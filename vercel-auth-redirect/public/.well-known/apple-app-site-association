@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "9DWYL25EC4.com.ricajincom.pawsinus",
+        "paths": [
+          "/auth/*",
+          "/auth/callback"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "9DWYL25EC4.com.ricajincom.pawsinus"
+    ]
+  }
+}
