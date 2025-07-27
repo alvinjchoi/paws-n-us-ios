@@ -69,15 +69,16 @@ struct StubPushTokenRepository: PushTokenWebRepository {
 }
 
 struct StubAuthRepository: AuthRepository {
-    func signUp(email: String, password: String, name: String) async throws -> Adopter {
+    func createAdopterProfile(userID: String, email: String, name: String) async throws -> Adopter {
         return Adopter(
+            id: userID,
             name: name,
             email: email,
             location: "San Francisco, CA"
         )
     }
     
-    func signIn(email: String, password: String) async throws -> Adopter {
+    func getAdopterProfile(userID: String) async throws -> Adopter? {
         return MockedData.adopter
     }
 }

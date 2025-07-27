@@ -18,13 +18,21 @@ struct ProfileView: View {
                 switch adopter {
                 case .notRequested:
                     ProgressView()
-                        .onAppear { loadProfile() }
+                        .onAppear { 
+                            Task {
+                                await loadProfile()
+                            }
+                        }
                 case .isLoading:
                     ProgressView()
                 case .loaded(let adopterProfile):
                     profileContent(adopterProfile)
                 case .failed(let error):
-                    ErrorView(error: error, retryAction: loadProfile)
+                    ErrorView(error: error, retryAction: {
+                        Task {
+                            await loadProfile()
+                        }
+                    })
                 }
             }
             .navigationTitle("Profile")
@@ -161,19 +169,21 @@ struct ProfileView: View {
             // Get current user from Supabase
             if let user = try await diContainer.interactors.authInteractor.getCurrentUser() {
                 // Load adopter profile
-                if let profile = try await diContainer.supabaseClient.from("profiles")
+                let response = try await diContainer.supabaseClient.from("profiles")
                     .select()
                     .eq("id", value: user.id.uuidString)
                     .single()
                     .execute()
-                    .value as? [String: Any] {
+                
+                let profileData = response.data
+                if let profile = try? JSONSerialization.jsonObject(with: profileData) as? [String: Any] {
                     
                     let adopterProfile = Adopter(
                         id: profile["id"] as? String ?? user.id.uuidString,
                         name: profile["name"] as? String ?? "Unknown",
                         email: profile["email"] as? String ?? user.email ?? "",
-                        bio: profile["bio"] as? String ?? "",
                         location: profile["location"] as? String ?? "Unknown",
+                        bio: profile["bio"] as? String ?? "",
                         profileImageURL: profile["profile_image_url"] as? String
                     )
                     
@@ -208,7 +218,7 @@ struct ProfileView: View {
             
             VStack(spacing: 15) {
                 Button(action: {
-                    showingAuth = true
+                    // Navigate to auth - handled by AppView
                 }) {
                     Text("Sign In / Sign Up")
                         .font(.system(size: 18, weight: .semibold))
