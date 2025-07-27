@@ -1,8 +1,8 @@
 import Foundation
 import Supabase
 
-struct SupabaseDogsRepository: DogsRepository {
-    let client: SupabaseClient
+struct SupabaseDogsRepository: DogsRepository, @unchecked Sendable {
+    let client: SupabaseClient // SupabaseClient is not Sendable, hence @unchecked
     
     func getDogs() async throws -> [Dog] {
         do {
@@ -18,6 +18,7 @@ struct SupabaseDogsRepository: DogsRepository {
             let dogs = dogDTOs.map { $0.toDog() }
             if !dogs.isEmpty {
                 print("First dog: \(dogs[0].name) - \(dogs[0].breed)")
+                print("First dog images: \(dogs[0].imageURLs)")
             }
             
             return dogs

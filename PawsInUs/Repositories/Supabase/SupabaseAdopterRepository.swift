@@ -1,8 +1,8 @@
 import Foundation
 import Supabase
 
-struct SupabaseAdopterRepository: AdopterRepository {
-    let client: SupabaseClient
+struct SupabaseAdopterRepository: AdopterRepository, @unchecked Sendable {
+    let client: SupabaseClient // SupabaseClient is not Sendable, hence @unchecked
     
     func getAdopter(by id: String) async throws -> Adopter? {
         do {

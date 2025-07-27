@@ -1,8 +1,8 @@
 import Foundation
 import Supabase
 
-struct SupabaseMatchingRepository: MatchingRepository {
-    let client: SupabaseClient
+struct SupabaseMatchingRepository: MatchingRepository, @unchecked Sendable {
+    let client: SupabaseClient // SupabaseClient is not Sendable, hence @unchecked
     
     func checkForMatch(adopterID: String, dogID: String) async throws -> Match? {
         do {
