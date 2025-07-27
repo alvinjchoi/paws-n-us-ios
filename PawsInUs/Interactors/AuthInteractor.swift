@@ -9,10 +9,11 @@ import Foundation
 import SwiftUI
 import Supabase
 
-protocol AuthInteractor {
+protocol AuthInteractor: Sendable {
     func signUp(email: String, password: String, name: String) async throws
     func signIn(email: String, password: String) async throws
     func signInWithOTP(email: String) async throws
+    func verifyOTP(email: String, token: String) async throws
     func signOut() async throws
     func getCurrentUser() async throws -> User?
     func signInWithApple() async throws
@@ -29,10 +30,16 @@ extension DIContainer.Interactors {
     }
 }
 
-struct RealAuthInteractor: AuthInteractor {
+final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
     let appState: Store<AppState>
     let authRepository: AuthRepository
     let supabaseClient: SupabaseClient
+    
+    init(appState: Store<AppState>, authRepository: AuthRepository, supabaseClient: SupabaseClient) {
+        self.appState = appState
+        self.authRepository = authRepository
+        self.supabaseClient = supabaseClient
+    }
     
     func signUp(email: String, password: String, name: String) async throws {
         // Sign up with Supabase
@@ -42,18 +49,17 @@ struct RealAuthInteractor: AuthInteractor {
             data: ["name": AnyJSON(name)]
         )
         
-        if let user = authResponse.user {
-            // Create adopter profile
-            let adopter = try await authRepository.createAdopterProfile(
-                userID: user.id.uuidString,
-                email: email,
-                name: name
-            )
-            
-            await MainActor.run {
-                appState[\.userData.currentAdopterID] = adopter.id
-                appState[\.userData.isAuthenticated] = true
-            }
+        let user = authResponse.user
+        // Create adopter profile
+        let adopter = try await authRepository.createAdopterProfile(
+            userID: user.id.uuidString,
+            email: email,
+            name: name
+        )
+        
+        await MainActor.run { [appState] in
+            appState[\.userData.currentAdopterID] = adopter.id
+            appState[\.userData.isAuthenticated] = true
         }
     }
     
@@ -63,7 +69,7 @@ struct RealAuthInteractor: AuthInteractor {
             password: password
         )
         
-        await MainActor.run {
+        await MainActor.run { [appState] in
             appState[\.userData.currentAdopterID] = session.user.id.uuidString
             appState[\.userData.isAuthenticated] = true
         }
@@ -72,14 +78,27 @@ struct RealAuthInteractor: AuthInteractor {
     func signInWithOTP(email: String) async throws {
         try await supabaseClient.auth.signInWithOTP(
             email: email,
-            redirectTo: URL(string: "io.pawsinus://login-callback")
+            shouldCreateUser: true
         )
+    }
+    
+    func verifyOTP(email: String, token: String) async throws {
+        let session = try await supabaseClient.auth.verifyOTP(
+            email: email,
+            token: token,
+            type: .email
+        )
+        
+        await MainActor.run { [appState] in
+            appState[\.userData.currentAdopterID] = session.user.id.uuidString
+            appState[\.userData.isAuthenticated] = true
+        }
     }
     
     func signOut() async throws {
         try await supabaseClient.auth.signOut()
         
-        await MainActor.run {
+        await MainActor.run { [appState] in
             appState[\.userData.isAuthenticated] = false
             appState[\.userData.currentAdopterID] = nil
             appState[\.userData.likedDogIDs] = []
@@ -89,7 +108,7 @@ struct RealAuthInteractor: AuthInteractor {
     }
     
     func getCurrentUser() async throws -> User? {
-        try await supabaseClient.auth.session?.user
+        return supabaseClient.auth.currentSession?.user
     }
     
     func signInWithApple() async throws {

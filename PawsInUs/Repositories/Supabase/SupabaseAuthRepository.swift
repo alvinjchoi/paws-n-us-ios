@@ -41,9 +41,7 @@ struct SupabaseAuthRepository: AuthRepository {
             .single()
             .execute()
         
-        guard let data = response.data else { return nil }
-        
-        let profile = try JSONDecoder().decode(ProfileDTO.self, from: data)
+        let profile = try JSONDecoder().decode(ProfileDTO.self, from: response.data)
         return profile.toAdopter()
     }
 }
@@ -72,8 +70,8 @@ struct ProfileDTO: Codable {
             id: id,
             name: name,
             email: email,
-            bio: bio ?? "",
             location: location ?? "Unknown",
+            bio: bio ?? "",
             profileImageURL: profileImageURL
         )
     }

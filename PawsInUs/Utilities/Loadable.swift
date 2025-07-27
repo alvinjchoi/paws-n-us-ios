@@ -11,7 +11,7 @@ import SwiftUI
 
 typealias LoadableSubject<T> = Binding<Loadable<T>>
 
-enum Loadable<T> {
+enum Loadable<T>: @unchecked Sendable {
 
     case notRequested
     case isLoading(last: T?, cancelBag: CancelBag)

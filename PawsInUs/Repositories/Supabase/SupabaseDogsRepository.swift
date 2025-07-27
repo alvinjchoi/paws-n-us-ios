@@ -5,7 +5,7 @@ struct SupabaseDogsRepository: DogsRepository, @unchecked Sendable {
     let client: SupabaseClient // SupabaseClient is not Sendable, hence @unchecked
     
     // Add completion-based method for workaround
-    func getDogsWithCompletion(completion: @escaping (Result<[Dog], Error>) -> Void) {
+    func getDogsWithCompletion(completion: @escaping @Sendable (Result<[Dog], Error>) -> Void) {
         guard let url = URL(string: "https://jxhtbzipglekixpogclo.supabase.co/rest/v1/dogs") else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1)))
             return
