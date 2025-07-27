@@ -34,7 +34,6 @@ struct RealDogsInteractor: DogsInteractor {
     
     @MainActor
     func loadDogs(dogs: Binding<Loadable<[Dog]>>) {
-        print("🚀 loadDogs called")
         dogs.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
         let seenDogIDs = appState.value.userData.likedDogIDs.union(appState.value.userData.dislikedDogIDs)
@@ -42,19 +41,13 @@ struct RealDogsInteractor: DogsInteractor {
         
         // Use completion-based approach as workaround for broken async/await
         if let supabaseRepo = repository as? SupabaseDogsRepository {
-            print("✅ Using SupabaseDogsRepository")
             supabaseRepo.getDogsWithCompletion { result in
-                print("🔔 Completion block called with result")
                 DispatchQueue.main.async {
-                    print("🏃 On main thread now")
                     switch result {
                     case .success(let allDogs):
-                        print("🐕 Got \(allDogs.count) dogs from Supabase")
                         let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
-                        print("👀 \(unseenDogs.count) unseen dogs")
                         dogs.wrappedValue = .loaded(unseenDogs)
                     case .failure(let error):
-                        print("❌ Failed to load dogs: \(error)")
                         dogs.wrappedValue = .failed(error)
                     }
                 }
