@@ -39,13 +39,29 @@ struct RealDogsInteractor: DogsInteractor {
         let seenDogIDs = appState.value.userData.likedDogIDs.union(appState.value.userData.dislikedDogIDs)
         let repository = dogsRepository
         
-        Task {
-            do {
-                let allDogs = try await repository.getDogs()
-                let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
-                dogs.wrappedValue = .loaded(unseenDogs)
-            } catch {
-                dogs.wrappedValue = .failed(error)
+        // Use completion-based approach as workaround for broken async/await
+        if let supabaseRepo = repository as? SupabaseDogsRepository {
+            supabaseRepo.getDogsWithCompletion { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let allDogs):
+                        let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
+                        dogs.wrappedValue = .loaded(unseenDogs)
+                    case .failure(let error):
+                        dogs.wrappedValue = .failed(error)
+                    }
+                }
+            }
+        } else {
+            // Fallback to async/await for other repositories
+            Task {
+                do {
+                    let allDogs = try await repository.getDogs()
+                    let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
+                    dogs.wrappedValue = .loaded(unseenDogs)
+                } catch {
+                    dogs.wrappedValue = .failed(error)
+                }
             }
         }
     }
