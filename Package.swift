@@ -14,13 +14,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.0"),
-        .package(url: "https://github.com/supabase-community/supabase-swift", from: "2.0.0")
+        .package(url: "https://github.com/supabase-community/supabase-swift", from: "2.0.0"),
+        .package(url: "https://github.com/nalexn/EnvironmentOverrides", from: "0.0.4")
     ],
     targets: [
         .target(
             name: "PawsInUs",
             dependencies: [
-                .product(name: "Supabase", package: "supabase-swift")
+                .product(name: "Supabase", package: "supabase-swift"),
+                .product(name: "EnvironmentOverrides", package: "EnvironmentOverrides")
             ],
             path: "PawsInUs",
             exclude: [
