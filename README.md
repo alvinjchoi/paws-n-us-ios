@@ -1,4 +1,4 @@
-# Pawsinus 🐕
+# PawsInUs 🐕
 
 A Tinder-style iOS app for dog adoption, connecting potential adopters with dogs from Korean animal shelters.
 
@@ -69,7 +69,6 @@ PawsInUs/
 
 - [Deployment Guide](docs/DEPLOYMENT.md) - TestFlight and App Store deployment
 - [Database Setup](docs/sql/setup_database.sql) - Supabase schema
-- [Supabase Setup](SUPABASE_SETUP.md) - Backend configuration
 
 ## Contributing
 
