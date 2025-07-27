@@ -39,6 +39,7 @@ extension DIContainer {
         let matchingRepository: MatchingRepository
         let adopterRepository: AdopterRepository
         let authRepository: AuthRepository
+        let storageRepository: StorageRepository
         let images: ImagesWebRepository
         let pushToken: PushTokenWebRepository
     }
@@ -59,6 +60,7 @@ extension DIContainer {
                       matchingRepository: StubMatchingRepository(),
                       adopterRepository: StubAdopterRepository(),
                       authRepository: StubAuthRepository(),
+                      storageRepository: StubStorageRepository(),
                       images: StubImagesRepository(),
                       pushToken: StubPushTokenRepository()
                   ))

@@ -77,6 +77,7 @@ extension AppEnvironment {
                 matchingRepository: StubMatchingRepository(),
                 adopterRepository: StubAdopterRepository(),
                 authRepository: StubAuthRepository(),
+                storageRepository: StubStorageRepository(),
                 images: RealImagesWebRepository(session: session),
                 pushToken: RealPushTokenWebRepository(session: session)
             )
@@ -89,6 +90,7 @@ extension AppEnvironment {
             matchingRepository: SupabaseMatchingRepository(client: supabaseClient),
             adopterRepository: SupabaseAdopterRepository(client: supabaseClient),
             authRepository: SupabaseAuthRepository(client: supabaseClient),
+            storageRepository: SupabaseStorageRepository(client: supabaseClient),
             images: RealImagesWebRepository(session: session),
             pushToken: RealPushTokenWebRepository(session: session)
         )

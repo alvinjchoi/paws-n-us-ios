@@ -87,6 +87,26 @@ struct StubAuthRepository: AuthRepository {
     }
 }
 
+struct StubStorageRepository: StorageRepository {
+    func uploadImage(bucket: String, path: String, data: Data) async throws -> String {
+        print("Stub: Uploaded image to \(bucket)/\(path)")
+        return "https://example.com/\(bucket)/\(path)"
+    }
+    
+    func getPublicURL(bucket: String, path: String) -> String {
+        return "https://example.com/\(bucket)/\(path)"
+    }
+    
+    func deleteImage(bucket: String, path: String) async throws {
+        print("Stub: Deleted image from \(bucket)/\(path)")
+    }
+    
+    func listImages(bucket: String, folder: String) async throws -> [String] {
+        return ["https://example.com/\(bucket)/\(folder)/image1.jpg",
+                "https://example.com/\(bucket)/\(folder)/image2.jpg"]
+    }
+}
+
 enum RepositoryError: Error {
     case notFound
 }
