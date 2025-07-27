@@ -8,6 +8,7 @@
 import SwiftUI
 import Supabase
 import Combine
+import WebKit
 
 struct SwipeView: View {
     @Environment(\.injected) private var diContainer
@@ -33,7 +34,7 @@ struct SwipeView: View {
                 
                 // Main content
                 content
-                    .padding(.top, 10)
+                    .padding(.top, 20)
             }
         }
         .onAppear {
@@ -48,37 +49,61 @@ struct SwipeView: View {
     }
     
     private var headerView: some View {
-        HStack {
-            Image(systemName: "pawprint.fill")
-                .font(.title)
-                .foregroundColor(.orange)
-            
-            Text("pawsinus")
-                .font(.title)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
+        HStack(alignment: .center) {
+            // Logo section - positioned more to the left
+            if Bundle.main.path(forResource: "pawsinus-logo", ofType: "svg") != nil {
+                SVGLogoView()
+                    .frame(width: 160, height: 48)
+                    .clipped()
+                    .offset(x: -20)
+            } else {
+                // Fallback to pawprint + text
+                HStack(spacing: 8) {
+                    Image(systemName: "pawprint.fill")
+                        .font(.title)
+                        .foregroundColor(.orange)
+                    
+                    Text("pawsinus")
+                        .font(.title)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                }
+            }
             
             Spacer()
             
-            Button(action: {
-                diContainer.appState[\.routing.selectedTab] = .profile
-            }) {
-                Image(systemName: "person.circle")
-                    .font(.title2)
-                    .foregroundColor(.gray)
-            }
-            
-            Button(action: {
-                diContainer.appState[\.routing.selectedTab] = .likes
-            }) {
-                Image(systemName: "heart.circle")
-                    .font(.title2)
-                    .foregroundColor(.gray)
+            // Right side buttons
+            HStack(spacing: 16) {
+                Button(action: {
+                    diContainer.appState[\.routing.selectedTab] = .profile
+                }) {
+                    Image(systemName: "person.circle")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                }
+                
+                Button(action: {
+                    diContainer.appState[\.routing.selectedTab] = .likes
+                }) {
+                    Image(systemName: "heart.circle")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                }
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
         .background(Color(.systemBackground))
+        .onAppear {
+            print("🖼️ Header view appeared")
+            let logoPath = Bundle.main.path(forResource: "pawsinus-logo", ofType: "svg")
+            print("🖼️ SVG logo path: \(logoPath ?? "not found")")
+            if let path = logoPath {
+                let svgData = try? Data(contentsOf: URL(fileURLWithPath: path))
+                let uiImage = svgData != nil ? UIImage(data: svgData!) : nil
+                print("🖼️ SVG data loaded: \(svgData != nil), UIImage created: \(uiImage != nil)")
+            }
+        }
     }
     
     @ViewBuilder
@@ -141,9 +166,9 @@ struct SwipeView: View {
                 ForEach(Array(dogs.enumerated().reversed()), id: \.element.id) { index, dog in
                     if index >= currentIndex && index < currentIndex + 3 {
                         DogCardView(dog: dog)
-                            .frame(width: geometry.size.width - 40, height: geometry.size.height - 120)
+                            .frame(width: geometry.size.width - 40, height: geometry.size.height - 80)
                             .aspectRatio(3/4, contentMode: .fit)
-                            .offset(y: CGFloat(index - currentIndex) * 10)
+                            .offset(y: CGFloat(index - currentIndex) * 10 - 25)
                             .scaleEffect(index == currentIndex ? 1 : 0.95 - CGFloat(index - currentIndex) * 0.02)
                             .opacity(index == currentIndex ? 1 : 0.9)
                             .offset(index == currentIndex ? dragOffset : .zero)
@@ -276,6 +301,13 @@ struct SwipeView: View {
         
         let dog = dogs[currentIndex]
         
+        // Update state immediately, not after animation
+        if action == .like {
+            diContainer.interactors.dogsInteractor.likeDog(dog)
+        } else {
+            diContainer.interactors.dogsInteractor.passDog(dog)
+        }
+        
         withAnimation(.easeOut(duration: 0.3)) {
             dragOffset = CGSize(
                 width: action == .like ? UIScreen.main.bounds.width * 1.5 : -UIScreen.main.bounds.width * 1.5,
@@ -284,12 +316,6 @@ struct SwipeView: View {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if action == .like {
-                diContainer.interactors.dogsInteractor.likeDog(dog)
-            } else {
-                diContainer.interactors.dogsInteractor.passDog(dog)
-            }
-            
             currentIndex += 1
             dragOffset = .zero
             showAction = false
@@ -442,5 +468,41 @@ struct DogCardView: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+    }
+}
+
+struct SVGLogoView: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.backgroundColor = UIColor.clear
+        webView.isOpaque = false
+        webView.scrollView.isScrollEnabled = false
+        webView.scrollView.bounces = false
+        
+        if let svgPath = Bundle.main.path(forResource: "pawsinus-logo", ofType: "svg"),
+           let svgContent = try? String(contentsOfFile: svgPath) {
+            let htmlContent = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body { margin: 0; padding: 0; background: transparent; display: flex; justify-content: flex-start; align-items: center; height: 100vh; width: 100vw; }
+                    svg { width: 100%; height: auto; max-height: 100%; }
+                </style>
+            </head>
+            <body>
+                \(svgContent)
+            </body>
+            </html>
+            """
+            webView.loadHTMLString(htmlContent, baseURL: nil)
+        }
+        
+        return webView
+    }
+    
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        // No updates needed
     }
 }
