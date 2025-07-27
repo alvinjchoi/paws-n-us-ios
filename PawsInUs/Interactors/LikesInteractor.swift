@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 protocol LikesInteractor {
-    func loadLikedDogs(dogs: Binding<Loadable<[Dog]>>)
+    @MainActor func loadLikedDogs(dogs: Binding<Loadable<[Dog]>>)
     func unlikeDog(_ dog: Dog)
 }
 
@@ -27,19 +27,21 @@ struct RealLikesInteractor: LikesInteractor {
     let appState: Store<AppState>
     let dogsRepository: DogsRepository
     
+    @MainActor
     func loadLikedDogs(dogs: Binding<Loadable<[Dog]>>) {
         dogs.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
-        // Get liked dog IDs before starting the task
+        // Get liked dog IDs and repository before starting the task
         let likedDogIDs = appState.value.userData.likedDogIDs
+        let repository = dogsRepository
         
-        Task { @MainActor in
+        Task {
             var dogsList: [Dog] = []
             
             // Fetch each liked dog
             for dogID in likedDogIDs {
                 do {
-                    let dog = try await dogsRepository.getDog(by: dogID)
+                    let dog = try await repository.getDog(by: dogID)
                     dogsList.append(dog)
                 } catch {
                     // Skip dogs that can't be loaded

@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 protocol AdopterInteractor {
-    func loadProfile(adopter: Binding<Loadable<Adopter>>)
+    @MainActor func loadProfile(adopter: Binding<Loadable<Adopter>>)
     func updatePreferences(_ preferences: AdopterPreferences)
     func updateProfile(name: String, bio: String, location: String)
 }
@@ -28,6 +28,7 @@ struct RealAdopterInteractor: AdopterInteractor {
     let appState: Store<AppState>
     let adopterRepository: AdopterRepository
     
+    @MainActor
     func loadProfile(adopter: Binding<Loadable<Adopter>>) {
         adopter.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
@@ -35,7 +36,7 @@ struct RealAdopterInteractor: AdopterInteractor {
         let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
         let repository = adopterRepository
         
-        Task { @MainActor in
+        Task {
             do {
                 let profile = try await repository.getAdopter(by: currentAdopterID)
                 
