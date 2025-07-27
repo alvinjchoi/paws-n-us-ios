@@ -63,7 +63,7 @@ struct SwipeView: View {
                         .font(.title)
                         .foregroundColor(.orange)
                     
-                    Text("pawsinus")
+                    Text("Paws-N-Us")
                         .font(.title)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)

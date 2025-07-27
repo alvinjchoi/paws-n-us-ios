@@ -1,4 +1,4 @@
-# PawsInUs 🐕
+# Paws-N-Us 🐕
 
 A Tinder-style iOS app for dog adoption, connecting potential adopters with dogs from Korean animal shelters.
 
@@ -50,7 +50,7 @@ Built with Clean Architecture principles (based on the original [Clean Architect
 ## Project Structure
 
 ```
-PawsInUs/
+Paws-N-Us/
 ├── Core/               # App lifecycle and state management
 ├── DependencyInjection/# DI container and configuration
 ├── Interactors/        # Business logic layer
