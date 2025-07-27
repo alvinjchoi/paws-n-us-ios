@@ -175,7 +175,6 @@ struct EmailSignInView: View {
     @Environment(\.injected) private var diContainer
     @Environment(\.dismiss) private var dismiss
     @State private var email = ""
-    @State private var magicLinkURL = ""
     @State private var isLoading = false
     @State private var showAlert = false
     @State private var alertMessage = ""
@@ -193,65 +192,30 @@ struct EmailSignInView: View {
                     .padding(.top, 40)
                 
                 if emailSent {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
+                        Image(systemName: "envelope.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.orange)
+                        
                         Text("이메일을 확인해주세요!")
-                            .font(.headline)
+                            .font(.title2)
+                            .fontWeight(.bold)
                         
                         Text("로그인 링크가 \(email)로 전송되었습니다.")
-                            .font(.subheadline)
+                            .font(.body)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         
-                        Divider()
-                            .padding(.vertical)
-                        
-                        Text("링크가 작동하지 않나요?")
-                            .font(.subheadline)
+                        Text("링크를 클릭하면 자동으로 Paws-N-Us 앱이 열립니다.")
+                            .font(.caption)
                             .foregroundColor(.secondary)
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("해결 방법:")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                            Text("1. 이메일의 링크를 클릭")
-                                .font(.caption)
-                            Text("2. Safari가 열리면 전체 URL 복사")
-                                .font(.caption)
-                            Text("3. 아래에 붙여넣기")
-                                .font(.caption)
-                            Text("⚠️ URL이 '#access_token='을 포함해야 합니다")
-                                .font(.caption)
-                                .foregroundColor(.orange)
-                        }
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal)
-                        
-                        TextField("URL 또는 access_token", text: $magicLinkURL)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
+                            .multilineTextAlignment(.center)
                             .padding(.horizontal)
-                        
-                        Button(action: processMagicLink) {
-                            if isLoading {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Text("로그인")
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(22)
-                        .disabled(isLoading || magicLinkURL.isEmpty)
-                        .padding(.horizontal)
                     }
                     .padding()
                     
-                    Button(action: { emailSent = false; email = ""; magicLinkURL = "" }) {
+                    Button(action: { emailSent = false; email = "" }) {
                         Text("다른 이메일로 시도")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.orange)
@@ -290,18 +254,6 @@ struct EmailSignInView: View {
             } message: {
                 Text(alertMessage)
             }
-            .onOpenURL { url in
-                // Handle the magic link callback
-                Task {
-                    do {
-                        try await diContainer.supabaseClient.auth.session(from: url)
-                        dismiss()
-                    } catch {
-                        alertMessage = "로그인에 실패했습니다. 다시 시도해주세요."
-                        showAlert = true
-                    }
-                }
-            }
         }
     }
     
@@ -328,73 +280,6 @@ struct EmailSignInView: View {
         }
     }
     
-    private func processMagicLink() {
-        guard !magicLinkURL.isEmpty else { return }
-        
-        isLoading = true
-        
-        Task {
-            do {
-                // First, try to open the verification URL in Safari to get the redirect
-                if magicLinkURL.contains("/auth/v1/verify") {
-                    // This is the initial magic link - open it in Safari
-                    guard let url = URL(string: magicLinkURL) else {
-                        throw NSError(domain: "Invalid URL", code: -1)
-                    }
-                    
-                    // Open in Safari
-                    await UIApplication.shared.open(url)
-                    
-                    await MainActor.run {
-                        isLoading = false
-                        alertMessage = "Safari에서 URL이 열렸습니다. 로그인이 완료되면 앱으로 돌아오세요."
-                        showAlert = true
-                    }
-                    return
-                }
-                
-                // Handle different URL formats
-                if magicLinkURL.hasPrefix("pawsinus://") {
-                    // Direct app callback URL
-                    guard let url = URL(string: magicLinkURL) else {
-                        throw NSError(domain: "Invalid URL", code: -1)
-                    }
-                    
-                    try await diContainer.supabaseClient.auth.session(from: url)
-                    
-                    await MainActor.run {
-                        isLoading = false
-                        dismiss()
-                    }
-                } else if magicLinkURL.contains("#access_token=") {
-                    // User copied the URL after redirect
-                    if let hashIndex = magicLinkURL.firstIndex(of: "#") {
-                        let fragment = String(magicLinkURL[magicLinkURL.index(after: hashIndex)...])
-                        let callbackURL = "pawsinus://login-callback#\(fragment)"
-                        
-                        guard let url = URL(string: callbackURL) else {
-                            throw NSError(domain: "Invalid callback URL", code: -1)
-                        }
-                        
-                        try await diContainer.supabaseClient.auth.session(from: url)
-                        
-                        await MainActor.run {
-                            isLoading = false
-                            dismiss()
-                        }
-                    }
-                } else {
-                    throw NSError(domain: "잘못된 URL입니다. 매직 링크를 클릭한 후 전체 URL을 복사하세요.", code: -1)
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    alertMessage = error.localizedDescription
-                    showAlert = true
-                }
-            }
-        }
-    }
 }
 
 #Preview {
