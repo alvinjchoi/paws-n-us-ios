@@ -32,7 +32,6 @@ struct RealAdopterInteractor: AdopterInteractor {
     func loadProfile(adopter: Binding<Loadable<Adopter>>) {
         adopter.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
-        // Get adopter ID and repository reference before starting the task
         let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
         let repository = adopterRepository
         

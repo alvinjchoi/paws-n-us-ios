@@ -47,8 +47,8 @@ enum DeepLink: Equatable {
 // MARK: - DeepLinksHandler
 
 @MainActor
-protocol DeepLinksHandler {
-    func open(deepLink: DeepLink)
+protocol DeepLinksHandler: Sendable {
+    @MainActor func open(deepLink: DeepLink)
 }
 
 struct RealDeepLinksHandler: DeepLinksHandler {

@@ -35,6 +35,7 @@ extension Store {
         return map(keyPath).removeDuplicates().eraseToAnyPublisher()
     }
     
+    @MainActor
     func binding<Value>(for keyPath: WritableKeyPath<Output, Value>) -> Binding<Value> where Value: Equatable {
         Binding(
             get: { self.value[keyPath: keyPath] },
@@ -45,6 +46,7 @@ extension Store {
 
 // MARK: -
 
+@MainActor
 extension Binding where Value: Equatable {
     func dispatched<State>(to state: Store<State>,
                            _ keyPath: WritableKeyPath<State, Value>) -> Self {
@@ -52,6 +54,7 @@ extension Binding where Value: Equatable {
     }
 }
 
+@MainActor
 extension Binding where Value: Equatable {
     typealias ValueClosure = (Value) -> Void
 

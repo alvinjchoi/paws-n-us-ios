@@ -71,7 +71,7 @@ struct RealDogsInteractor: DogsInteractor {
         Task {
             do {
                 if try await repository.checkForMatch(adopterID: currentAdopterID, dogID: dogID) != nil {
-                    await MainActor.run {
+                    _ = await MainActor.run {
                         appState[\.userData.matchedDogIDs].insert(dogID)
                     }
                     Self.showMatchNotification(dog: dog)

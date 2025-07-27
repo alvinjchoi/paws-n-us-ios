@@ -113,14 +113,20 @@ extension Loadable: Equatable where T: Equatable {
 }
 
 extension LoadableSubject {
-    func load<T>(_ resource: @escaping () async throws -> T) where Value == Loadable<T> {
+    @MainActor
+    func load<T: Sendable>(_ resource: @escaping () async throws -> T) where Value == Loadable<T> {
         let cancelBag = CancelBag()
         wrappedValue.setIsLoading(cancelBag: cancelBag)
         let task = Task {
             do {
-                wrappedValue = .loaded(try await resource())
+                let result = try await resource()
+                await MainActor.run {
+                    wrappedValue = .loaded(result)
+                }
             } catch {
-                wrappedValue = .failed(error)
+                await MainActor.run {
+                    wrappedValue = .failed(error)
+                }
             }
         }
         task.store(in: cancelBag)

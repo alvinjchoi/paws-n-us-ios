@@ -9,10 +9,11 @@ import Foundation
 import UIKit
 
 extension DIContainer.Interactors {
+    @MainActor
     var userPermissions: UserPermissionsInteractor {
         RealUserPermissionsInteractor(
             appState: appState,
-            openAppSettings: { @MainActor in
+            openAppSettings: {
                 guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                 UIApplication.shared.open(url)
             }

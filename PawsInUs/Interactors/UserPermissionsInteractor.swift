@@ -23,20 +23,20 @@ extension Permission {
 }
 
 protocol UserPermissionsInteractor: AnyObject {
-    func resolveStatus(for permission: Permission)
-    func request(permission: Permission)
+    @MainActor func resolveStatus(for permission: Permission)
+    @MainActor func request(permission: Permission)
 }
 
-protocol SystemNotificationsSettings {
+protocol SystemNotificationsSettings: Sendable {
     var authorizationStatus: UNAuthorizationStatus { get }
 }
 
-protocol SystemNotificationsCenter {
-    func currentSettings() async -> SystemNotificationsSettings
+protocol SystemNotificationsCenter: Sendable {
+    func currentSettings() async -> any SystemNotificationsSettings
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
 }
 
-extension UNNotificationSettings: SystemNotificationsSettings { }
+extension UNNotificationSettings: SystemNotificationsSettings, @unchecked Sendable { }
 extension UNUserNotificationCenter: SystemNotificationsCenter {
     func currentSettings() async -> any SystemNotificationsSettings {
         return await notificationSettings()
@@ -45,6 +45,7 @@ extension UNUserNotificationCenter: SystemNotificationsCenter {
 
 // MARK: - RealUserPermissionsInteractor
 
+@MainActor
 final class RealUserPermissionsInteractor: UserPermissionsInteractor {
 
     private let appState: Store<AppState>
@@ -64,10 +65,10 @@ final class RealUserPermissionsInteractor: UserPermissionsInteractor {
         let keyPath = AppState.permissionKeyPath(for: permission)
         let currentStatus = appState[keyPath]
         guard currentStatus == .unknown else { return }
-        let appState = appState
+        
         switch permission {
         case .pushNotifications:
-            Task { @MainActor in
+            Task {
                 appState[keyPath] = await pushNotificationsPermissionStatus()
             }
         }
@@ -77,9 +78,7 @@ final class RealUserPermissionsInteractor: UserPermissionsInteractor {
         let keyPath = AppState.permissionKeyPath(for: permission)
         let currentStatus = appState[keyPath]
         guard currentStatus != .denied else {
-            Task { @MainActor in
-                openAppSettings()
-            }
+            openAppSettings()
             return
         }
         switch permission {

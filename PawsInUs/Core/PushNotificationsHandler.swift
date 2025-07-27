@@ -10,7 +10,7 @@ import UserNotifications
 
 protocol PushNotificationsHandler { }
 
-final class RealPushNotificationsHandler: NSObject, PushNotificationsHandler {
+final class RealPushNotificationsHandler: NSObject, PushNotificationsHandler, @unchecked Sendable {
     
     private let deepLinksHandler: DeepLinksHandler
     
@@ -47,15 +47,17 @@ extension RealPushNotificationsHandler: UNUserNotificationCenterDelegate {
         
         // Handle different notification types
         if let dogID = payload["dogID"] as? String {
+            let handler = deepLinksHandler
             Task { @MainActor in
-                deepLinksHandler.open(deepLink: .showDog(dogID: dogID))
-                completionHandler()
+                handler.open(deepLink: .showDog(dogID: dogID))
             }
+            completionHandler()
         } else if let matchID = payload["matchID"] as? String {
+            let handler = deepLinksHandler
             Task { @MainActor in
-                deepLinksHandler.open(deepLink: .showMatch(matchID: matchID))
-                completionHandler()
+                handler.open(deepLink: .showMatch(matchID: matchID))
             }
+            completionHandler()
         } else {
             completionHandler()
         }
