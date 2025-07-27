@@ -42,7 +42,11 @@
     "%lld years old" : {
 
     },
+    "%lld세" : {
+
+    },
     "⚠️ There is an issue with local database" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -329,6 +333,9 @@
     "Likes" : {
 
     },
+    "Likes View" : {
+
+    },
     "Name" : {
 
     },
@@ -442,6 +449,9 @@
     "Profile" : {
 
     },
+    "Profile View" : {
+
+    },
     "Retry" : {
       "localizations" : {
         "de" : {
@@ -459,6 +469,7 @@
       }
     },
     "Running unit tests" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

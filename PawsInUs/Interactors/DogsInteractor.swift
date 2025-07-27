@@ -38,23 +38,39 @@ struct RealDogsInteractor: DogsInteractor {
         dogs.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
         let seenDogIDs = appState.value.userData.likedDogIDs.union(appState.value.userData.dislikedDogIDs)
+        let repository = dogsRepository
         
-        // Use mock data for now
-        let mockDogs = [
-            Dog(id: "1", name: "Max", breed: "Golden Retriever", age: 3, size: .large, gender: .male, 
-                imageURLs: ["https://images.unsplash.com/photo-1552053831-71594a27632d?w=500"], 
-                bio: "Friendly and energetic", shelterID: "shelter1", shelterName: "Happy Paws", 
-                location: "New York", traits: ["Friendly", "Playful"], isGoodWithKids: true, 
-                isGoodWithPets: true, energyLevel: .high, dateAdded: Date()),
-            Dog(id: "2", name: "Luna", breed: "Labrador", age: 2, size: .large, gender: .female,
-                imageURLs: ["https://images.unsplash.com/photo-1537151625747-768eb6cf92b7?w=500"],
-                bio: "Sweet and gentle", shelterID: "shelter1", shelterName: "Happy Paws",
-                location: "New York", traits: ["Gentle", "Calm"], isGoodWithKids: true,
-                isGoodWithPets: true, energyLevel: .medium, dateAdded: Date())
-        ]
-        
-        let unseenDogs = mockDogs.filter { !seenDogIDs.contains($0.id) }
-        dogs.wrappedValue = .loaded(unseenDogs)
+        // Use completion-based approach as workaround for broken async/await
+        if let supabaseRepo = repository as? SupabaseDogsRepository {
+            print("✅ Using SupabaseDogsRepository")
+            supabaseRepo.getDogsWithCompletion { result in
+                print("🔔 Completion block called with result")
+                DispatchQueue.main.async {
+                    print("🏃 On main thread now")
+                    switch result {
+                    case .success(let allDogs):
+                        print("🐕 Got \(allDogs.count) dogs from Supabase")
+                        let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
+                        print("👀 \(unseenDogs.count) unseen dogs")
+                        dogs.wrappedValue = .loaded(unseenDogs)
+                    case .failure(let error):
+                        print("❌ Failed to load dogs: \(error)")
+                        dogs.wrappedValue = .failed(error)
+                    }
+                }
+            }
+        } else {
+            // Fallback to async/await for other repositories
+            Task {
+                do {
+                    let allDogs = try await repository.getDogs()
+                    let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
+                    dogs.wrappedValue = .loaded(unseenDogs)
+                } catch {
+                    dogs.wrappedValue = .failed(error)
+                }
+            }
+        }
     }
     
     @MainActor

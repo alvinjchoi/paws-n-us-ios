@@ -152,6 +152,7 @@ struct SwipeView: View {
                     if index >= currentIndex && index < currentIndex + 3 {
                         DogCardView(dog: dog)
                             .frame(width: geometry.size.width - 40, height: geometry.size.height - 120)
+                            .aspectRatio(3/4, contentMode: .fit)
                             .offset(y: CGFloat(index - currentIndex) * 10)
                             .scaleEffect(index == currentIndex ? 1 : 0.95 - CGFloat(index - currentIndex) * 0.02)
                             .opacity(index == currentIndex ? 1 : 0.9)
@@ -170,6 +171,7 @@ struct SwipeView: View {
                 }
                 
                 actionButtons
+                    .zIndex(2000) // Ensure buttons are always on top
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
@@ -324,27 +326,35 @@ struct DogCardView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Background image
-            if !dog.imageURLs.isEmpty {
-                AsyncImage(url: URL(string: dog.imageURLs[currentImageIndex])) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            ProgressView()
-                        )
-                }
-            } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .overlay(
-                        Text("No image")
-                            .foregroundColor(.white)
-                    )
-            }
+            // Background container with fixed size
+            Rectangle()
+                .fill(Color.clear)
+                .overlay(
+                    // Background image with fixed aspect ratio
+                    Group {
+                        if !dog.imageURLs.isEmpty {
+                            AsyncImage(url: URL(string: dog.imageURLs[currentImageIndex])) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .overlay(
+                                        ProgressView()
+                                    )
+                            }
+                        } else {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .overlay(
+                                    Text("No image")
+                                        .foregroundColor(.white)
+                                )
+                        }
+                    }
+                    .clipped()
+                )
                 
                 // Image indicators at top
                 if dog.imageURLs.count > 1 {
@@ -375,28 +385,48 @@ struct DogCardView: View {
                     endPoint: .bottom
                 )
                 
-                // Dog info
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(alignment: .bottom) {
-                        Text(dog.name)
-                            .font(.system(size: 32, weight: .bold))
-                        Text("\(dog.age)")
-                            .font(.system(size: 26, weight: .medium))
-                        Spacer()
-                        
-                        Button(action: {}) {
-                            Image(systemName: "info.circle")
-                                .font(.system(size: 28))
-                                .foregroundColor(.white)
-                        }
-                    }
+                // Dog info - positioned higher to avoid button overlap
+                VStack {
+                    Spacer()
                     
-                    Text(dog.bio)
-                        .font(.system(size: 16))
-                        .lineLimit(2)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(alignment: .bottom) {
+                            HStack(alignment: .bottom, spacing: 8) {
+                                Text(dog.name)
+                                    .font(.system(size: 30, weight: .bold))
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .minimumScaleFactor(0.8)
+                                Text("\(dog.age)세")
+                                    .font(.system(size: 22, weight: .medium))
+                            }
+                            .layoutPriority(1)
+                            
+                            Spacer(minLength: 8)
+                            
+                            Button(action: {}) {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 26))
+                                    .foregroundColor(.white)
+                            }
+                            .layoutPriority(2)
+                        }
+                        
+                        Text(dog.bio)
+                            .font(.system(size: 16))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .truncationMode(.tail)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Add spacing to avoid button overlap
+                    Color.clear
+                        .frame(height: 80)
                 }
-                .foregroundColor(.white)
-                .padding()
                 
                 // Tap areas for image navigation
                 HStack(spacing: 0) {
