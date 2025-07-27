@@ -39,7 +39,7 @@ private struct QueryViewContainer<T: PersistentModel>: View, Equatable {
         QueryView(query: builder(searchText), results: results)
     }
 
-    static func == (lhs: QueryViewContainer<T>, rhs: QueryViewContainer<T>) -> Bool {
+    nonisolated static func == (lhs: QueryViewContainer<T>, rhs: QueryViewContainer<T>) -> Bool {
         return lhs.searchText == rhs.searchText
     }
 }
