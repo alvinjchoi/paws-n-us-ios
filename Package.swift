@@ -33,7 +33,7 @@ let package = Package(
                 .process("Resources/Localizable.xcstrings"),
             ],
             swiftSettings: [
-                .swiftLanguageMode(.v5)
+                .swiftLanguageMode(.v6)
             ],
             linkerSettings: [
                 .linkedFramework("UIKit")
@@ -47,7 +47,7 @@ let package = Package(
             ],
             path: "UnitTests",
             swiftSettings: [
-                .swiftLanguageMode(.v5)
+                .swiftLanguageMode(.v6)
             ],
         )
     ]
