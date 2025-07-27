@@ -43,9 +43,8 @@ struct RealDogsInteractor: DogsInteractor {
                 let allDogs = try await dogsRepository.getDogs()
                 let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
                 
-                let dogsList = unseenDogs
                 await MainActor.run {
-                    dogs.wrappedValue = .loaded(dogsList)
+                    dogs.wrappedValue = .loaded(unseenDogs)
                 }
             } catch {
                 await MainActor.run {

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4819F10E2CDF5819003CA0AE /* EnvironmentOverrides in Frameworks */ = {isa = PBXBuildFile; productRef = 4819F10D2CDF5819003CA0AE /* EnvironmentOverrides */; };
 		4819F1172CDF6DD4003CA0AE /* ViewInspector in Frameworks */ = {isa = PBXBuildFile; productRef = 4819F1162CDF6DD4003CA0AE /* ViewInspector */; };
+		4819F11A2CDF6DD7003CA0AE /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 4819F1192CDF6DD6003CA0AE /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4819F11A2CDF6DD7003CA0AE /* Supabase in Frameworks */,
 				4819F10E2CDF5819003CA0AE /* EnvironmentOverrides in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,6 +100,7 @@
 			name = PawsInUs;
 			packageProductDependencies = (
 				4819F10D2CDF5819003CA0AE /* EnvironmentOverrides */,
+				4819F1192CDF6DD6003CA0AE /* Supabase */,
 			);
 			productName = PawsInUs;
 			productReference = 488734172CDCA2DB00B400A3 /* PawsInUs.app */;
@@ -161,6 +164,7 @@
 			packageReferences = (
 				4819F10C2CDF5819003CA0AE /* XCRemoteSwiftPackageReference "EnvironmentOverrides" */,
 				4819F1152CDF6DD4003CA0AE /* XCRemoteSwiftPackageReference "ViewInspector" */,
+				4819F1182CDF6DD5003CA0AE /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 488734182CDCA2DB00B400A3 /* Products */;
@@ -496,6 +500,14 @@
 				minimumVersion = 0.10.0;
 			};
 		};
+		4819F1182CDF6DD5003CA0AE /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -508,6 +520,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4819F1152CDF6DD4003CA0AE /* XCRemoteSwiftPackageReference "ViewInspector" */;
 			productName = ViewInspector;
+		};
+		4819F1192CDF6DD6003CA0AE /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4819F1182CDF6DD5003CA0AE /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

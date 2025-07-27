@@ -5,22 +5,29 @@ struct SupabaseDogsRepository: DogsRepository {
     let client: SupabaseClient
     
     func getDogs() async throws -> [Dog] {
-        let response = try await client.from("dogs")
-            .select()
-            .execute()
-        
-        let dogs = try response.decode(to: [Dog].self)
-        return dogs
+        do {
+            let dogDTOs: [DogDTO] = try await client.from("dogs")
+                .select()
+                .execute()
+                .value
+            
+            print("Fetched \(dogDTOs.count) dogs")
+            
+            return dogDTOs.map { $0.toDog() }
+        } catch {
+            print("Error fetching dogs: \(error)")
+            throw error
+        }
     }
     
     func getDog(by id: String) async throws -> Dog {
-        let response = try await client.from("dogs")
+        let dogDTO: DogDTO = try await client.from("dogs")
             .select()
             .eq("id", value: id)
             .single()
             .execute()
+            .value
         
-        let dog = try response.decode(to: Dog.self)
-        return dog
+        return dogDTO.toDog()
     }
 }

@@ -37,9 +37,8 @@ struct RealMatchesInteractor: MatchesInteractor {
                 let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
                 let allMatches = try await matchesRepository.getMatches(for: currentAdopterID)
                 
-                let matchesList = allMatches
                 await MainActor.run {
-                    matches.wrappedValue = .loaded(matchesList)
+                    matches.wrappedValue = .loaded(allMatches)
                 }
             } catch {
                 await MainActor.run {

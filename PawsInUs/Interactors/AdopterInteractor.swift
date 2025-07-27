@@ -36,12 +36,10 @@ struct RealAdopterInteractor: AdopterInteractor {
             do {
                 let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
                 let profile = try await adopterRepository.getAdopter(by: currentAdopterID)
-                if let profile = profile {
-                    await MainActor.run {
+                await MainActor.run {
+                    if let profile = profile {
                         adopter.wrappedValue = .loaded(profile)
-                    }
-                } else {
-                    await MainActor.run {
+                    } else {
                         adopter.wrappedValue = .failed(AdopterError.notFound)
                     }
                 }
@@ -82,8 +80,15 @@ struct RealAdopterInteractor: AdopterInteractor {
     }
 }
 
-enum AdopterError: Error {
+enum AdopterError: Error, LocalizedError {
     case notFound
+    
+    var errorDescription: String? {
+        switch self {
+        case .notFound:
+            return "Profile not found. Please sign in or create an account."
+        }
+    }
 }
 
 protocol AdopterRepository {

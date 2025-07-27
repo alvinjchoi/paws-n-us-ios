@@ -5,13 +5,19 @@ struct SupabaseAdopterRepository: AdopterRepository {
     let client: SupabaseClient
     
     func getAdopter(by id: String) async throws -> Adopter? {
-        let response = try await client.from("adopters")
-            .select()
-            .eq("id", value: id)
-            .maybeSingle()
-            .execute()
-        
-        return try response.decode(to: Adopter?.self)
+        do {
+            let adopterDTO: AdopterDTO = try await client.from("adopters")
+                .select()
+                .eq("id", value: id)
+                .single()
+                .execute()
+                .value
+            
+            return adopterDTO.toAdopter()
+        } catch {
+            // If no record found, return nil
+            return nil
+        }
     }
     
     func updatePreferences(adopterID: String, preferences: AdopterPreferences) async throws {

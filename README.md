@@ -1,75 +1,96 @@
-### Articles related to this project
+# Pawsinus 🐕
 
-* [Clean Architecture for SwiftUI](https://nalexn.github.io/clean-architecture-swiftui/?utm_source=nalexn_github)
-* [Programmatic navigation in SwiftUI project](https://nalexn.github.io/swiftui-deep-linking/?utm_source=nalexn_github)
-* [Separation of Concerns in Software Design](https://nalexn.github.io/separation-of-concerns/?utm_source=nalexn_github)
+A Tinder-style iOS app for dog adoption, connecting potential adopters with dogs from Korean animal shelters.
+
+## Features
+
+- **Swipe Interface**: Tinder-like card swiping to browse adoptable dogs
+- **Smart Matching**: Filter by size, age, energy level, and compatibility
+- **Likes Management**: Save and review dogs you're interested in
+- **User Profiles**: Customize preferences and manage your adoption journey
+- **Korean Localization**: Full support for Korean shelters and users
+
+## Architecture
+
+Built with Clean Architecture principles (based on the original [Clean Architecture for SwiftUI](https://nalexn.github.io/clean-architecture-swiftui/) template):
+- **SwiftUI** for modern, declarative UI
+- **SwiftData** for local persistence
+- **Supabase** for backend services
+- **Combine** for reactive programming
+- **iOS 18.0+** minimum deployment target
+
+## Getting Started
+
+### Prerequisites
+
+- Xcode 15+
+- iOS 18.0+ device or simulator
+- Supabase account
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/pawsinus.git
+   cd pawsinus
+   ```
+
+2. Open in Xcode:
+   ```bash
+   open PawsInUs.xcodeproj
+   ```
+
+3. Configure Supabase:
+   - Create a Supabase project
+   - Run the setup script from `docs/sql/setup_database.sql`
+   - Update credentials in `SupabaseConfig.swift`
+
+4. Build and run (⌘R)
+
+## Project Structure
+
+```
+PawsInUs/
+├── Core/               # App lifecycle and state management
+├── DependencyInjection/# DI container and configuration
+├── Interactors/        # Business logic layer
+├── Repositories/       # Data access layer
+│   ├── Models/         # Data models
+│   └── Supabase/       # Backend integration
+├── UI/                 # SwiftUI views
+│   ├── Auth/           # Authentication screens
+│   ├── SwipeView/      # Main swiping interface
+│   ├── Likes/          # Liked dogs view
+│   └── Profile/        # User profile
+└── Utilities/          # Helper classes and extensions
+```
+
+## Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT.md) - TestFlight and App Store deployment
+- [Database Setup](docs/sql/setup_database.sql) - Supabase schema
+- [Supabase Setup](SUPABASE_SETUP.md) - Backend configuration
+
+## Contributing
+
+This project is currently in development. Contributions are welcome!
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Original Clean Architecture template by [Alexey Naumov](https://github.com/nalexn/clean-architecture-swiftui)
+- Dog images from Unsplash
+- Korean animal shelter data based on public information
 
 ---
 
-# Clean Architecture for SwiftUI + Combine
-
-A demo project showcasing the setup of the SwiftUI app with Clean Architecture.
-
-The app uses the [restcountries.com](https://restcountries.com/) REST API to show the list of countries and details about them.
-
-**Check out [mvvm branch](https://github.com/nalexn/clean-architecture-swiftui/tree/mvvm) for the MVVM revision of the same app.**
-
-For the example of handling the **authentication state** in the app, you can refer to my [other tiny project](https://github.com/nalexn/uikit-swiftui) that harnesses the locks and keys principle for solving this problem.
-
-![platforms](https://img.shields.io/badge/platforms-iPhone%20%7C%20iPad%20%7C%20macOS-lightgrey) [![codecov](https://codecov.io/gh/nalexn/clean-architecture-swiftui/branch/master/graph/badge.svg)](https://codecov.io/gh/nalexn/clean-architecture-swiftui) [![codebeat badge](https://codebeat.co/badges/db33561b-0b2b-4ee1-a941-a08efbd0ebd7)](https://codebeat.co/projects/github-com-nalexn-clean-architecture-swiftui-master)
-
-<p align="center">
-  <img src="https://github.com/nalexn/blob_files/blob/master/images/countries_preview.png?raw=true" alt="Diagram"/>
-</p>
-
-## Key features
-* End of 2024 update: the project was fully revamped to use modern iOS stack technologies
-* Decoupled **Presentation**, **Business Logic**, and **Data Access** layers
-* Programmatic navigation. Push notifications with deep link
-* Redux-like centralized `AppState` as the single source of truth
-* Native SwiftUI dependency injection
-* Handling of the system events (such as `didBecomeActive`, `willResignActive`)
-* Full test coverage, including the UI (thanks to the [ViewInspector](https://github.com/nalexn/ViewInspector))
-* Simple yet flexible networking layer built on async - await
-* UI - vanilla **SwiftUI** + **Combine**
-* Data persistence with **SwiftData**
-
-## Architecture overview
-
-<p align="center">
-  <img src="https://github.com/nalexn/blob_files/blob/master/images/swiftui_arc_001.png?raw=true" alt="Diagram"/>
-</p>
-
-### Presentation Layer
-
-**SwiftUI views** that contain no business logic and are a function of the state.
-
-Side effects are triggered by the user's actions (such as a tap on a button) or view lifecycle event `onAppear` and are forwarded to the `Interactors`.
-
-State and business logic layer (`AppState` + `Interactors`) are natively injected into the view hierarchy with `@Environment`.
-
-### Business Logic Layer
-
-Business Logic Layer is represented by `Interactors`. 
-
-Interactors receive requests to perform work, such as obtaining data from an external source or making computations, but they never return data back directly.
-
-Instead, they forward the result to the `AppState` or to a `Binding`. The latter is used when the result of work (the data) is used locally by one View and does not belong to the `AppState`.
-
-[Previously](https://github.com/nalexn/clean-architecture-swiftui/releases/tag/1.0), this app did not use CoreData for persistence, and all loaded data were stored in the `AppState`.
-
-With the persistence layer in place we have a choice - either to load the DB content onto the `AppState`, or serve the data from `Interactors` on an on-demand basis through `Binding`.
-
-The first option suits best when you don't have a lot of data, for example, when you just store the last used login email in the `UserDefaults`. Then, the corresponding string value can just be loaded onto the `AppState` at launch and updated by the `Interactor` when the user changes the input.
-
-The second option is better when you have massive amounts of data and introduce a fully-fledged database for storing it locally.
-
-### Data Access Layer
-
-Data Access Layer is represented by `Repositories`.
-
-Repositories provide asynchronous API (`Publisher` from Combine) for making [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations on the backend or a local database. They don't contain business logic, neither do they mutate the `AppState`. Repositories are accessible and used only by the Interactors.
-
----
-
-[![Twitter](https://img.shields.io/badge/twitter-nallexn-blue)](https://twitter.com/nallexn) [![blog](https://img.shields.io/badge/blog-github-blue)](https://nalexn.github.io/?utm_source=nalexn_github)
+**Note**: This is a demonstration project. For production use, ensure you have proper agreements with animal shelters and comply with all relevant regulations.

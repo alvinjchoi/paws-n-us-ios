@@ -109,20 +109,45 @@ final class Dog: Codable {
 }
 
 enum DogSize: String, Codable, CaseIterable {
-    case small = "Small"
-    case medium = "Medium"
-    case large = "Large"
-    case extraLarge = "Extra Large"
+    case small = "small"
+    case medium = "medium"
+    case large = "large"
+    case extraLarge = "extraLarge"
+    
+    var displayName: String {
+        switch self {
+        case .small: return "Small"
+        case .medium: return "Medium"
+        case .large: return "Large"
+        case .extraLarge: return "Extra Large"
+        }
+    }
 }
 
 enum DogGender: String, Codable, CaseIterable {
-    case male = "Male"
-    case female = "Female"
+    case male = "male"
+    case female = "female"
+    
+    var displayName: String {
+        switch self {
+        case .male: return "Male"
+        case .female: return "Female"
+        }
+    }
 }
 
 enum EnergyLevel: String, Codable, CaseIterable {
-    case low = "Low"
-    case medium = "Medium"
-    case high = "High"
-    case veryHigh = "Very High"
+    case low = "low"
+    case medium = "medium"
+    case high = "high"
+    case veryHigh = "veryHigh"
+    
+    var displayName: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        case .veryHigh: return "Very High"
+        }
+    }
 }

@@ -11,16 +11,15 @@ struct SupabaseAuthRepository: AuthRepository {
             data: ["name": AnyJSON(name)]
         )
         
-        guard let userId = authResponse.user?.id.uuidString else {
-            throw AuthError.signUpFailed
-        }
+        let userId = authResponse.user.id.uuidString
         
-        let adopter = Adopter(
+        let adopterDTO = AdopterDTO(
             id: userId,
             name: name,
             email: email,
             location: "",
             bio: "",
+            profileImageURL: nil,
             preferences: AdopterPreferences(
                 preferredSizes: [],
                 preferredAgeRange: 0...20,
@@ -31,14 +30,15 @@ struct SupabaseAuthRepository: AuthRepository {
             ),
             likedDogIDs: [],
             dislikedDogIDs: [],
-            matchedDogIDs: []
+            matchedDogIDs: [],
+            registrationDate: Date()
         )
         
         try await client.from("adopters")
-            .insert(adopter)
+            .insert(adopterDTO)
             .execute()
         
-        return adopter
+        return adopterDTO.toAdopter()
     }
     
     func signIn(email: String, password: String) async throws -> Adopter {
@@ -51,14 +51,14 @@ struct SupabaseAuthRepository: AuthRepository {
             throw AuthError.signInFailed
         }
         
-        let response = try await client.from("adopters")
+        let adopterDTO: AdopterDTO = try await client.from("adopters")
             .select()
             .eq("id", value: userId)
             .single()
             .execute()
+            .value
         
-        let adopter = try response.decode(to: Adopter.self)
-        return adopter
+        return adopterDTO.toAdopter()
     }
 }
 
