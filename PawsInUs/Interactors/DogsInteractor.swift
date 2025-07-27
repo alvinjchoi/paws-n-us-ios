@@ -32,21 +32,28 @@ struct RealDogsInteractor: DogsInteractor {
     let matchingRepository: MatchingRepository
     
     func loadDogs(dogs: Binding<Loadable<[Dog]>>) {
+        print("DogsInteractor.loadDogs called")
         let cancelBag = CancelBag()
         dogs.wrappedValue = .isLoading(last: nil, cancelBag: cancelBag)
         
+        // Get the seen dog IDs before starting the task
+        let seenDogIDs = appState.value.userData.likedDogIDs.union(appState.value.userData.dislikedDogIDs)
+        print("Seen dog IDs: \(seenDogIDs)")
+        
         let task = Task {
             do {
-                _ = appState.value.userData.currentAdopterID ?? ""
-                let seenDogIDs = appState.value.userData.likedDogIDs.union(appState.value.userData.dislikedDogIDs)
-                
+                print("About to call dogsRepository.getDogs()...")
                 let allDogs = try await dogsRepository.getDogs()
+                print("Got \(allDogs.count) dogs from repository")
+                
                 let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
+                print("Filtered to \(unseenDogs.count) unseen dogs")
                 
                 await MainActor.run {
                     dogs.wrappedValue = .loaded(unseenDogs)
                 }
             } catch {
+                print("Failed to load dogs: \(error)")
                 await MainActor.run {
                     dogs.wrappedValue = .failed(error)
                 }

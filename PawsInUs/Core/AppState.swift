@@ -32,7 +32,7 @@ extension AppState {
 
 extension AppState {
     struct UserData: Equatable {
-        var currentAdopterID: String? = "test-user-123" // TODO: Remove this test ID
+        var currentAdopterID: String? = "550e8400-e29b-41d4-a716-446655440100" // TODO: Remove this test ID
         var isAuthenticated: Bool = true // TODO: Set to false for production
         var likedDogIDs: Set<String> = []
         var dislikedDogIDs: Set<String> = []
@@ -42,7 +42,7 @@ extension AppState {
 
 extension AppState {
     struct System: Equatable {
-        var isActive: Bool = false
+        var isActive: Bool = true // Start as active
         var keyboardHeight: CGFloat = 0
     }
 }

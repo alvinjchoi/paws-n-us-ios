@@ -6,16 +6,27 @@ struct SupabaseDogsRepository: DogsRepository {
     
     func getDogs() async throws -> [Dog] {
         do {
+            print("Attempting to fetch dogs from Supabase...")
+            
             let dogDTOs: [DogDTO] = try await client.from("dogs")
                 .select()
                 .execute()
                 .value
             
-            print("Fetched \(dogDTOs.count) dogs")
+            print("Successfully fetched \(dogDTOs.count) dogs from Supabase")
             
-            return dogDTOs.map { $0.toDog() }
+            let dogs = dogDTOs.map { $0.toDog() }
+            if !dogs.isEmpty {
+                print("First dog: \(dogs[0].name) - \(dogs[0].breed)")
+            }
+            
+            return dogs
         } catch {
-            print("Error fetching dogs: \(error)")
+            print("Error fetching dogs from Supabase: \(error)")
+            print("Error details: \(error.localizedDescription)")
+            if let postgrestError = error as? PostgrestError {
+                print("Postgrest error: \(postgrestError)")
+            }
             throw error
         }
     }

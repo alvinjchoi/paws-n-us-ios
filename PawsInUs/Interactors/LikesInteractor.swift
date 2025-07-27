@@ -31,9 +31,10 @@ struct RealLikesInteractor: LikesInteractor {
         let cancelBag = CancelBag()
         dogs.wrappedValue = .isLoading(last: nil, cancelBag: cancelBag)
         
+        // Get liked dog IDs before starting the task
+        let likedDogIDs = appState.value.userData.likedDogIDs
+        
         let task = Task {
-            let likedDogIDs = appState.value.userData.likedDogIDs
-            let dogsRepository = self.dogsRepository
             var dogsList: [Dog] = []
             
             // Fetch each liked dog
@@ -48,13 +49,10 @@ struct RealLikesInteractor: LikesInteractor {
             }
             
             // Sort by most recently liked (reverse order since we append to the set)
-            dogsList.reverse()
-            
-            // Capture the final list
-            let finalDogs = dogsList
+            let finalDogsList = dogsList.reversed()
             
             await MainActor.run {
-                dogs.wrappedValue = .loaded(finalDogs)
+                dogs.wrappedValue = .loaded(Array(finalDogsList))
             }
         }
         task.store(in: cancelBag)

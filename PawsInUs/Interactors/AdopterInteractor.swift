@@ -32,14 +32,19 @@ struct RealAdopterInteractor: AdopterInteractor {
         let cancelBag = CancelBag()
         adopter.wrappedValue = .isLoading(last: nil, cancelBag: cancelBag)
         
+        // Get adopter ID before starting the task
+        let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
+        
         let task = Task {
             do {
-                let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
                 let profile = try await adopterRepository.getAdopter(by: currentAdopterID)
-                await MainActor.run {
-                    if let profile = profile {
+                
+                if let profile = profile {
+                    await MainActor.run {
                         adopter.wrappedValue = .loaded(profile)
-                    } else {
+                    }
+                } else {
+                    await MainActor.run {
                         adopter.wrappedValue = .failed(AdopterError.notFound)
                     }
                 }

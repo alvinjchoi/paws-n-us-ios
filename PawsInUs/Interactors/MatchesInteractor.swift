@@ -32,9 +32,11 @@ struct RealMatchesInteractor: MatchesInteractor {
         let cancelBag = CancelBag()
         matches.wrappedValue = .isLoading(last: nil, cancelBag: cancelBag)
         
+        // Get adopter ID before starting the task
+        let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
+        
         let task = Task {
             do {
-                let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
                 let allMatches = try await matchesRepository.getMatches(for: currentAdopterID)
                 
                 await MainActor.run {
