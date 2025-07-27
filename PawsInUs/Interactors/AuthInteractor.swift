@@ -13,7 +13,6 @@ protocol AuthInteractor: Sendable {
     func signUp(email: String, password: String, name: String) async throws
     func signIn(email: String, password: String) async throws
     func signInWithOTP(email: String) async throws
-    func verifyOTP(email: String, token: String) async throws
     func signOut() async throws
     func getCurrentUser() async throws -> User?
     func signInWithApple() async throws
@@ -80,43 +79,11 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
         // Note: Supabase sends magic links for email auth by default
         // To display it as an OTP code, modify the email template in Supabase dashboard
         try await supabaseClient.auth.signInWithOTP(
-            email: email
+            email: email,
+            redirectTo: URL(string: "io.pawsinus://login-callback")
         )
     }
     
-    func verifyOTP(email: String, token: String) async throws {
-        // For email magic links displayed as OTP codes
-        // We need to construct and process the magic link URL
-        let tokenHash = token.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? token
-        let typeParam = "email"
-        
-        // Create the verification URL that would normally be in the magic link
-        var components = URLComponents()
-        components.scheme = "io.pawsinus"  // Your app's URL scheme
-        components.host = "login-callback"
-        components.queryItems = [
-            URLQueryItem(name: "token_hash", value: tokenHash),
-            URLQueryItem(name: "type", value: typeParam)
-        ]
-        
-        guard let url = components.url else {
-            throw AuthError.invalidToken
-        }
-        
-        // Process the magic link URL
-        try await supabaseClient.auth.session(from: url)
-        
-        // Get the authenticated user
-        guard let user = supabaseClient.auth.currentUser else {
-            throw AuthError.invalidToken
-        }
-        
-        // Update app state
-        await MainActor.run { [appState] in
-            appState[\.userData.currentAdopterID] = user.id.uuidString
-            appState[\.userData.isAuthenticated] = true
-        }
-    }
     
     func signOut() async throws {
         try await supabaseClient.auth.signOut()

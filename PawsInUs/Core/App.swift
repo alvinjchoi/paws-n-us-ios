@@ -16,6 +16,15 @@ struct MainApp: App {
     var body: some Scene {
         WindowGroup {
             appDelegate.rootView
+                .onOpenURL { url in
+                    Task {
+                        do {
+                            try await SupabaseConfig.client.auth.session(from: url)
+                        } catch {
+                            print("Error handling magic link: \(error)")
+                        }
+                    }
+                }
         }
     }
 }

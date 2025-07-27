@@ -8,6 +8,8 @@
 import Foundation
 import UIKit
 
+#if DEBUG
+
 struct StubDogsRepository: DogsRepository {
     func getDogs() async throws -> [Dog] {
         return MockedData.dogs
@@ -104,3 +106,5 @@ struct StubStorageRepository: StorageRepository {
 enum RepositoryError: Error {
     case notFound
 }
+
+#endif

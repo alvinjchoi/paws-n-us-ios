@@ -42,7 +42,7 @@ struct RealDogsInteractor: DogsInteractor {
         // Use completion-based approach as workaround for broken async/await
         if let supabaseRepo = repository as? SupabaseDogsRepository {
             supabaseRepo.getDogsWithCompletion { result in
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     switch result {
                     case .success(let allDogs):
                         let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }

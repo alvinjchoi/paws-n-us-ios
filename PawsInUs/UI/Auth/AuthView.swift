@@ -175,11 +175,10 @@ struct EmailSignInView: View {
     @Environment(\.injected) private var diContainer
     @Environment(\.dismiss) private var dismiss
     @State private var email = ""
-    @State private var otp = ""
     @State private var isLoading = false
     @State private var showAlert = false
     @State private var alertMessage = ""
-    @State private var showOTPField = false
+    @State private var emailSent = false
     
     var body: some View {
         NavigationStack {
@@ -188,52 +187,39 @@ struct EmailSignInView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .keyboardType(.emailAddress)
                     .textInputAutocapitalization(.never)
-                    .disabled(showOTPField)
+                    .disabled(emailSent)
                     .padding(.horizontal)
                     .padding(.top, 40)
                 
-                if showOTPField {
-                    VStack(alignment: .leading, spacing: 8) {
-                        TextField("인증 코드", text: $otp)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
+                if emailSent {
+                    VStack(spacing: 16) {
+                        Text("이메일을 확인해주세요!")
+                            .font(.headline)
+                        
+                        Text("로그인 링크가 \(email)로 전송되었습니다.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         
-                        Text("이메일에서 링크의 토큰을 복사하세요")
+                        Text("링크를 클릭하면 자동으로 로그인됩니다.")
                             .font(.caption)
-                            .foregroundColor(.gray)
-                            .padding(.horizontal)
+                            .foregroundColor(.secondary)
                     }
+                    .padding()
                     
-                    Button(action: verifyOTP) {
-                        if isLoading {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Text("인증하기")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.orange)
-                    .foregroundColor(.white)
-                    .cornerRadius(25)
-                    .disabled(isLoading || otp.isEmpty)
-                    .padding(.horizontal)
-                    
-                    Button(action: { showOTPField = false; otp = "" }) {
-                        Text("이메일 다시 입력")
-                            .font(.system(size: 14))
-                            .foregroundColor(.gray)
+                    Button(action: { emailSent = false; email = "" }) {
+                        Text("다른 이메일로 시도")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.orange)
                     }
                 } else {
-                    Button(action: sendOTP) {
+                    Button(action: sendMagicLink) {
                         if isLoading {
                             ProgressView()
                                 .tint(.white)
                         } else {
-                            Text("인증 코드 받기")
+                            Text("로그인 링크 받기")
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -256,15 +242,27 @@ struct EmailSignInView: View {
                     }
                 }
             }
-            .alert("인증", isPresented: $showAlert) {
+            .alert("알림", isPresented: $showAlert) {
                 Button("확인", role: .cancel) { }
             } message: {
                 Text(alertMessage)
             }
+            .onOpenURL { url in
+                // Handle the magic link callback
+                Task {
+                    do {
+                        try await diContainer.supabaseClient.auth.session(from: url)
+                        dismiss()
+                    } catch {
+                        alertMessage = "로그인에 실패했습니다. 다시 시도해주세요."
+                        showAlert = true
+                    }
+                }
+            }
         }
     }
     
-    private func sendOTP() {
+    private func sendMagicLink() {
         guard !email.isEmpty else { return }
         
         isLoading = true
@@ -275,37 +273,12 @@ struct EmailSignInView: View {
                 
                 await MainActor.run {
                     isLoading = false
-                    showOTPField = true
-                    alertMessage = "인증 코드가 이메일로 전송되었습니다."
-                    showAlert = true
+                    emailSent = true
                 }
             } catch {
                 await MainActor.run {
                     isLoading = false
                     alertMessage = error.localizedDescription
-                    showAlert = true
-                }
-            }
-        }
-    }
-    
-    private func verifyOTP() {
-        guard !otp.isEmpty else { return }
-        
-        isLoading = true
-        
-        Task {
-            do {
-                try await diContainer.interactors.authInteractor.verifyOTP(email: email, token: otp)
-                
-                await MainActor.run {
-                    isLoading = false
-                    dismiss()
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    alertMessage = "인증 코드가 올바르지 않습니다. 다시 시도해주세요."
                     showAlert = true
                 }
             }

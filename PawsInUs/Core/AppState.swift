@@ -32,8 +32,8 @@ extension AppState {
 
 extension AppState {
     struct UserData: Equatable {
-        var currentAdopterID: String? = "550e8400-e29b-41d4-a716-446655440100" // TODO: Remove this test ID
-        var isAuthenticated: Bool = true // TODO: Set to false for production
+        var currentAdopterID: String? = nil
+        var isAuthenticated: Bool = false
         var likedDogIDs: Set<String> = []
         var dislikedDogIDs: Set<String> = []
         var matchedDogIDs: Set<String> = []

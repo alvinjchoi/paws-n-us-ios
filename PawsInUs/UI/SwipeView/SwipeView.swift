@@ -480,7 +480,7 @@ struct SVGLogoView: UIViewRepresentable {
         webView.scrollView.bounces = false
         
         if let svgPath = Bundle.main.path(forResource: "pawsinus-logo", ofType: "svg"),
-           let svgContent = try? String(contentsOfFile: svgPath) {
+           let svgContent = try? String(contentsOfFile: svgPath, encoding: .utf8) {
             let htmlContent = """
             <!DOCTYPE html>
             <html>

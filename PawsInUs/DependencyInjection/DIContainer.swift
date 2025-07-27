@@ -53,7 +53,8 @@ extension DIContainer {
         }
 
         static var stub: Self {
-            .init(appState: Store(AppState()),
+            #if DEBUG
+            return .init(appState: Store(AppState()),
                   repositories: Repositories(
                       dogsRepository: StubDogsRepository(),
                       matchesRepository: StubMatchesRepository(),
@@ -64,17 +65,26 @@ extension DIContainer {
                       images: StubImagesRepository(),
                       pushToken: StubPushTokenRepository()
                   ))
+            #else
+            fatalError("Stub interactors should only be used in DEBUG mode")
+            #endif
         }
     }
 }
 
 extension EnvironmentValues {
-    @Entry var injected: DIContainer = DIContainer(
-        appState: AppState(), 
-        interactors: .stub,
-        modelContainer: .stub,
-        supabaseClient: SupabaseConfig.client
-    )
+    @Entry var injected: DIContainer = {
+        #if DEBUG
+        return DIContainer(
+            appState: AppState(), 
+            interactors: .stub,
+            modelContainer: .stub,
+            supabaseClient: SupabaseConfig.client
+        )
+        #else
+        fatalError("DIContainer must be injected via .inject() modifier")
+        #endif
+    }()
 }
 
 extension View {
