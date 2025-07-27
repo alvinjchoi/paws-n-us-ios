@@ -29,34 +29,30 @@ struct RealMatchesInteractor: MatchesInteractor {
     let matchesRepository: MatchesRepository
     
     func loadMatches(matches: Binding<Loadable<[Match]>>) {
-        let cancelBag = CancelBag()
-        matches.wrappedValue = .isLoading(last: nil, cancelBag: cancelBag)
+        matches.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
-        // Get adopter ID before starting the task
+        // Get adopter ID and repository reference before starting the task
         let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
+        let repository = matchesRepository
         
-        let task = Task {
+        Task { @MainActor in
             do {
-                let allMatches = try await matchesRepository.getMatches(for: currentAdopterID)
-                
-                await MainActor.run {
-                    matches.wrappedValue = .loaded(allMatches)
-                }
+                let allMatches = try await repository.getMatches(for: currentAdopterID)
+                matches.wrappedValue = .loaded(allMatches)
             } catch {
-                await MainActor.run {
-                    matches.wrappedValue = .failed(error)
-                }
+                matches.wrappedValue = .failed(error)
             }
         }
-        task.store(in: cancelBag)
     }
     
     func sendMessage(matchID: String, message: String) {
+        let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
+        let repository = matchesRepository
+        
         Task {
             do {
-                let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
                 let newMessage = Message(senderID: currentAdopterID, content: message)
-                try await matchesRepository.sendMessage(matchID: matchID, message: newMessage)
+                try await repository.sendMessage(matchID: matchID, message: newMessage)
             } catch {
                 print("Error sending message: \(error)")
             }
@@ -64,9 +60,11 @@ struct RealMatchesInteractor: MatchesInteractor {
     }
     
     func updateMatchStatus(matchID: String, status: MatchStatus) {
+        let repository = matchesRepository
+        
         Task {
             do {
-                try await matchesRepository.updateMatchStatus(matchID: matchID, status: status)
+                try await repository.updateMatchStatus(matchID: matchID, status: status)
             } catch {
                 print("Error updating match status: \(error)")
             }
@@ -74,7 +72,7 @@ struct RealMatchesInteractor: MatchesInteractor {
     }
 }
 
-protocol MatchesRepository {
+protocol MatchesRepository: Sendable {
     func getMatches(for adopterID: String) async throws -> [Match]
     func sendMessage(matchID: String, message: Message) async throws
     func updateMatchStatus(matchID: String, status: MatchStatus) async throws

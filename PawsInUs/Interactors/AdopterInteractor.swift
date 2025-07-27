@@ -29,39 +29,34 @@ struct RealAdopterInteractor: AdopterInteractor {
     let adopterRepository: AdopterRepository
     
     func loadProfile(adopter: Binding<Loadable<Adopter>>) {
-        let cancelBag = CancelBag()
-        adopter.wrappedValue = .isLoading(last: nil, cancelBag: cancelBag)
+        adopter.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
-        // Get adopter ID before starting the task
+        // Get adopter ID and repository reference before starting the task
         let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
+        let repository = adopterRepository
         
-        let task = Task {
+        Task { @MainActor in
             do {
-                let profile = try await adopterRepository.getAdopter(by: currentAdopterID)
+                let profile = try await repository.getAdopter(by: currentAdopterID)
                 
                 if let profile = profile {
-                    await MainActor.run {
-                        adopter.wrappedValue = .loaded(profile)
-                    }
+                    adopter.wrappedValue = .loaded(profile)
                 } else {
-                    await MainActor.run {
-                        adopter.wrappedValue = .failed(AdopterError.notFound)
-                    }
+                    adopter.wrappedValue = .failed(AdopterError.notFound)
                 }
             } catch {
-                await MainActor.run {
-                    adopter.wrappedValue = .failed(error)
-                }
+                adopter.wrappedValue = .failed(error)
             }
         }
-        task.store(in: cancelBag)
     }
     
     func updatePreferences(_ preferences: AdopterPreferences) {
+        let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
+        let repository = adopterRepository
+        
         Task {
             do {
-                let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
-                try await adopterRepository.updatePreferences(adopterID: currentAdopterID, preferences: preferences)
+                try await repository.updatePreferences(adopterID: currentAdopterID, preferences: preferences)
             } catch {
                 print("Error updating preferences: \(error)")
             }
@@ -69,10 +64,12 @@ struct RealAdopterInteractor: AdopterInteractor {
     }
     
     func updateProfile(name: String, bio: String, location: String) {
+        let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
+        let repository = adopterRepository
+        
         Task {
             do {
-                let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
-                try await adopterRepository.updateProfile(
+                try await repository.updateProfile(
                     adopterID: currentAdopterID,
                     name: name,
                     bio: bio,
@@ -96,7 +93,7 @@ enum AdopterError: Error, LocalizedError {
     }
 }
 
-protocol AdopterRepository {
+protocol AdopterRepository: Sendable {
     func getAdopter(by id: String) async throws -> Adopter?
     func updatePreferences(adopterID: String, preferences: AdopterPreferences) async throws
     func updateProfile(adopterID: String, name: String, bio: String, location: String) async throws
