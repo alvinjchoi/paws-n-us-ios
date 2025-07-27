@@ -34,27 +34,17 @@ struct RealDogsInteractor: DogsInteractor {
     
     @MainActor
     func loadDogs(dogs: Binding<Loadable<[Dog]>>) {
-        print("DogsInteractor.loadDogs called")
         dogs.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
-        // Get the seen dog IDs before starting the task
         let seenDogIDs = appState.value.userData.likedDogIDs.union(appState.value.userData.dislikedDogIDs)
-        print("Seen dog IDs: \(seenDogIDs)")
+        let repository = dogsRepository
         
-        // Now we can use proper async/await with Swift 6!
         Task {
             do {
-                print("Loading dogs from repository...")
-                let allDogs = try await dogsRepository.getDogs()
-                print("Got \(allDogs.count) dogs from repository")
-                
+                let allDogs = try await repository.getDogs()
                 let unseenDogs = allDogs.filter { !seenDogIDs.contains($0.id) }
-                print("Filtered to \(unseenDogs.count) unseen dogs")
-                
                 dogs.wrappedValue = .loaded(unseenDogs)
-                print("Dogs loaded successfully")
             } catch {
-                print("Failed to load dogs: \(error)")
                 dogs.wrappedValue = .failed(error)
             }
         }
@@ -71,13 +61,11 @@ struct RealDogsInteractor: DogsInteractor {
         Task {
             do {
                 if try await repository.checkForMatch(adopterID: currentAdopterID, dogID: dogID) != nil {
-                    _ = await MainActor.run {
-                        appState[\.userData.matchedDogIDs].insert(dogID)
-                    }
+                    appState[\.userData.matchedDogIDs].insert(dogID)
                     Self.showMatchNotification(dog: dog)
                 }
             } catch {
-                print("Error checking for match: \(error)")
+                // Silently handle errors
             }
         }
     }
@@ -90,13 +78,12 @@ struct RealDogsInteractor: DogsInteractor {
         do {
             return try await dogsRepository.getDog(by: id)
         } catch {
-            print("Error fetching dog: \(error)")
             return nil
         }
     }
     
     private static func showMatchNotification(dog: Dog) {
-        print("It's a match with \(dog.name)!")
+        // TODO: Implement actual notification
     }
 }
 

@@ -94,6 +94,21 @@ enum EnergyLevel: String, Codable, CaseIterable, Sendable {
     case high = "high"
     case veryHigh = "veryHigh"
     
+    // Custom decoding to handle "veryHigh" from API
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        
+        switch value {
+        case "low": self = .low
+        case "medium": self = .medium
+        case "high": self = .high
+        case "veryHigh", "very_high": self = .veryHigh
+        default:
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid energy level: \(value)")
+        }
+    }
+    
     var displayName: String {
         switch self {
         case .low: return "Low"

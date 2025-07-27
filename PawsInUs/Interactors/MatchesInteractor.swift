@@ -55,7 +55,7 @@ struct RealMatchesInteractor: MatchesInteractor {
                 let newMessage = Message(senderID: currentAdopterID, content: message)
                 try await repository.sendMessage(matchID: matchID, message: newMessage)
             } catch {
-                print("Error sending message: \(error)")
+                // Error sending message
             }
         }
     }
@@ -67,7 +67,7 @@ struct RealMatchesInteractor: MatchesInteractor {
             do {
                 try await repository.updateMatchStatus(matchID: matchID, status: status)
             } catch {
-                print("Error updating match status: \(error)")
+                // Error updating match status
             }
         }
     }

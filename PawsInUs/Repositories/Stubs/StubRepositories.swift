@@ -27,11 +27,9 @@ struct StubMatchesRepository: MatchesRepository {
     }
     
     func sendMessage(matchID: String, message: Message) async throws {
-        print("Stub: Message sent to match \(matchID)")
     }
     
     func updateMatchStatus(matchID: String, status: MatchStatus) async throws {
-        print("Stub: Updated match \(matchID) status to \(status)")
     }
 }
 
@@ -47,11 +45,9 @@ struct StubAdopterRepository: AdopterRepository {
     }
     
     func updatePreferences(adopterID: String, preferences: AdopterPreferences) async throws {
-        print("Stub: Updated preferences for adopter \(adopterID)")
     }
     
     func updateProfile(adopterID: String, name: String, bio: String, location: String) async throws {
-        print("Stub: Updated profile for adopter \(adopterID)")
     }
 }
 
@@ -69,7 +65,6 @@ struct StubPushTokenRepository: PushTokenWebRepository {
     let baseURL: String = ""
     
     func register(devicePushToken: Data) async throws {
-        print("Stub: Push token registered")
     }
 }
 
@@ -89,7 +84,6 @@ struct StubAuthRepository: AuthRepository {
 
 struct StubStorageRepository: StorageRepository {
     func uploadImage(bucket: String, path: String, data: Data) async throws -> String {
-        print("Stub: Uploaded image to \(bucket)/\(path)")
         return "https://example.com/\(bucket)/\(path)"
     }
     
@@ -98,7 +92,6 @@ struct StubStorageRepository: StorageRepository {
     }
     
     func deleteImage(bucket: String, path: String) async throws {
-        print("Stub: Deleted image from \(bucket)/\(path)")
     }
     
     func listImages(bucket: String, folder: String) async throws -> [String] {

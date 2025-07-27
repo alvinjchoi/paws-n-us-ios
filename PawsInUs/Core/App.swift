@@ -65,7 +65,6 @@ struct RootView: View {
             }
         }
         .onAppear {
-            print("RootView appeared - selected tab: \(diContainer.appState.value.routing.selectedTab)")
         }
     }
 }

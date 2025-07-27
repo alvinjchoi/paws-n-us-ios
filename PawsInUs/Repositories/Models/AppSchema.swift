@@ -6,6 +6,7 @@
 //  Copyright © 2024 Alexey Naumov. All rights reserved.
 //
 
+import Foundation
 import SwiftData
 
 typealias DBModel = SchemaV1
@@ -14,8 +15,18 @@ enum SchemaV1: VersionedSchema {
     nonisolated(unsafe) static var versionIdentifier = Schema.Version(1, 0, 0)
     
     static var models: [any PersistentModel.Type] {
-        [] // Empty - we're using Supabase for all data storage
+        // We need at least one model for SwiftData to work properly
+        // This is a dummy model that won't be used
+        [DummyModel.self]
     }
+}
+
+// Dummy model to satisfy SwiftData requirements
+@Model
+final class DummyModel {
+    var id: String = UUID().uuidString
+    
+    init() {}
 }
 
 extension Schema {

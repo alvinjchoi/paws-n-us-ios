@@ -98,9 +98,9 @@ extension AppEnvironment {
 
     private static func configuredModelContainer() -> ModelContainer {
         do {
-            return try ModelContainer.appModelContainer()
+            let container = try ModelContainer.appModelContainer()
+            return container
         } catch {
-            // Log the error
             return ModelContainer.stub
         }
     }

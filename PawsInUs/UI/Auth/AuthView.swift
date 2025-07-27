@@ -304,15 +304,21 @@ struct EmailSignUpView: View {
         }
     }
     
+    @MainActor
     private func handleSignUp() {
         isLoading = true
         
+        let authInteractor = diContainer.interactors.authInteractor
+        let emailValue = email
+        let passwordValue = password
+        let nameValue = name
+        
         Task {
             do {
-                try await diContainer.interactors.authInteractor.signUp(
-                    email: email,
-                    password: password,
-                    name: name
+                try await authInteractor.signUp(
+                    email: emailValue,
+                    password: passwordValue,
+                    name: nameValue
                 )
             } catch {
                 await MainActor.run {

@@ -23,7 +23,6 @@ struct SwipeView: View {
     private let rotationMultiplier: Double = 0.03
     
     var body: some View {
-        let _ = print("SwipeView body called")
         ZStack {
             Color(.systemGray6)
                 .ignoresSafeArea()
@@ -38,11 +37,9 @@ struct SwipeView: View {
             }
         }
         .onAppear {
-            print("SwipeView onAppear called")
             shouldLoad = true
         }
         .onChange(of: shouldLoad) { oldValue, newValue in
-            print("shouldLoad changed from \(oldValue) to: \(newValue)")
             if newValue {
                 loadDogs()
                 shouldLoad = false
@@ -86,7 +83,6 @@ struct SwipeView: View {
     
     @ViewBuilder
     private var content: some View {
-        let _ = print("Content view rendering, dogs state: \(dogs)")
         ZStack {
             // Background to maintain layout
             Color.clear
@@ -94,21 +90,16 @@ struct SwipeView: View {
             
             switch dogs {
             case .notRequested:
-                let _ = print("Dogs state: notRequested")
                 ProgressView()
             case .isLoading:
-                let _ = print("Dogs state: isLoading")
                 ProgressView()
             case .loaded(let dogsArray):
-                let _ = print("Dogs state: loaded with \(dogsArray.count) dogs")
                 if dogsArray.isEmpty {
                     emptyView
                 } else {
-                    let _ = print("Displaying \(dogsArray.count) dogs, currentIndex: \(currentIndex)")
                     swipeStack(dogs: dogsArray)
                 }
             case .failed(let error):
-                let _ = print("Dogs state: failed with error: \(error)")
                 ErrorView(error: error, retryAction: loadDogs)
             }
         }
@@ -309,8 +300,6 @@ struct SwipeView: View {
     }
     
     private func loadDogs() {
-        print("loadDogs called")
-        // Use the interactor again
         diContainer.interactors.dogsInteractor.loadDogs(dogs: $dogs)
     }
 }

@@ -58,7 +58,7 @@ struct RealAdopterInteractor: AdopterInteractor {
             do {
                 try await repository.updatePreferences(adopterID: currentAdopterID, preferences: preferences)
             } catch {
-                print("Error updating preferences: \(error)")
+                // Error updating preferences
             }
         }
     }
@@ -76,7 +76,7 @@ struct RealAdopterInteractor: AdopterInteractor {
                     location: location
                 )
             } catch {
-                print("Error updating profile: \(error)")
+                // Error updating profile
             }
         }
     }

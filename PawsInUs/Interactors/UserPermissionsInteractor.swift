@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import UserNotifications
+@preconcurrency import UserNotifications
 
 enum Permission {
     case pushNotifications
@@ -27,16 +27,16 @@ protocol UserPermissionsInteractor: AnyObject {
     @MainActor func request(permission: Permission)
 }
 
-protocol SystemNotificationsSettings: Sendable {
+protocol SystemNotificationsSettings {
     var authorizationStatus: UNAuthorizationStatus { get }
 }
 
-protocol SystemNotificationsCenter: Sendable {
+protocol SystemNotificationsCenter {
     func currentSettings() async -> any SystemNotificationsSettings
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
 }
 
-extension UNNotificationSettings: SystemNotificationsSettings, @unchecked Sendable { }
+extension UNNotificationSettings: SystemNotificationsSettings { }
 extension UNUserNotificationCenter: SystemNotificationsCenter {
     func currentSettings() async -> any SystemNotificationsSettings {
         return await notificationSettings()
@@ -106,14 +106,13 @@ extension UNAuthorizationStatus {
 private extension RealUserPermissionsInteractor {
 
     func pushNotificationsPermissionStatus() async -> Permission.Status {
-        return await notificationCenter
-            .currentSettings()
+        return await UNUserNotificationCenter.current()
+            .notificationSettings()
             .authorizationStatus.map
     }
 
     func requestPushNotificationsPermission() async {
-        let center = notificationCenter
-        let isGranted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+        let isGranted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])) ?? false
         appState[\.permissions.push] = isGranted ? .granted : .denied
     }
 }
