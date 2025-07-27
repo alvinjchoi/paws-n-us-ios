@@ -354,6 +354,7 @@
 				DEVELOPMENT_TEAM = 9DWYL25EC4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleURLTypes = "(
 					{
 						CFBundleURLName = \"io.pawsinus\";
@@ -398,6 +399,7 @@
 				DEVELOPMENT_TEAM = 9DWYL25EC4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_CFBundleURLTypes = "(
 					{
 						CFBundleURLName = \"io.pawsinus\";

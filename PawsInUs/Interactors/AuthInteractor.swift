@@ -75,10 +75,11 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
     }
     
     func signInWithOTP(email: String) async throws {
-        // Send magic link to email with web redirect
+        // Send magic link to email with direct app redirect
+        // Using io.pawsinus to match Xcode URL scheme configuration
         try await supabaseClient.auth.signInWithOTP(
             email: email,
-            redirectTo: URL(string: "https://pawsnus.com/auth/callback")
+            redirectTo: URL(string: "io.pawsinus://login-callback")
         )
     }
     
