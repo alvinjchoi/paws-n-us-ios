@@ -48,7 +48,7 @@ struct SwipeView: View {
             }
         }
         .sheet(item: $selectedDog) { dog in
-            DogDetailView(dog: dog)
+            DogDetailsView(dog: dog)
         }
     }
     

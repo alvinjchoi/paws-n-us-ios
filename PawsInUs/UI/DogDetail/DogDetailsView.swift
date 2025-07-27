@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DogDetailView: View {
+struct DogDetailsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.injected) private var diContainer
     let dog: Dog
@@ -189,7 +189,7 @@ struct DogDetailView: View {
     private func toggleLike() {
         if isLiked {
             // Unlike
-            diContainer.appState[\.userData.likedDogIDs].removeAll { $0 == dog.id }
+            diContainer.appState[\.userData.likedDogIDs].removeAll(where: { $0 == dog.id })
         } else {
             // Like
             diContainer.interactors.dogsInteractor.likeDog(dog)
@@ -209,7 +209,7 @@ struct DogDetailView: View {
 }
 
 #Preview {
-    DogDetailView(dog: Dog.preview)
+    DogDetailsView(dog: Dog.preview)
         .inject(DIContainer(
             appState: AppState(),
             interactors: .stub,
