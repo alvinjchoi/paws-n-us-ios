@@ -1,68 +1,80 @@
+//
+//  SupabaseAuthRepository.swift
+//  Pawsinus
+//
+//  Created by Assistant on 1/27/25.
+//
+
 import Foundation
 import Supabase
 
 struct SupabaseAuthRepository: AuthRepository {
     let client: SupabaseClient
     
-    func signUp(email: String, password: String, name: String) async throws -> Adopter {
-        let authResponse = try await client.auth.signUp(
-            email: email,
-            password: password,
-            data: ["name": AnyJSON(name)]
-        )
-        
-        let userId = authResponse.user.id.uuidString
-        
-        let adopterDTO = AdopterDTO(
-            id: userId,
+    func createAdopterProfile(userID: String, email: String, name: String) async throws -> Adopter {
+        // Create adopter profile in the database
+        let adopter = Adopter(
+            id: userID,
             name: name,
             email: email,
-            location: "",
-            bio: "",
-            profileImageURL: nil,
-            preferences: AdopterPreferences(
-                preferredSizes: [],
-                preferredAgeRange: 0...20,
-                preferredEnergyLevels: [],
-                hasKids: false,
-                hasOtherPets: false,
-                maxDistance: 50
-            ),
-            likedDogIDs: [],
-            dislikedDogIDs: [],
-            matchedDogIDs: [],
-            registrationDate: Date()
+            location: "Unknown"
         )
         
-        try await client.from("adopters")
-            .insert(adopterDTO)
+        // Insert into profiles table
+        try await client.from("profiles")
+            .insert([
+                "id": userID,
+                "name": name,
+                "email": email,
+                "location": adopter.location,
+                "created_at": ISO8601DateFormatter().string(from: Date())
+            ])
             .execute()
         
-        return adopterDTO.toAdopter()
+        return adopter
     }
     
-    func signIn(email: String, password: String) async throws -> Adopter {
-        try await client.auth.signIn(
-            email: email,
-            password: password
-        )
-        
-        guard let userId = client.auth.currentUser?.id.uuidString else {
-            throw AuthError.signInFailed
-        }
-        
-        let adopterDTO: AdopterDTO = try await client.from("adopters")
+    func getAdopterProfile(userID: String) async throws -> Adopter? {
+        let response = try await client.from("profiles")
             .select()
-            .eq("id", value: userId)
+            .eq("id", value: userID)
             .single()
             .execute()
-            .value
         
-        return adopterDTO.toAdopter()
+        guard let data = response.data else { return nil }
+        
+        let profile = try JSONDecoder().decode(ProfileDTO.self, from: data)
+        return profile.toAdopter()
     }
 }
 
-enum AuthError: Error {
-    case signUpFailed
-    case signInFailed
+struct ProfileDTO: Codable {
+    let id: String
+    let name: String
+    let email: String
+    let bio: String?
+    let location: String?
+    let profileImageURL: String?
+    let createdAt: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case email
+        case bio
+        case location
+        case profileImageURL = "profile_image_url"
+        case createdAt = "created_at"
+    }
+    
+    func toAdopter() -> Adopter {
+        return Adopter(
+            id: id,
+            name: name,
+            email: email,
+            bio: bio ?? "",
+            location: location ?? "Unknown",
+            profileImageURL: profileImageURL
+        )
+    }
 }

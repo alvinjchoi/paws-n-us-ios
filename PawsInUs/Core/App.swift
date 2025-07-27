@@ -33,27 +33,9 @@ struct RootView: View {
     @Environment(\.injected) private var diContainer
     
     var body: some View {
-        TabView {
-            SwipeView()
-                .tabItem {
-                    Label("Discover", systemImage: "pawprint.fill")
-                }
-                .tag(AppState.Tab.discover)
-            
-            LikesView()
-                .tabItem {
-                    Label("Likes", systemImage: "heart.fill")
-                }
-                .tag(AppState.Tab.likes)
-            
-            Text("Profile View")
-                .tabItem {
-                    Label("Profile", systemImage: "person.fill")
-                }
-                .tag(AppState.Tab.profile)
-        }
-        .onAppear {
-            print("🌟 RootView appeared")
-        }
+        AppView()
+            .onAppear {
+                print("🌟 RootView appeared")
+            }
     }
 }

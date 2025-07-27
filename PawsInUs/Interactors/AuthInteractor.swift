@@ -7,11 +7,14 @@
 
 import Foundation
 import SwiftUI
+import Supabase
 
 protocol AuthInteractor {
     func signUp(email: String, password: String, name: String) async throws
     func signIn(email: String, password: String) async throws
-    func signOut()
+    func signInWithOTP(email: String) async throws
+    func signOut() async throws
+    func getCurrentUser() async throws -> User?
     func signInWithApple() async throws
     func signInWithKakao() async throws
 }
@@ -20,7 +23,8 @@ extension DIContainer.Interactors {
     var authInteractor: AuthInteractor {
         RealAuthInteractor(
             appState: appState,
-            authRepository: repositories.authRepository
+            authRepository: repositories.authRepository,
+            supabaseClient: SupabaseConfig.client
         )
     }
 }
@@ -28,48 +32,92 @@ extension DIContainer.Interactors {
 struct RealAuthInteractor: AuthInteractor {
     let appState: Store<AppState>
     let authRepository: AuthRepository
+    let supabaseClient: SupabaseClient
     
     func signUp(email: String, password: String, name: String) async throws {
-        // Create new adopter account
-        let adopter = Adopter(
-            name: name,
+        // Sign up with Supabase
+        let authResponse = try await supabaseClient.auth.signUp(
             email: email,
-            location: "Unknown"
+            password: password,
+            data: ["name": AnyJSON(name)]
         )
         
-        // In a real app, this would call an API
-        appState[\.userData.currentAdopterID] = adopter.id
-        appState[\.userData.isAuthenticated] = true
+        if let user = authResponse.user {
+            // Create adopter profile
+            let adopter = try await authRepository.createAdopterProfile(
+                userID: user.id.uuidString,
+                email: email,
+                name: name
+            )
+            
+            await MainActor.run {
+                appState[\.userData.currentAdopterID] = adopter.id
+                appState[\.userData.isAuthenticated] = true
+            }
+        }
     }
     
     func signIn(email: String, password: String) async throws {
-        // In a real app, this would validate credentials
-        appState[\.userData.currentAdopterID] = "user1"
-        appState[\.userData.isAuthenticated] = true
+        let session = try await supabaseClient.auth.signIn(
+            email: email,
+            password: password
+        )
+        
+        await MainActor.run {
+            appState[\.userData.currentAdopterID] = session.user.id.uuidString
+            appState[\.userData.isAuthenticated] = true
+        }
     }
     
-    func signOut() {
-        appState[\.userData.isAuthenticated] = false
-        appState[\.userData.currentAdopterID] = nil
-        appState[\.userData.likedDogIDs] = []
-        appState[\.userData.dislikedDogIDs] = []
-        appState[\.userData.matchedDogIDs] = []
+    func signInWithOTP(email: String) async throws {
+        try await supabaseClient.auth.signInWithOTP(
+            email: email,
+            redirectTo: URL(string: "io.pawsinus://login-callback")
+        )
+    }
+    
+    func signOut() async throws {
+        try await supabaseClient.auth.signOut()
+        
+        await MainActor.run {
+            appState[\.userData.isAuthenticated] = false
+            appState[\.userData.currentAdopterID] = nil
+            appState[\.userData.likedDogIDs] = []
+            appState[\.userData.dislikedDogIDs] = []
+            appState[\.userData.matchedDogIDs] = []
+        }
+    }
+    
+    func getCurrentUser() async throws -> User? {
+        try await supabaseClient.auth.session?.user
     }
     
     func signInWithApple() async throws {
-        // Implement Apple Sign In
-        appState[\.userData.currentAdopterID] = "apple_user"
-        appState[\.userData.isAuthenticated] = true
+        // TODO: Implement Apple Sign In with Supabase
+        throw AuthError.notImplemented
     }
     
     func signInWithKakao() async throws {
-        // Implement Kakao Sign In
-        appState[\.userData.currentAdopterID] = "kakao_user"
-        appState[\.userData.isAuthenticated] = true
+        // TODO: Implement Kakao Sign In with Supabase
+        throw AuthError.notImplemented
+    }
+}
+
+enum AuthError: LocalizedError {
+    case notImplemented
+    case profileCreationFailed
+    
+    var errorDescription: String? {
+        switch self {
+        case .notImplemented:
+            return "This sign-in method is not yet implemented"
+        case .profileCreationFailed:
+            return "Failed to create user profile"
+        }
     }
 }
 
 protocol AuthRepository {
-    func signUp(email: String, password: String, name: String) async throws -> Adopter
-    func signIn(email: String, password: String) async throws -> Adopter
+    func createAdopterProfile(userID: String, email: String, name: String) async throws -> Adopter
+    func getAdopterProfile(userID: String) async throws -> Adopter?
 }

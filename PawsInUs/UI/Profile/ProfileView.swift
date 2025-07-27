@@ -11,15 +11,10 @@ struct ProfileView: View {
     @Environment(\.injected) private var diContainer
     @State private var adopter: Loadable<Adopter> = .notRequested
     @State private var showingPreferences = false
-    @State private var showingAuth = false
-    
-    var isAuthenticated: Bool {
-        diContainer.appState.value.userData.isAuthenticated
-    }
     
     var body: some View {
-        ScrollView {
-            if isAuthenticated {
+        NavigationStack {
+            ScrollView {
                 switch adopter {
                 case .notRequested:
                     ProgressView()
@@ -31,23 +26,15 @@ struct ProfileView: View {
                 case .failed(let error):
                     ErrorView(error: error, retryAction: loadProfile)
                 }
-            } else {
-                notAuthenticatedView
+            }
+            .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showingPreferences) {
+                PreferencesView()
             }
         }
-        .navigationTitle("Profile")
-        .navigationBarTitleDisplayMode(.large)
-        .sheet(isPresented: $showingPreferences) {
-            PreferencesView()
-        }
-        .sheet(isPresented: $showingAuth) {
-            AuthView()
-                .environment(\.injected, diContainer)
-        }
-        .onReceive(diContainer.appState.updates(for: \.userData.isAuthenticated)) { authenticated in
-            if authenticated {
-                loadProfile()
-            }
+        .task {
+            await loadProfile()
         }
     }
     
@@ -143,7 +130,9 @@ struct ProfileView: View {
                     
                     // Sign Out
                     Button(action: {
-                        diContainer.interactors.authInteractor.signOut()
+                        Task {
+                            try? await diContainer.interactors.authInteractor.signOut()
+                        }
                     }) {
                         HStack {
                             Label("Sign Out", systemImage: "arrow.right.square")
@@ -164,8 +153,36 @@ struct ProfileView: View {
         }
     }
     
-    private func loadProfile() {
-        diContainer.interactors.adopterInteractor.loadProfile(adopter: $adopter)
+    @MainActor
+    private func loadProfile() async {
+        adopter = .isLoading(last: nil, cancelBag: CancelBag())
+        
+        do {
+            // Get current user from Supabase
+            if let user = try await diContainer.interactors.authInteractor.getCurrentUser() {
+                // Load adopter profile
+                if let profile = try await diContainer.supabaseClient.from("profiles")
+                    .select()
+                    .eq("id", value: user.id.uuidString)
+                    .single()
+                    .execute()
+                    .value as? [String: Any] {
+                    
+                    let adopterProfile = Adopter(
+                        id: profile["id"] as? String ?? user.id.uuidString,
+                        name: profile["name"] as? String ?? "Unknown",
+                        email: profile["email"] as? String ?? user.email ?? "",
+                        bio: profile["bio"] as? String ?? "",
+                        location: profile["location"] as? String ?? "Unknown",
+                        profileImageURL: profile["profile_image_url"] as? String
+                    )
+                    
+                    adopter = .loaded(adopterProfile)
+                }
+            }
+        } catch {
+            adopter = .failed(error)
+        }
     }
     
     private var notAuthenticatedView: some View {
