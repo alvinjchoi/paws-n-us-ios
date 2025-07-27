@@ -1,0 +1,520 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "·" : {
+
+    },
+    "%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "%lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
+    },
+    "%lld years old" : {
+
+    },
+    "⚠️ There is an issue with local database" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Es gibt ein Problem mit der lokalen Datenbank"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ ローカルデータベースに問題があります"
+          }
+        }
+      }
+    },
+    "About %@" : {
+
+    },
+    "About Me" : {
+
+    },
+    "Additional Information" : {
+
+    },
+    "Allow Push" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push-Benachrichtigungen erlauben"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プッシュ通知を許可する"
+          }
+        }
+      }
+    },
+    "Already have an account?" : {
+
+    },
+    "An Error Occured" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Fehler ist aufgetreten"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エラーが発生しました"
+          }
+        }
+      }
+    },
+    "Basic Info" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grundlegende Informationen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基本情報"
+          }
+        }
+      }
+    },
+    "Cancel loading" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden abbrechen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み込みをキャンセル"
+          }
+        }
+      }
+    },
+    "Canceled by user" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vom Benutzer abgebrochen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユーザーによってキャンセルされました"
+          }
+        }
+      }
+    },
+    "Capital" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hauptstadt"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "首都"
+          }
+        }
+      }
+    },
+    "Check back later for more furry friends!" : {
+
+    },
+    "Close" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "閉じる"
+          }
+        }
+      }
+    },
+    "Code" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コード"
+          }
+        }
+      }
+    },
+    "Contact %@" : {
+
+    },
+    "Continue with Apple" : {
+
+    },
+    "Continue with Email" : {
+
+    },
+    "Continue with Kakao" : {
+
+    },
+    "Continue with Phone" : {
+
+    },
+    "Countries" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Länder"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "国々"
+          }
+        }
+      }
+    },
+    "Create a password" : {
+
+    },
+    "Create Account" : {
+
+    },
+    "Currencies" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Währungen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通貨"
+          }
+        }
+      }
+    },
+    "Data is missing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten fehlen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "データが不足しています"
+          }
+        }
+      }
+    },
+    "Discover" : {
+
+    },
+    "Done" : {
+
+    },
+    "Edit Profile" : {
+
+    },
+    "Email" : {
+
+    },
+    "Energy level: %@" : {
+
+    },
+    "Enter your details to get started" : {
+
+    },
+    "Enter your email" : {
+
+    },
+    "Enter your name" : {
+
+    },
+    "Error" : {
+
+    },
+    "finding your perfect match" : {
+
+    },
+    "Good with kids" : {
+
+    },
+    "Good with other pets" : {
+
+    },
+    "Help" : {
+
+    },
+    "LIKE" : {
+
+    },
+    "Likes" : {
+
+    },
+    "Matches" : {
+
+    },
+    "Name" : {
+
+    },
+    "Neighboring countries" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachbarländer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隣接する国々"
+          }
+        }
+      }
+    },
+    "No likes yet" : {
+
+    },
+    "No matches found" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Übereinstimmungen gefunden"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一致するものが見つかりません"
+          }
+        }
+      }
+    },
+    "No more dogs to show" : {
+
+    },
+    "NOPE" : {
+
+    },
+    "Not suitable for kids" : {
+
+    },
+    "OK" : {
+
+    },
+    "Password" : {
+
+    },
+    "pawsinus" : {
+
+    },
+    "Personality" : {
+
+    },
+    "Population" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevölkerung"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人口"
+          }
+        }
+      }
+    },
+    "Population %lld" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevölkerung %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "人口 %lld"
+          }
+        }
+      }
+    },
+    "Preferences" : {
+
+    },
+    "Preferences Settings" : {
+
+    },
+    "Prefers to be only pet" : {
+
+    },
+    "Privacy" : {
+
+    },
+    "Profile" : {
+
+    },
+    "Retry" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再試行"
+          }
+        }
+      }
+    },
+    "Running unit tests" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Führen von Unit-Tests"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ユニットテストを実行中"
+          }
+        }
+      }
+    },
+    "Settings" : {
+
+    },
+    "Sign In" : {
+
+    },
+    "Sign in to start" : {
+
+    },
+    "Sign Out" : {
+
+    },
+    "Sign Up" : {
+
+    },
+    "Skip Sign In (Dev)" : {
+
+    },
+    "Start Swiping" : {
+
+    },
+    "Start swiping to find dogs you love!" : {
+
+    },
+    "Statistics" : {
+
+    },
+    "Terms" : {
+
+    },
+    "Unable to load image" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild kann nicht geladen werden"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画像を読み込めません"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

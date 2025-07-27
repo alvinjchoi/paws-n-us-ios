@@ -4,25 +4,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "CountriesSwiftUI",
+    name: "PawsInUs",
     platforms: [
         .iOS(.v18),
         .macOS(.v12)
     ],
     products: [
-        .library(name: "CountriesSwiftUI", targets: ["CountriesSwiftUI"])
+        .library(name: "PawsInUs", targets: ["PawsInUs"])
     ],
     dependencies: [
-        .package(url: "https://github.com/nalexn/EnvironmentOverrides", from: "0.0.4"),
-        .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.0")
+        .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.0"),
+        .package(url: "https://github.com/supabase-community/supabase-swift", from: "2.0.0")
     ],
     targets: [
         .target(
-            name: "CountriesSwiftUI",
+            name: "PawsInUs",
             dependencies: [
-                .product(name: "EnvironmentOverrides", package: "EnvironmentOverrides")
+                .product(name: "Supabase", package: "supabase-swift")
             ],
-            path: "CountriesSwiftUI",
+            path: "PawsInUs",
             exclude: [
                 "Resources/Preview Assets.xcassets",
             ],
@@ -40,7 +40,7 @@ let package = Package(
         .testTarget(
             name: "UnitTests",
             dependencies: [
-                "CountriesSwiftUI",
+                "PawsInUs",
                 .product(name: "ViewInspector", package: "ViewInspector")
             ],
             path: "UnitTests",
