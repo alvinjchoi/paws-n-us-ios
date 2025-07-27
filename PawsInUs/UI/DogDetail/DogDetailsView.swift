@@ -189,7 +189,7 @@ struct DogDetailsView: View {
     private func toggleLike() {
         if isLiked {
             // Unlike
-            diContainer.appState[\.userData.likedDogIDs].removeAll(where: { $0 == dog.id })
+            diContainer.appState[\.userData.likedDogIDs].remove(dog.id)
         } else {
             // Like
             diContainer.interactors.dogsInteractor.likeDog(dog)
