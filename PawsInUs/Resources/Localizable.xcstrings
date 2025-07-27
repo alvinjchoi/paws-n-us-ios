@@ -4,9 +4,6 @@
     "" : {
 
     },
-    "·" : {
-
-    },
     "%@" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -45,6 +42,9 @@
 
     },
     "%lld세" : {
+
+    },
+    "|" : {
 
     },
     "⚠️ There is an issue with local database" : {
@@ -87,9 +87,6 @@
         }
       }
     },
-    "Already have an account?" : {
-
-    },
     "An Error Occured" : {
       "localizations" : {
         "de" : {
@@ -105,6 +102,9 @@
           }
         }
       }
+    },
+    "Apple로 계속하기" : {
+
     },
     "Basic Info" : {
       "extractionState" : "stale",
@@ -216,18 +216,6 @@
     "Continue Browsing" : {
 
     },
-    "Continue with Apple" : {
-
-    },
-    "Continue with Email" : {
-
-    },
-    "Continue with Kakao" : {
-
-    },
-    "Continue with Phone" : {
-
-    },
     "Countries" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -244,12 +232,6 @@
           }
         }
       }
-    },
-    "Create a password" : {
-
-    },
-    "Create Account" : {
-
     },
     "Create an account to save your favorite dogs and connect with shelters" : {
 
@@ -299,37 +281,16 @@
     "Edit Profile" : {
 
     },
-    "Email" : {
-
-    },
     "Energy level: %@" : {
 
     },
-    "Enter your details to get started" : {
-
-    },
-    "Enter your email" : {
-
-    },
-    "Enter your name" : {
-
-    },
-    "Error" : {
-
-    },
     "Error: %@" : {
-
-    },
-    "finding your perfect match" : {
 
     },
     "Good with kids" : {
 
     },
     "Good with other pets" : {
-
-    },
-    "Help" : {
 
     },
     "LIKE" : {
@@ -339,9 +300,6 @@
 
     },
     "Loading liked dogs..." : {
-
-    },
-    "Name" : {
 
     },
     "Neighboring countries" : {
@@ -396,12 +354,6 @@
     "Not suitable for kids" : {
 
     },
-    "OK" : {
-
-    },
-    "Password" : {
-
-    },
     "pawsinus" : {
 
     },
@@ -451,13 +403,7 @@
     "Prefers to be only pet" : {
 
     },
-    "Privacy" : {
-
-    },
     "Profile" : {
-
-    },
-    "Profile View" : {
 
     },
     "Retry" : {
@@ -496,34 +442,19 @@
     "Settings" : {
 
     },
-    "Sign In" : {
-
-    },
     "Sign In / Sign Up" : {
 
     },
     "Sign in to Save Your Likes" : {
 
     },
-    "Sign in to start" : {
-
-    },
     "Sign Out" : {
-
-    },
-    "Sign Up" : {
-
-    },
-    "Skip Sign In (Dev)" : {
 
     },
     "Start Swiping" : {
 
     },
     "Start swiping to find dogs you love!" : {
-
-    },
-    "Terms" : {
 
     },
     "Unable to load image" : {
@@ -542,6 +473,57 @@
           }
         }
       }
+    },
+    "계정 찾기" : {
+
+    },
+    "문의하기" : {
+
+    },
+    "비밀번호 찾기" : {
+
+    },
+    "운명의 반려견을 만나보세요" : {
+
+    },
+    "이메일 다시 입력" : {
+
+    },
+    "이메일 주소" : {
+
+    },
+    "이메일로 계속하기" : {
+
+    },
+    "이메일로 로그인" : {
+
+    },
+    "인증" : {
+
+    },
+    "인증 코드 6자리" : {
+
+    },
+    "인증 코드 받기" : {
+
+    },
+    "인증하기" : {
+
+    },
+    "취소" : {
+
+    },
+    "카카오로 계속하기" : {
+
+    },
+    "포인어스에서" : {
+
+    },
+    "확인" : {
+
+    },
+    "휴대폰 번호로 계속하기" : {
+
     }
   },
   "version" : "1.0"
