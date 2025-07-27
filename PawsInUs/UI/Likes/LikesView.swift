@@ -146,13 +146,10 @@ struct LikesView: View {
     
     private func loadLikedDogs() {
         guard !isCurrentlyLoading else {
-            print("🐕 Already loading, skipping duplicate request")
             return
         }
         
         let currentLikedIDs = Array(diContainer.appState.value.userData.likedDogIDs)
-        print("🐕 Loading liked dogs... Current liked IDs: \(currentLikedIDs)")
-        print("🐕 Current state: \(likedDogs)")
         
         isCurrentlyLoading = true
         diContainer.interactors.likesInteractor.loadLikedDogs(dogs: $likedDogs)
@@ -160,7 +157,6 @@ struct LikesView: View {
         // Reset loading flag after timeout
         DispatchQueue.main.asyncAfter(deadline: .now() + 12) {
             if isCurrentlyLoading {
-                print("🐕 Resetting loading flag after timeout")
                 isCurrentlyLoading = false
             }
         }
@@ -238,7 +234,6 @@ struct LikedDogCard: View {
                     .frame(height: 140)
                     .clipped()
                     .onAppear {
-                        print("🖼️ Loading image URL: \(firstImageURL)")
                     }
                 } else {
                     Rectangle()

@@ -1,5 +1,6 @@
 ## Mac OS
 .DS_Store
+*.DS_Store
 
 ## Xcode workspace
 *.xcworkspace
@@ -57,3 +58,23 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/app_archive
 .env
+
+## Backup files
+*.backup
+*.bak
+*.tmp
+
+## Screenshots and images
+*.png
+*.PNG
+*.jpg
+*.jpeg
+IMG_*
+simulator_screenshot_*
+
+## Xcode project backup files
+*.pbxproj.backup
+*.pbxproj.bak
+
+## Test/Debug files
+push_with_deeplink.apns

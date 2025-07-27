@@ -95,14 +95,7 @@ struct SwipeView: View {
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
         .onAppear {
-            print("🖼️ Header view appeared")
             let logoPath = Bundle.main.path(forResource: "pawsinus-logo", ofType: "svg")
-            print("🖼️ SVG logo path: \(logoPath ?? "not found")")
-            if let path = logoPath {
-                let svgData = try? Data(contentsOf: URL(fileURLWithPath: path))
-                let uiImage = svgData != nil ? UIImage(data: svgData!) : nil
-                print("🖼️ SVG data loaded: \(svgData != nil), UIImage created: \(uiImage != nil)")
-            }
         }
     }
     

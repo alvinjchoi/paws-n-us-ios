@@ -21,7 +21,6 @@ struct MainApp: App {
                         do {
                             try await SupabaseConfig.client.auth.session(from: url)
                         } catch {
-                            print("Error handling magic link: \(error)")
                         }
                     }
                 }
@@ -44,7 +43,6 @@ struct RootView: View {
     var body: some View {
         AppView()
             .onAppear {
-                print("🌟 RootView appeared")
             }
     }
 }
