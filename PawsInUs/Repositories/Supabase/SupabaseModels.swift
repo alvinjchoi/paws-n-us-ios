@@ -81,7 +81,7 @@ struct DogDTO: Codable, Sendable {
     let isGoodWithKids: Bool
     let isGoodWithPets: Bool
     let energyLevel: EnergyLevel
-    let dateAdded: Date
+    let dateAdded: String // Changed to String to match API response
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -103,6 +103,10 @@ struct DogDTO: Codable, Sendable {
     }
     
     func toDog() -> Dog {
+        // Convert string date to Date
+        let dateFormatter = ISO8601DateFormatter()
+        let date = dateFormatter.date(from: dateAdded) ?? Date()
+        
         return Dog(
             id: id,
             name: name,
@@ -119,7 +123,7 @@ struct DogDTO: Codable, Sendable {
             isGoodWithKids: isGoodWithKids,
             isGoodWithPets: isGoodWithPets,
             energyLevel: energyLevel,
-            dateAdded: dateAdded
+            dateAdded: date
         )
     }
 }

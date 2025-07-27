@@ -7,14 +7,14 @@
 
 import Foundation
 
-final class Match: Codable, Equatable {
-    var id: String
-    var dogID: String
-    var adopterID: String
-    var shelterID: String
-    var matchDate: Date
-    var status: MatchStatus
-    var conversation: [Message]
+struct Match: Codable, Equatable, Sendable {
+    let id: String
+    let dogID: String
+    let adopterID: String
+    let shelterID: String
+    let matchDate: Date
+    let status: MatchStatus
+    let conversation: [Message]
     
     init(id: String = UUID().uuidString,
          dogID: String,
@@ -32,34 +32,9 @@ final class Match: Codable, Equatable {
         self.conversation = conversation
     }
     
-    enum CodingKeys: String, CodingKey {
-        case id, dogID, adopterID, shelterID, matchDate, status, conversation
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(String.self, forKey: .id)
-        dogID = try container.decode(String.self, forKey: .dogID)
-        adopterID = try container.decode(String.self, forKey: .adopterID)
-        shelterID = try container.decode(String.self, forKey: .shelterID)
-        matchDate = try container.decode(Date.self, forKey: .matchDate)
-        status = try container.decode(MatchStatus.self, forKey: .status)
-        conversation = try container.decode([Message].self, forKey: .conversation)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(dogID, forKey: .dogID)
-        try container.encode(adopterID, forKey: .adopterID)
-        try container.encode(shelterID, forKey: .shelterID)
-        try container.encode(matchDate, forKey: .matchDate)
-        try container.encode(status, forKey: .status)
-        try container.encode(conversation, forKey: .conversation)
-    }
 }
 
-enum MatchStatus: String, Codable {
+enum MatchStatus: String, Codable, Sendable {
     case matched = "matched"
     case chatting = "chatting"
     case meetingScheduled = "meetingScheduled"
@@ -68,10 +43,10 @@ enum MatchStatus: String, Codable {
 }
 
 struct Message: Codable, Sendable, Equatable {
-    var id: String
-    var senderID: String
-    var content: String
-    var timestamp: Date
+    let id: String
+    let senderID: String
+    let content: String
+    let timestamp: Date
     
     init(id: String = UUID().uuidString,
          senderID: String,

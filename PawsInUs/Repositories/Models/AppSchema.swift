@@ -11,7 +11,7 @@ import SwiftData
 typealias DBModel = SchemaV1
 
 enum SchemaV1: VersionedSchema {
-    static var versionIdentifier = Schema.Version(1, 0, 0)
+    nonisolated(unsafe) static var versionIdentifier = Schema.Version(1, 0, 0)
     
     static var models: [any PersistentModel.Type] {
         [] // Empty - we're using Supabase for all data storage

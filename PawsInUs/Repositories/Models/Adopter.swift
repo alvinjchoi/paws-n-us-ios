@@ -7,18 +7,18 @@
 
 import Foundation
 
-final class Adopter: Codable, Equatable {
-    var id: String
-    var name: String
-    var email: String
-    var location: String
-    var bio: String
-    var profileImageURL: String?
-    var preferences: AdopterPreferences
-    var likedDogIDs: [String]
-    var dislikedDogIDs: [String]
-    var matchedDogIDs: [String]
-    var registrationDate: Date
+struct Adopter: Codable, Equatable, Sendable {
+    let id: String
+    let name: String
+    let email: String
+    let location: String
+    let bio: String
+    let profileImageURL: String?
+    let preferences: AdopterPreferences
+    let likedDogIDs: [String]
+    let dislikedDogIDs: [String]
+    let matchedDogIDs: [String]
+    let registrationDate: Date
     
     init(id: String = UUID().uuidString,
          name: String,
@@ -44,41 +44,6 @@ final class Adopter: Codable, Equatable {
         self.registrationDate = registrationDate
     }
     
-    enum CodingKeys: String, CodingKey {
-        case id, name, email, location, bio, profileImageURL
-        case preferences, likedDogIDs, dislikedDogIDs, matchedDogIDs
-        case registrationDate
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(String.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
-        email = try container.decode(String.self, forKey: .email)
-        location = try container.decode(String.self, forKey: .location)
-        bio = try container.decode(String.self, forKey: .bio)
-        profileImageURL = try container.decodeIfPresent(String.self, forKey: .profileImageURL)
-        preferences = try container.decode(AdopterPreferences.self, forKey: .preferences)
-        likedDogIDs = try container.decode([String].self, forKey: .likedDogIDs)
-        dislikedDogIDs = try container.decode([String].self, forKey: .dislikedDogIDs)
-        matchedDogIDs = try container.decode([String].self, forKey: .matchedDogIDs)
-        registrationDate = try container.decode(Date.self, forKey: .registrationDate)
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encode(email, forKey: .email)
-        try container.encode(location, forKey: .location)
-        try container.encode(bio, forKey: .bio)
-        try container.encodeIfPresent(profileImageURL, forKey: .profileImageURL)
-        try container.encode(preferences, forKey: .preferences)
-        try container.encode(likedDogIDs, forKey: .likedDogIDs)
-        try container.encode(dislikedDogIDs, forKey: .dislikedDogIDs)
-        try container.encode(matchedDogIDs, forKey: .matchedDogIDs)
-        try container.encode(registrationDate, forKey: .registrationDate)
-    }
 }
 
 struct AdopterPreferences: Codable, Sendable {
