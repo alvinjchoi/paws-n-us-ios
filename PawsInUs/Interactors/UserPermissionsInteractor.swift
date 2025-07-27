@@ -48,12 +48,12 @@ extension UNUserNotificationCenter: SystemNotificationsCenter {
 final class RealUserPermissionsInteractor: UserPermissionsInteractor {
 
     private let appState: Store<AppState>
-    private let openAppSettings: () -> Void
+    private let openAppSettings: @MainActor () -> Void
     private let notificationCenter: SystemNotificationsCenter
 
     init(appState: Store<AppState>,
          notificationCenter: SystemNotificationsCenter = UNUserNotificationCenter.current(),
-         openAppSettings: @escaping () -> Void
+         openAppSettings: @escaping @MainActor () -> Void
     ) {
         self.appState = appState
         self.notificationCenter = notificationCenter
@@ -77,7 +77,9 @@ final class RealUserPermissionsInteractor: UserPermissionsInteractor {
         let keyPath = AppState.permissionKeyPath(for: permission)
         let currentStatus = appState[keyPath]
         guard currentStatus != .denied else {
-            openAppSettings()
+            Task { @MainActor in
+                openAppSettings()
+            }
             return
         }
         switch permission {

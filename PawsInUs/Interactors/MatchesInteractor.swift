@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 protocol MatchesInteractor {
-    func loadMatches(matches: Binding<Loadable<[Match]>>)
+    @MainActor func loadMatches(matches: Binding<Loadable<[Match]>>)
     func sendMessage(matchID: String, message: String)
     func updateMatchStatus(matchID: String, status: MatchStatus)
 }
@@ -28,6 +28,7 @@ struct RealMatchesInteractor: MatchesInteractor {
     let appState: Store<AppState>
     let matchesRepository: MatchesRepository
     
+    @MainActor
     func loadMatches(matches: Binding<Loadable<[Match]>>) {
         matches.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
@@ -35,7 +36,7 @@ struct RealMatchesInteractor: MatchesInteractor {
         let currentAdopterID = appState.value.userData.currentAdopterID ?? ""
         let repository = matchesRepository
         
-        Task { @MainActor in
+        Task {
             do {
                 let allMatches = try await repository.getMatches(for: currentAdopterID)
                 matches.wrappedValue = .loaded(allMatches)
