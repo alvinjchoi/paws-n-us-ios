@@ -8,6 +8,7 @@
 
     },
     "%@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -24,6 +25,7 @@
       }
     },
     "%lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -331,9 +333,6 @@
 
     },
     "Likes" : {
-
-    },
-    "Likes View" : {
 
     },
     "Name" : {

@@ -40,7 +40,7 @@ struct RootView: View {
                 }
                 .tag(AppState.Tab.discover)
             
-            Text("Likes View")
+            LikesView()
                 .tabItem {
                     Label("Likes", systemImage: "heart.fill")
                 }
