@@ -10,6 +10,7 @@ import Supabase
 
 struct AuthView: View {
     @Environment(\.injected) private var diContainer
+    @Environment(\.dismiss) private var dismiss
     @State private var showEmailSignIn = false
     
     var body: some View {
@@ -19,7 +20,7 @@ struct AuthView: View {
                 HStack {
                     Spacer()
                     Button(action: {
-                        // Handle close if needed
+                        dismiss()
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 24))

@@ -11,28 +11,33 @@ struct ProfileView: View {
     @Environment(\.injected) private var diContainer
     @State private var adopter: Loadable<Adopter> = .notRequested
     @State private var showingPreferences = false
+    @State private var showingAuth = false
     
     var body: some View {
         NavigationStack {
             ScrollView {
-                switch adopter {
-                case .notRequested:
-                    ProgressView()
-                        .onAppear { 
+                if diContainer.appState[\.userData.isAuthenticated] {
+                    switch adopter {
+                    case .notRequested:
+                        ProgressView()
+                            .onAppear { 
+                                Task {
+                                    await loadProfile()
+                                }
+                            }
+                    case .isLoading:
+                        ProgressView()
+                    case .loaded(let adopterProfile):
+                        profileContent(adopterProfile)
+                    case .failed(let error):
+                        ErrorView(error: error, retryAction: {
                             Task {
                                 await loadProfile()
                             }
-                        }
-                case .isLoading:
-                    ProgressView()
-                case .loaded(let adopterProfile):
-                    profileContent(adopterProfile)
-                case .failed(let error):
-                    ErrorView(error: error, retryAction: {
-                        Task {
-                            await loadProfile()
-                        }
-                    })
+                        })
+                    }
+                } else {
+                    notAuthenticatedView
                 }
             }
             .navigationTitle("Profile")
@@ -40,9 +45,14 @@ struct ProfileView: View {
             .sheet(isPresented: $showingPreferences) {
                 PreferencesView()
             }
+            .sheet(isPresented: $showingAuth) {
+                AuthView()
+            }
         }
         .task {
-            await loadProfile()
+            if diContainer.appState[\.userData.isAuthenticated] {
+                await loadProfile()
+            }
         }
     }
     
@@ -205,11 +215,11 @@ struct ProfileView: View {
                 .foregroundColor(.orange)
             
             VStack(spacing: 10) {
-                Text("Sign in to Save Your Likes")
+                Text("프로필")
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text("Create an account to save your favorite dogs and get notified about matches")
+                Text("로그인하여 좋아요한 강아지들을 저장하고 매칭 알림을 받아보세요")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -218,9 +228,9 @@ struct ProfileView: View {
             
             VStack(spacing: 15) {
                 Button(action: {
-                    // Navigate to auth - handled by AppView
+                    showingAuth = true
                 }) {
-                    Text("Sign In / Sign Up")
+                    Text("로그인 / 회원가입")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -233,7 +243,7 @@ struct ProfileView: View {
                 Button(action: {
                     // Continue as guest - do nothing
                 }) {
-                    Text("Continue Browsing")
+                    Text("계속 둘러보기")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.orange)
                 }

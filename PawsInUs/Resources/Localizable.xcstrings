@@ -236,9 +236,6 @@
     "Create an account to save your favorite dogs and connect with shelters" : {
 
     },
-    "Create an account to save your favorite dogs and get notified about matches" : {
-
-    },
     "Currencies" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -474,7 +471,16 @@
         }
       }
     },
+    "계속 둘러보기" : {
+
+    },
     "계정 찾기" : {
+
+    },
+    "로그인 / 회원가입" : {
+
+    },
+    "로그인하여 좋아요한 강아지들을 저장하고 매칭 알림을 받아보세요" : {
 
     },
     "문의하기" : {
@@ -517,6 +523,9 @@
 
     },
     "포인어스에서" : {
+
+    },
+    "프로필" : {
 
     },
     "확인" : {
