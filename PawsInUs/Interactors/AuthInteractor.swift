@@ -76,21 +76,44 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
     }
     
     func signInWithOTP(email: String) async throws {
+        // Send magic link to email
+        // Note: Supabase sends magic links for email auth by default
+        // To display it as an OTP code, modify the email template in Supabase dashboard
         try await supabaseClient.auth.signInWithOTP(
-            email: email,
-            shouldCreateUser: true
+            email: email
         )
     }
     
     func verifyOTP(email: String, token: String) async throws {
-        let session = try await supabaseClient.auth.verifyOTP(
-            email: email,
-            token: token,
-            type: .email
-        )
+        // For email magic links displayed as OTP codes
+        // We need to construct and process the magic link URL
+        let tokenHash = token.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? token
+        let typeParam = "email"
         
+        // Create the verification URL that would normally be in the magic link
+        var components = URLComponents()
+        components.scheme = "io.pawsinus"  // Your app's URL scheme
+        components.host = "login-callback"
+        components.queryItems = [
+            URLQueryItem(name: "token_hash", value: tokenHash),
+            URLQueryItem(name: "type", value: typeParam)
+        ]
+        
+        guard let url = components.url else {
+            throw AuthError.invalidToken
+        }
+        
+        // Process the magic link URL
+        try await supabaseClient.auth.session(from: url)
+        
+        // Get the authenticated user
+        guard let user = supabaseClient.auth.currentUser else {
+            throw AuthError.invalidToken
+        }
+        
+        // Update app state
         await MainActor.run { [appState] in
-            appState[\.userData.currentAdopterID] = session.user.id.uuidString
+            appState[\.userData.currentAdopterID] = user.id.uuidString
             appState[\.userData.isAuthenticated] = true
         }
     }
@@ -125,6 +148,7 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
 enum AuthError: LocalizedError {
     case notImplemented
     case profileCreationFailed
+    case invalidToken
     
     var errorDescription: String? {
         switch self {
@@ -132,6 +156,8 @@ enum AuthError: LocalizedError {
             return "This sign-in method is not yet implemented"
         case .profileCreationFailed:
             return "Failed to create user profile"
+        case .invalidToken:
+            return "Invalid verification token"
         }
     }
 }
