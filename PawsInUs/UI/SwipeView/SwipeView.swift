@@ -37,13 +37,18 @@ struct SwipeView: View {
             }
         }
         .onAppear {
+            print("🎯 SwipeView appeared")
             shouldLoad = true
         }
         .onChange(of: shouldLoad) { oldValue, newValue in
             if newValue {
+                print("📱 Loading dogs from SwipeView")
                 loadDogs()
                 shouldLoad = false
             }
+        }
+        .onChange(of: dogs) { oldValue, newValue in
+            print("🔄 Dogs state changed from \(oldValue) to \(newValue)")
         }
     }
     
@@ -91,16 +96,21 @@ struct SwipeView: View {
             switch dogs {
             case .notRequested:
                 ProgressView()
+                    .onAppear { print("📊 State: notRequested") }
             case .isLoading:
                 ProgressView()
+                    .onAppear { print("📊 State: isLoading") }
             case .loaded(let dogsArray):
                 if dogsArray.isEmpty {
                     emptyView
+                        .onAppear { print("📊 State: loaded but empty") }
                 } else {
                     swipeStack(dogs: dogsArray)
+                        .onAppear { print("📊 State: loaded with \(dogsArray.count) dogs") }
                 }
             case .failed(let error):
                 ErrorView(error: error, retryAction: loadDogs)
+                    .onAppear { print("📊 State: failed with \(error)") }
             }
         }
     }

@@ -75,7 +75,7 @@ struct DogDTO: Codable, Sendable {
     let imageURLs: [String]
     let bio: String
     let shelterID: String
-    let shelterName: String
+    let shelterName: String?  // Make optional since it might not be in the response
     let location: String
     let traits: [String]
     let isGoodWithKids: Bool
@@ -117,7 +117,7 @@ struct DogDTO: Codable, Sendable {
             imageURLs: imageURLs,
             bio: bio,
             shelterID: shelterID,
-            shelterName: shelterName,
+            shelterName: shelterName ?? "Unknown Shelter",  // Provide default if missing
             location: location,
             traits: traits,
             isGoodWithKids: isGoodWithKids,
