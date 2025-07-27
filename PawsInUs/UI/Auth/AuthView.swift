@@ -193,10 +193,18 @@ struct EmailSignInView: View {
                     .padding(.top, 40)
                 
                 if showOTPField {
-                    TextField("인증 코드 6자리", text: $otp)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .keyboardType(.numberPad)
-                        .padding(.horizontal)
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("인증 코드", text: $otp)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .padding(.horizontal)
+                        
+                        Text("이메일에서 링크의 토큰을 복사하세요")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding(.horizontal)
+                    }
                     
                     Button(action: verifyOTP) {
                         if isLoading {
@@ -211,7 +219,7 @@ struct EmailSignInView: View {
                     .background(Color.orange)
                     .foregroundColor(.white)
                     .cornerRadius(25)
-                    .disabled(isLoading || otp.count != 6)
+                    .disabled(isLoading || otp.isEmpty)
                     .padding(.horizontal)
                     
                     Button(action: { showOTPField = false; otp = "" }) {
@@ -282,7 +290,7 @@ struct EmailSignInView: View {
     }
     
     private func verifyOTP() {
-        guard otp.count == 6 else { return }
+        guard !otp.isEmpty else { return }
         
         isLoading = true
         
