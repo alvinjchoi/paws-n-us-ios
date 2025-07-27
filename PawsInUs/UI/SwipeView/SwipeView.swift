@@ -19,6 +19,7 @@ struct SwipeView: View {
     @State private var swipeAction: SwipeAction = .none
     @State private var shouldLoad = false
     @State private var checkTimer: Timer?
+    @State private var selectedDog: Dog?
     
     private let swipeThreshold: CGFloat = 100
     private let rotationMultiplier: Double = 0.03
@@ -45,6 +46,9 @@ struct SwipeView: View {
                 loadDogs()
                 shouldLoad = false
             }
+        }
+        .sheet(item: $selectedDog) { dog in
+            DogDetailView(dog: dog)
         }
     }
     
@@ -158,7 +162,9 @@ struct SwipeView: View {
                 // Render cards in reverse order so the current card is on top
                 ForEach(Array(dogs.enumerated().reversed()), id: \.element.id) { index, dog in
                     if index >= currentIndex && index < currentIndex + 3 {
-                        DogCardView(dog: dog)
+                        DogCardView(dog: dog, onInfoTap: {
+                            selectedDog = dog
+                        })
                             .frame(width: geometry.size.width - 40, height: geometry.size.height - 80)
                             .aspectRatio(3/4, contentMode: .fit)
                             .offset(y: CGFloat(index - currentIndex) * 10 - 25)
@@ -331,6 +337,7 @@ enum SwipeAction {
 
 struct DogCardView: View {
     let dog: Dog
+    let onInfoTap: () -> Void
     @State private var currentImageIndex = 0
     
     var body: some View {
@@ -413,7 +420,7 @@ struct DogCardView: View {
                             
                             Spacer(minLength: 8)
                             
-                            Button(action: {}) {
+                            Button(action: onInfoTap) {
                                 Image(systemName: "info.circle")
                                     .font(.system(size: 26))
                                     .foregroundColor(.white)

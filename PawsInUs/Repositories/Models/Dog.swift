@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Dog: Codable, Equatable, Sendable {
+struct Dog: Codable, Equatable, Sendable, Identifiable {
     let id: String
     let name: String
     let breed: String
@@ -24,6 +24,8 @@ struct Dog: Codable, Equatable, Sendable {
     let isGoodWithPets: Bool
     let energyLevel: EnergyLevel
     let dateAdded: Date
+    let personality: String?
+    let healthStatus: String?
     
     init(id: String = UUID().uuidString,
          name: String,
@@ -40,7 +42,9 @@ struct Dog: Codable, Equatable, Sendable {
          isGoodWithKids: Bool = false,
          isGoodWithPets: Bool = false,
          energyLevel: EnergyLevel = .medium,
-         dateAdded: Date = Date()) {
+         dateAdded: Date = Date(),
+         personality: String? = nil,
+         healthStatus: String? = nil) {
         self.id = id
         self.name = name
         self.breed = breed
@@ -57,6 +61,8 @@ struct Dog: Codable, Equatable, Sendable {
         self.isGoodWithPets = isGoodWithPets
         self.energyLevel = energyLevel
         self.dateAdded = dateAdded
+        self.personality = personality
+        self.healthStatus = healthStatus
     }
 }
 
@@ -68,10 +74,10 @@ enum DogSize: String, Codable, CaseIterable, Sendable {
     
     var displayName: String {
         switch self {
-        case .small: return "Small"
-        case .medium: return "Medium"
-        case .large: return "Large"
-        case .extraLarge: return "Extra Large"
+        case .small: return "소형견"
+        case .medium: return "중형견"
+        case .large: return "대형견"
+        case .extraLarge: return "초대형견"
         }
     }
 }
@@ -123,5 +129,33 @@ enum EnergyLevel: String, Codable, CaseIterable, Sendable {
 extension Dog {
     static func == (lhs: Dog, rhs: Dog) -> Bool {
         lhs.id == rhs.id
+    }
+}
+
+// MARK: - Preview
+extension Dog {
+    static var preview: Dog {
+        Dog(
+            id: "preview-1",
+            name: "맥스",
+            breed: "골든 리트리버",
+            age: 3,
+            size: .large,
+            gender: .male,
+            imageURLs: [
+                "https://images.unsplash.com/photo-1552053831-71594a27632d",
+                "https://images.unsplash.com/photo-1633722715463-d30f4f325e24"
+            ],
+            bio: "활발하고 친근한 골든 리트리버 맥스입니다. 사람을 정말 좋아하고 다른 강아지들과도 잘 지내요!",
+            shelterID: "shelter-1",
+            shelterName: "행복한 동물 보호소",
+            location: "서울시 강남구",
+            traits: ["친근함", "활발함", "똑똑함"],
+            isGoodWithKids: true,
+            isGoodWithPets: true,
+            energyLevel: .high,
+            personality: "맥스는 매우 사교적이고 장난기 많은 강아지입니다. 공놀이를 특히 좋아하며, 새로운 사람을 만나는 것을 즐깁니다.",
+            healthStatus: "건강 상태 양호. 모든 예방접종 완료. 중성화 수술 완료."
+        )
     }
 }
