@@ -14,7 +14,7 @@ import Combine
 struct RootViewAppearance: ViewModifier {
     
     @Environment(\.injected) private var injected: DIContainer
-    @State private var isActive: Bool = false
+    @State private var isActive: Bool = true // Start as active
     internal let inspection = Inspection<Self>()
     
     func body(content: Content) -> some View {

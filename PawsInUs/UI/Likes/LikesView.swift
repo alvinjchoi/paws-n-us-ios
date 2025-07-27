@@ -10,6 +10,11 @@ import SwiftUI
 struct LikesView: View {
     @Environment(\.injected) private var diContainer
     @State private var likedDogs: Loadable<[Dog]> = .notRequested
+    @State private var showingAuth = false
+    
+    var isAuthenticated: Bool {
+        diContainer.appState.value.userData.isAuthenticated
+    }
     
     var body: some View {
         NavigationStack {
@@ -17,30 +22,45 @@ struct LikesView: View {
                 Color(.systemGray6)
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    switch likedDogs {
-                    case .notRequested:
-                        ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .onAppear { loadLikedDogs() }
-                    case .isLoading:
-                        ProgressView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    case .loaded(let dogs):
-                        if dogs.isEmpty {
-                            emptyLikesView
-                        } else {
-                            likedDogsGrid(dogs: dogs)
+                if isAuthenticated {
+                    ScrollView {
+                        switch likedDogs {
+                        case .notRequested:
+                            ProgressView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .onAppear { loadLikedDogs() }
+                        case .isLoading:
+                            ProgressView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        case .loaded(let dogs):
+                            if dogs.isEmpty {
+                                emptyLikesView
+                            } else {
+                                likedDogsGrid(dogs: dogs)
+                            }
+                        case .failed(let error):
+                            ErrorView(error: error, retryAction: loadLikedDogs)
                         }
-                    case .failed(let error):
-                        ErrorView(error: error, retryAction: loadLikedDogs)
                     }
+                } else {
+                    notAuthenticatedView
                 }
             }
             .navigationTitle("Likes")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                loadLikedDogs()
+                if isAuthenticated {
+                    loadLikedDogs()
+                }
+            }
+            .sheet(isPresented: $showingAuth) {
+                AuthView()
+                    .environment(\.injected, diContainer)
+            }
+            .onReceive(diContainer.appState.updates(for: \.userData.isAuthenticated)) { authenticated in
+                if authenticated {
+                    loadLikedDogs()
+                }
             }
         }
     }
@@ -95,6 +115,54 @@ struct LikesView: View {
     
     private func loadLikedDogs() {
         diContainer.interactors.likesInteractor.loadLikedDogs(dogs: $likedDogs)
+    }
+    
+    private var notAuthenticatedView: some View {
+        VStack(spacing: 30) {
+            Spacer()
+                .frame(height: 50)
+            
+            Image(systemName: "heart.circle.fill")
+                .font(.system(size: 80))
+                .foregroundColor(.orange)
+            
+            VStack(spacing: 10) {
+                Text("Sign in to Save Your Likes")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("Create an account to save your favorite dogs and connect with shelters")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            VStack(spacing: 15) {
+                Button(action: {
+                    showingAuth = true
+                }) {
+                    Text("Sign In / Sign Up")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.orange)
+                        .cornerRadius(25)
+                }
+                .padding(.horizontal, 40)
+                
+                Button(action: {
+                    diContainer.appState[\.routing.selectedTab] = .discover
+                }) {
+                    Text("Continue Browsing")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.orange)
+                }
+            }
+            
+            Spacer()
+        }
     }
 }
 

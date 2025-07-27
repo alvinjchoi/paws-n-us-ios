@@ -33,6 +33,7 @@ struct SwipeView: View {
             }
         }
         .onAppear {
+            print("SwipeView appeared - loading dogs...")
             loadDogs()
         }
     }
@@ -81,13 +82,13 @@ struct SwipeView: View {
             switch dogs {
             case .notRequested:
                 ProgressView()
-                    .onAppear { loadDogs() }
             case .isLoading:
                 ProgressView()
             case .loaded(let dogsArray):
                 if dogsArray.isEmpty {
                     emptyView
                 } else {
+                    let _ = print("Displaying \(dogsArray.count) dogs, currentIndex: \(currentIndex)")
                     swipeStack(dogs: dogsArray)
                 }
             case .failed(let error):

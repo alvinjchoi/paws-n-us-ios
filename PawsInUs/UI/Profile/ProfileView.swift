@@ -11,25 +11,43 @@ struct ProfileView: View {
     @Environment(\.injected) private var diContainer
     @State private var adopter: Loadable<Adopter> = .notRequested
     @State private var showingPreferences = false
+    @State private var showingAuth = false
+    
+    var isAuthenticated: Bool {
+        diContainer.appState.value.userData.isAuthenticated
+    }
     
     var body: some View {
         ScrollView {
-            switch adopter {
-            case .notRequested:
-                ProgressView()
-                    .onAppear { loadProfile() }
-            case .isLoading:
-                ProgressView()
-            case .loaded(let adopterProfile):
-                profileContent(adopterProfile)
-            case .failed(let error):
-                ErrorView(error: error, retryAction: loadProfile)
+            if isAuthenticated {
+                switch adopter {
+                case .notRequested:
+                    ProgressView()
+                        .onAppear { loadProfile() }
+                case .isLoading:
+                    ProgressView()
+                case .loaded(let adopterProfile):
+                    profileContent(adopterProfile)
+                case .failed(let error):
+                    ErrorView(error: error, retryAction: loadProfile)
+                }
+            } else {
+                notAuthenticatedView
             }
         }
         .navigationTitle("Profile")
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showingPreferences) {
             PreferencesView()
+        }
+        .sheet(isPresented: $showingAuth) {
+            AuthView()
+                .environment(\.injected, diContainer)
+        }
+        .onReceive(diContainer.appState.updates(for: \.userData.isAuthenticated)) { authenticated in
+            if authenticated {
+                loadProfile()
+            }
         }
     }
     
@@ -148,6 +166,54 @@ struct ProfileView: View {
     
     private func loadProfile() {
         diContainer.interactors.adopterInteractor.loadProfile(adopter: $adopter)
+    }
+    
+    private var notAuthenticatedView: some View {
+        VStack(spacing: 30) {
+            Spacer()
+                .frame(height: 50)
+            
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: 80))
+                .foregroundColor(.orange)
+            
+            VStack(spacing: 10) {
+                Text("Sign in to Save Your Likes")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("Create an account to save your favorite dogs and get notified about matches")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            VStack(spacing: 15) {
+                Button(action: {
+                    showingAuth = true
+                }) {
+                    Text("Sign In / Sign Up")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.orange)
+                        .cornerRadius(25)
+                }
+                .padding(.horizontal, 40)
+                
+                Button(action: {
+                    // Continue as guest - do nothing
+                }) {
+                    Text("Continue Browsing")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.orange)
+                }
+            }
+            
+            Spacer()
+        }
     }
 }
 
