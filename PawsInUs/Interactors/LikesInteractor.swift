@@ -31,27 +31,48 @@ struct RealLikesInteractor: LikesInteractor {
     func loadLikedDogs(dogs: Binding<Loadable<[Dog]>>) {
         dogs.wrappedValue = .isLoading(last: nil, cancelBag: CancelBag())
         
-        // Get liked dog IDs and repository before starting the task
-        let likedDogIDs = appState.value.userData.likedDogIDs
+        let likedDogIDs = Array(appState.value.userData.likedDogIDs)
         let repository = dogsRepository
         
-        Task {
-            var dogsList: [Dog] = []
-            
-            // Fetch each liked dog
-            for dogID in likedDogIDs {
-                do {
-                    let dog = try await repository.getDog(by: dogID)
-                    dogsList.append(dog)
-                } catch {
-                    // Skip dogs that can't be loaded
-                    continue
+        guard !likedDogIDs.isEmpty else {
+            dogs.wrappedValue = .loaded([])
+            return
+        }
+        
+        // Use the same completion-based approach as DogsInteractor
+        if let supabaseRepo = repository as? SupabaseDogsRepository {
+            supabaseRepo.getDogsWithCompletion { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let allDogs):
+                        // Filter to only liked dogs and maintain order
+                        let sortedLikedDogs = likedDogIDs.compactMap { id in
+                            allDogs.first { $0.id == id }
+                        }
+                        dogs.wrappedValue = .loaded(sortedLikedDogs)
+                    case .failure(let error):
+                        dogs.wrappedValue = .failed(error)
+                    }
                 }
             }
-            
-            // Sort by most recently liked (reverse order since we append to the set)
-            let finalDogsList = dogsList.reversed()
-            dogs.wrappedValue = .loaded(Array(finalDogsList))
+        } else {
+            // Fallback to async/await for other repositories
+            Task {
+                var dogsList: [Dog] = []
+                
+                for dogID in likedDogIDs {
+                    do {
+                        let dog = try await repository.getDog(by: dogID)
+                        dogsList.append(dog)
+                    } catch {
+                        continue
+                    }
+                }
+                
+                await MainActor.run {
+                    dogs.wrappedValue = .loaded(Array(dogsList.reversed()))
+                }
+            }
         }
     }
     

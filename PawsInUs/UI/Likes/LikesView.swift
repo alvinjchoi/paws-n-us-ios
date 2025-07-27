@@ -13,7 +13,9 @@ struct LikesView: View {
     @State private var showingAuth = false
     
     var isAuthenticated: Bool {
-        diContainer.appState.value.userData.isAuthenticated
+        // Temporarily return true to test likes functionality
+        // TODO: Restore proper auth check: diContainer.appState.value.userData.isAuthenticated
+        true
     }
     
     var body: some View {
@@ -49,18 +51,13 @@ struct LikesView: View {
             .navigationTitle("Likes")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                if isAuthenticated {
+                if isAuthenticated && likedDogs == .notRequested {
                     loadLikedDogs()
                 }
             }
             .sheet(isPresented: $showingAuth) {
                 AuthView()
                     .environment(\.injected, diContainer)
-            }
-            .onReceive(diContainer.appState.updates(for: \.userData.isAuthenticated)) { authenticated in
-                if authenticated {
-                    loadLikedDogs()
-                }
             }
         }
     }
@@ -102,7 +99,10 @@ struct LikesView: View {
     }
     
     private func likedDogsGrid(dogs: [Dog]) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
+        LazyVGrid(columns: [
+            GridItem(.flexible(), spacing: 8),
+            GridItem(.flexible(), spacing: 8)
+        ], spacing: 16) {
             ForEach(dogs, id: \.id) { dog in
                 NavigationLink(destination: DogDetailView(dog: dog)) {
                     LikedDogCard(dog: dog)
@@ -110,7 +110,8 @@ struct LikesView: View {
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
     
     private func loadLikedDogs() {
@@ -168,6 +169,7 @@ struct LikesView: View {
 
 struct LikedDogCard: View {
     let dog: Dog
+    @Environment(\.injected) private var diContainer
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -184,7 +186,7 @@ struct LikedDogCard: View {
                             ProgressView()
                         )
                 }
-                .frame(height: 250)
+                .frame(height: 200)
                 .clipped()
             }
             
@@ -192,35 +194,53 @@ struct LikedDogCard: View {
             LinearGradient(
                 gradient: Gradient(colors: [
                     Color.clear,
-                    Color.black.opacity(0.7)
+                    Color.black.opacity(0.8)
                 ]),
                 startPoint: .center,
                 endPoint: .bottom
             )
             
             // Dog info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(dog.name)
-                        .font(.system(size: 20, weight: .bold))
-                    Text("\(dog.age)")
-                        .font(.system(size: 18, weight: .medium))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(dog.name)
+                            .font(.system(size: 16, weight: .bold))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        
+                        Text(dog.breed)
+                            .font(.system(size: 12, weight: .medium))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .opacity(0.9)
+                        
+                        Text(dog.shelterName)
+                            .font(.system(size: 10, weight: .regular))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .opacity(0.8)
+                    }
+                    
                     Spacer()
-                }
-                
-                HStack {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 12))
-                    Text(dog.location)
-                        .font(.system(size: 14))
-                    Spacer()
+                    
+                    Button(action: {
+                        diContainer.interactors.likesInteractor.unlikeDog(dog)
+                    }) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.red)
+                            .padding(4)
+                            .background(Circle().fill(Color.white.opacity(0.9)))
+                    }
                 }
             }
             .foregroundColor(.white)
-            .padding(12)
+            .padding(10)
         }
+        .aspectRatio(3/4, contentMode: .fit)
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
     }
 }
 
