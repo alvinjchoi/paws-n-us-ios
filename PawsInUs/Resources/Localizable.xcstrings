@@ -320,9 +320,6 @@
     "Error: %@" : {
 
     },
-    "Failed to load" : {
-
-    },
     "finding your perfect match" : {
 
     },
@@ -339,9 +336,6 @@
 
     },
     "Likes" : {
-
-    },
-    "Loaded %lld dogs" : {
 
     },
     "Loading liked dogs..." : {

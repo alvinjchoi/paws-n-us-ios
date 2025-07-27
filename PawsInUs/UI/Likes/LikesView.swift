@@ -52,10 +52,6 @@ struct LikesView: View {
                                 } else {
                                     likedDogsGrid(dogs: dogs)
                                 }
-                                Text("Loaded \(dogs.count) dogs")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                    .padding(.bottom)
                             }
                             .onAppear {
                                 isCurrentlyLoading = false
@@ -228,50 +224,21 @@ struct LikedDogCard: View {
             // Dog image with proper corner radius
             ZStack(alignment: .topTrailing) {
                 if let firstImageURL = dog.imageURLs.first {
-                    AsyncImage(url: URL(string: firstImageURL)) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        case .failure(let error):
-                            Rectangle()
-                                .fill(Color.red.opacity(0.3))
-                                .overlay(
-                                    VStack {
-                                        Image(systemName: "exclamationmark.triangle")
-                                            .font(.title2)
-                                            .foregroundColor(.red)
-                                        Text("Failed to load")
-                                            .font(.caption)
-                                            .foregroundColor(.red)
-                                        Text(error.localizedDescription)
-                                            .font(.caption2)
-                                            .foregroundColor(.red)
-                                            .multilineTextAlignment(.center)
-                                            .padding(.horizontal, 4)
-                                    }
-                                )
-                        case .empty:
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .overlay(
-                                    ProgressView()
-                                )
-                        @unknown default:
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                        }
+                    AsyncImage(url: URL(string: firstImageURL)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                ProgressView()
+                            )
                     }
                     .frame(height: 140)
                     .clipped()
                     .onAppear {
                         print("🖼️ Loading image URL: \(firstImageURL)")
-                    }
-                    .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AsyncImageError"))) { notification in
-                        if let error = notification.object as? Error {
-                            print("🖼️ AsyncImage error: \(error)")
-                        }
                     }
                 } else {
                     Rectangle()
