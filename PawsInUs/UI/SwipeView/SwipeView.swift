@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Supabase
+import Combine
 
 struct SwipeView: View {
     @Environment(\.injected) private var diContainer
@@ -14,11 +16,14 @@ struct SwipeView: View {
     @State private var dragOffset = CGSize.zero
     @State private var showAction = false
     @State private var swipeAction: SwipeAction = .none
+    @State private var shouldLoad = false
+    @State private var checkTimer: Timer?
     
     private let swipeThreshold: CGFloat = 100
     private let rotationMultiplier: Double = 0.03
     
     var body: some View {
+        let _ = print("SwipeView body called")
         ZStack {
             Color(.systemGray6)
                 .ignoresSafeArea()
@@ -33,8 +38,15 @@ struct SwipeView: View {
             }
         }
         .onAppear {
-            print("SwipeView appeared - loading dogs...")
-            loadDogs()
+            print("SwipeView onAppear called")
+            shouldLoad = true
+        }
+        .onChange(of: shouldLoad) { oldValue, newValue in
+            print("shouldLoad changed from \(oldValue) to: \(newValue)")
+            if newValue {
+                loadDogs()
+                shouldLoad = false
+            }
         }
     }
     
@@ -74,6 +86,7 @@ struct SwipeView: View {
     
     @ViewBuilder
     private var content: some View {
+        let _ = print("Content view rendering, dogs state: \(dogs)")
         ZStack {
             // Background to maintain layout
             Color.clear
@@ -81,10 +94,13 @@ struct SwipeView: View {
             
             switch dogs {
             case .notRequested:
+                let _ = print("Dogs state: notRequested")
                 ProgressView()
             case .isLoading:
+                let _ = print("Dogs state: isLoading")
                 ProgressView()
             case .loaded(let dogsArray):
+                let _ = print("Dogs state: loaded with \(dogsArray.count) dogs")
                 if dogsArray.isEmpty {
                     emptyView
                 } else {
@@ -92,6 +108,7 @@ struct SwipeView: View {
                     swipeStack(dogs: dogsArray)
                 }
             case .failed(let error):
+                let _ = print("Dogs state: failed with error: \(error)")
                 ErrorView(error: error, retryAction: loadDogs)
             }
         }
@@ -127,29 +144,33 @@ struct SwipeView: View {
     }
     
     private func swipeStack(dogs: [Dog]) -> some View {
-        ZStack {
-            // Render cards in reverse order so the current card is on top
-            ForEach(Array(dogs.enumerated().reversed()), id: \.element.id) { index, dog in
-                if index >= currentIndex && index < currentIndex + 3 {
-                    DogCardView(dog: dog)
-                        .offset(y: CGFloat(index - currentIndex) * 10)
-                        .scaleEffect(index == currentIndex ? 1 : 0.95 - CGFloat(index - currentIndex) * 0.02)
-                        .opacity(index == currentIndex ? 1 : 0.9)
-                        .offset(index == currentIndex ? dragOffset : .zero)
-                        .rotationEffect(.degrees(Double(dragOffset.width) * rotationMultiplier))
-                        .animation(.spring(), value: dragOffset)
-                        .gesture(
-                            index == currentIndex ? dragGesture : nil
-                        )
-                        .overlay(
-                            overlayView
-                                .opacity(index == currentIndex && showAction ? 1 : 0)
-                        )
-                        .zIndex(index == currentIndex ? 1000 : Double(1000 - (index - currentIndex)))
+        GeometryReader { geometry in
+            ZStack {
+                // Render cards in reverse order so the current card is on top
+                ForEach(Array(dogs.enumerated().reversed()), id: \.element.id) { index, dog in
+                    if index >= currentIndex && index < currentIndex + 3 {
+                        DogCardView(dog: dog)
+                            .frame(width: geometry.size.width - 40, height: geometry.size.height - 120)
+                            .offset(y: CGFloat(index - currentIndex) * 10)
+                            .scaleEffect(index == currentIndex ? 1 : 0.95 - CGFloat(index - currentIndex) * 0.02)
+                            .opacity(index == currentIndex ? 1 : 0.9)
+                            .offset(index == currentIndex ? dragOffset : .zero)
+                            .rotationEffect(.degrees(Double(dragOffset.width) * rotationMultiplier))
+                            .animation(.spring(), value: dragOffset)
+                            .gesture(
+                                index == currentIndex ? dragGesture : nil
+                            )
+                            .overlay(
+                                overlayView
+                                    .opacity(index == currentIndex && showAction ? 1 : 0)
+                            )
+                            .zIndex(index == currentIndex ? 1000 : Double(1000 - (index - currentIndex)))
+                    }
                 }
+                
+                actionButtons
             }
-            
-            actionButtons
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
     }
     
@@ -288,6 +309,8 @@ struct SwipeView: View {
     }
     
     private func loadDogs() {
+        print("loadDogs called")
+        // Use the interactor again
         diContainer.interactors.dogsInteractor.loadDogs(dogs: $dogs)
     }
 }
@@ -301,24 +324,28 @@ struct DogCardView: View {
     @State private var currentImageIndex = 0
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .bottom) {
-                // Background image
-                if !dog.imageURLs.isEmpty {
-                    AsyncImage(url: URL(string: dog.imageURLs[currentImageIndex])) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .overlay(
-                                ProgressView()
-                            )
-                    }
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
+        ZStack(alignment: .bottom) {
+            // Background image
+            if !dog.imageURLs.isEmpty {
+                AsyncImage(url: URL(string: dog.imageURLs[currentImageIndex])) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            ProgressView()
+                        )
                 }
+            } else {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .overlay(
+                        Text("No image")
+                            .foregroundColor(.white)
+                    )
+            }
                 
                 // Image indicators at top
                 if dog.imageURLs.count > 1 {
@@ -392,11 +419,9 @@ struct DogCardView: View {
                             }
                         }
                 }
-            }
-            .cornerRadius(12)
-            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 10)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
     }
 }

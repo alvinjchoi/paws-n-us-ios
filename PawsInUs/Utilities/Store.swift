@@ -7,7 +7,7 @@
 //
 
 import SwiftUI
-import Combine
+@preconcurrency import Combine
 
 typealias Store<State> = CurrentValueSubject<State, Never>
 
