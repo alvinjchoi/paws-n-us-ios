@@ -1,6 +1,9 @@
 # URL Scheme Setup for PawsInUs
 
-To enable magic link authentication, you need to configure the URL scheme in Xcode:
+To enable magic link authentication, you need to configure the URL scheme in Xcode.
+
+## Current Issue
+The magic link redirects to `io.pawsinus://login-callback` which Safari cannot open directly from a web page due to security restrictions.
 
 ## Steps to Configure:
 
@@ -22,13 +25,24 @@ To enable magic link authentication, you need to configure the URL scheme in Xco
 
 5. **Important**: The redirect URL in your code (`io.pawsinus://login-callback`) must match exactly what's configured in both Xcode and Supabase.
 
+## Workaround for Safari Redirect Issue:
+
+Since Safari blocks custom URL scheme redirects from web pages, the app now includes a manual option:
+
+1. Click the magic link in your email
+2. When Safari shows "Safari cannot open the page", copy the entire URL from the address bar
+3. Go back to the app
+4. Paste the URL in the text field that appears after sending the email
+5. Click "로그인" to complete authentication
+
+## Alternative Solutions:
+
+1. **Use Universal Links**: Configure your domain to support Universal Links (requires a web server)
+2. **Use a Web Redirect Page**: Host a simple web page that redirects to your app
+3. **Copy Just the Token**: Extract the token parameter from the URL and implement token-based verification
+
 ## Testing:
 
-1. When you receive the magic link email, it should redirect to `io.pawsinus://login-callback?token=...` instead of `localhost:3000`
-2. Your app will automatically handle the callback and complete the authentication
-
-## Troubleshooting:
-
-- If the link still goes to localhost:3000, double-check the Supabase redirect URL configuration
-- Make sure the URL scheme in Xcode matches exactly (case-sensitive)
-- For simulator testing, you may need to copy the link and open it in Safari on the simulator
+1. When you receive the magic link email, copy the entire URL
+2. Paste it in the app's magic link URL field
+3. The app will extract the token and complete authentication

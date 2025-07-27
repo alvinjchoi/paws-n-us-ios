@@ -76,11 +76,10 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
     
     func signInWithOTP(email: String) async throws {
         // Send magic link to email
-        // Note: Supabase sends magic links for email auth by default
-        // To display it as an OTP code, modify the email template in Supabase dashboard
+        // For mobile apps, we should use a web redirect first
         try await supabaseClient.auth.signInWithOTP(
             email: email,
-            redirectTo: URL(string: "io.pawsinus://login-callback")
+            redirectTo: nil  // Let Supabase use default redirect
         )
     }
     

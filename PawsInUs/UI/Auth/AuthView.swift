@@ -175,6 +175,7 @@ struct EmailSignInView: View {
     @Environment(\.injected) private var diContainer
     @Environment(\.dismiss) private var dismiss
     @State private var email = ""
+    @State private var magicLinkURL = ""
     @State private var isLoading = false
     @State private var showAlert = false
     @State private var alertMessage = ""
@@ -202,13 +203,44 @@ struct EmailSignInView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                         
-                        Text("링크를 클릭하면 자동으로 로그인됩니다.")
+                        Divider()
+                            .padding(.vertical)
+                        
+                        Text("링크가 작동하지 않나요?")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("이메일에서 링크를 복사하여 아래에 붙여넣으세요:")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
+                        TextField("매직 링크 URL", text: $magicLinkURL)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .padding(.horizontal)
+                        
+                        Button(action: processMagicLink) {
+                            if isLoading {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Text("로그인")
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(22)
+                        .disabled(isLoading || magicLinkURL.isEmpty)
+                        .padding(.horizontal)
                     }
                     .padding()
                     
-                    Button(action: { emailSent = false; email = "" }) {
+                    Button(action: { emailSent = false; email = ""; magicLinkURL = "" }) {
                         Text("다른 이메일로 시도")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.orange)
@@ -279,6 +311,35 @@ struct EmailSignInView: View {
                 await MainActor.run {
                     isLoading = false
                     alertMessage = error.localizedDescription
+                    showAlert = true
+                }
+            }
+        }
+    }
+    
+    private func processMagicLink() {
+        guard !magicLinkURL.isEmpty else { return }
+        
+        isLoading = true
+        
+        Task {
+            do {
+                // Extract the token from the URL
+                guard let url = URL(string: magicLinkURL) else {
+                    throw NSError(domain: "Invalid URL", code: -1)
+                }
+                
+                // Process the magic link
+                try await diContainer.supabaseClient.auth.session(from: url)
+                
+                await MainActor.run {
+                    isLoading = false
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    alertMessage = "로그인에 실패했습니다. URL을 확인해주세요."
                     showAlert = true
                 }
             }
