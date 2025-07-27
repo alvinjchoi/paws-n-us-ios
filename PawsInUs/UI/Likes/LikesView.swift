@@ -11,6 +11,7 @@ struct LikesView: View {
     @Environment(\.injected) private var diContainer
     @State private var likedDogs: Loadable<[Dog]> = .notRequested
     @State private var showingAuth = false
+    @State private var isCurrentlyLoading = false
     
     var isAuthenticated: Bool {
         // Temporarily return true to test likes functionality
@@ -28,20 +29,48 @@ struct LikesView: View {
                     ScrollView {
                         switch likedDogs {
                         case .notRequested:
-                            ProgressView()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .onAppear { loadLikedDogs() }
+                            VStack {
+                                ProgressView()
+                                Text("Not requested yet")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .onAppear { loadLikedDogs() }
                         case .isLoading:
-                            ProgressView()
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            VStack {
+                                ProgressView()
+                                Text("Loading liked dogs...")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         case .loaded(let dogs):
-                            if dogs.isEmpty {
-                                emptyLikesView
-                            } else {
-                                likedDogsGrid(dogs: dogs)
+                            VStack {
+                                if dogs.isEmpty {
+                                    emptyLikesView
+                                } else {
+                                    likedDogsGrid(dogs: dogs)
+                                }
+                                Text("Loaded \(dogs.count) dogs")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .padding(.bottom)
+                            }
+                            .onAppear {
+                                isCurrentlyLoading = false
                             }
                         case .failed(let error):
-                            ErrorView(error: error, retryAction: loadLikedDogs)
+                            VStack {
+                                ErrorView(error: error, retryAction: loadLikedDogs)
+                                Text("Error: \(error.localizedDescription)")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding()
+                            }
+                            .onAppear {
+                                isCurrentlyLoading = false
+                            }
                         }
                     }
                 } else {
@@ -52,6 +81,11 @@ struct LikesView: View {
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 if isAuthenticated && likedDogs == .notRequested {
+                    loadLikedDogs()
+                }
+            }
+            .onReceive(diContainer.appState.updates(for: \.userData.likedDogIDs)) { _ in
+                if isAuthenticated && !isCurrentlyLoading {
                     loadLikedDogs()
                 }
             }
@@ -115,7 +149,25 @@ struct LikesView: View {
     }
     
     private func loadLikedDogs() {
+        guard !isCurrentlyLoading else {
+            print("🐕 Already loading, skipping duplicate request")
+            return
+        }
+        
+        let currentLikedIDs = Array(diContainer.appState.value.userData.likedDogIDs)
+        print("🐕 Loading liked dogs... Current liked IDs: \(currentLikedIDs)")
+        print("🐕 Current state: \(likedDogs)")
+        
+        isCurrentlyLoading = true
         diContainer.interactors.likesInteractor.loadLikedDogs(dogs: $likedDogs)
+        
+        // Reset loading flag after timeout
+        DispatchQueue.main.asyncAfter(deadline: .now() + 12) {
+            if isCurrentlyLoading {
+                print("🐕 Resetting loading flag after timeout")
+                isCurrentlyLoading = false
+            }
+        }
     }
     
     private var notAuthenticatedView: some View {
@@ -172,75 +224,118 @@ struct LikedDogCard: View {
     @Environment(\.injected) private var diContainer
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Dog image
-            if let firstImageURL = dog.imageURLs.first {
-                AsyncImage(url: URL(string: firstImageURL)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
+        VStack(spacing: 0) {
+            // Dog image with proper corner radius
+            ZStack(alignment: .topTrailing) {
+                if let firstImageURL = dog.imageURLs.first {
+                    AsyncImage(url: URL(string: firstImageURL)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        case .failure(let error):
+                            Rectangle()
+                                .fill(Color.red.opacity(0.3))
+                                .overlay(
+                                    VStack {
+                                        Image(systemName: "exclamationmark.triangle")
+                                            .font(.title2)
+                                            .foregroundColor(.red)
+                                        Text("Failed to load")
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                        Text(error.localizedDescription)
+                                            .font(.caption2)
+                                            .foregroundColor(.red)
+                                            .multilineTextAlignment(.center)
+                                            .padding(.horizontal, 4)
+                                    }
+                                )
+                        case .empty:
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .overlay(
+                                    ProgressView()
+                                )
+                        @unknown default:
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                        }
+                    }
+                    .frame(height: 140)
+                    .clipped()
+                    .onAppear {
+                        print("🖼️ Loading image URL: \(firstImageURL)")
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: Notification.Name("AsyncImageError"))) { notification in
+                        if let error = notification.object as? Error {
+                            print("🖼️ AsyncImage error: \(error)")
+                        }
+                    }
+                } else {
                     Rectangle()
                         .fill(Color.gray.opacity(0.3))
                         .overlay(
-                            ProgressView()
+                            VStack {
+                                Image(systemName: "photo")
+                                    .font(.title2)
+                                    .foregroundColor(.gray)
+                                Text("No image")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
                         )
+                        .frame(height: 140)
                 }
-                .frame(height: 200)
-                .clipped()
+                
+                // Heart button
+                Button(action: {
+                    diContainer.interactors.likesInteractor.unlikeDog(dog)
+                }) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.red)
+                        .padding(6)
+                        .background(Circle().fill(Color.white.opacity(0.95)))
+                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                }
+                .padding(8)
             }
             
-            // Gradient overlay
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.clear,
-                    Color.black.opacity(0.8)
-                ]),
-                startPoint: .center,
-                endPoint: .bottom
-            )
-            
-            // Dog info
-            VStack(alignment: .leading, spacing: 6) {
+            // Dog info section
+            VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(dog.name)
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.system(size: 15, weight: .semibold))
                             .lineLimit(1)
                             .truncationMode(.tail)
+                            .foregroundColor(.primary)
                         
                         Text(dog.breed)
                             .font(.system(size: 12, weight: .medium))
                             .lineLimit(1)
                             .truncationMode(.tail)
-                            .opacity(0.9)
+                            .foregroundColor(.secondary)
                         
                         Text(dog.shelterName)
-                            .font(.system(size: 10, weight: .regular))
+                            .font(.system(size: 11, weight: .regular))
                             .lineLimit(1)
                             .truncationMode(.tail)
-                            .opacity(0.8)
+                            .foregroundColor(.gray)
                     }
                     
-                    Spacer()
-                    
-                    Button(action: {
-                        diContainer.interactors.likesInteractor.unlikeDog(dog)
-                    }) {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(.red)
-                            .padding(4)
-                            .background(Circle().fill(Color.white.opacity(0.9)))
-                    }
+                    Spacer(minLength: 0)
                 }
             }
-            .foregroundColor(.white)
-            .padding(10)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color(.systemBackground))
         }
-        .aspectRatio(3/4, contentMode: .fit)
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.15), radius: 4, x: 0, y: 2)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.1), radius: 6, x: 0, y: 3)
     }
 }
 
