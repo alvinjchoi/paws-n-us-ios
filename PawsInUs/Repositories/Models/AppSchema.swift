@@ -14,7 +14,7 @@ enum SchemaV1: VersionedSchema {
     static var versionIdentifier = Schema.Version(1, 0, 0)
     
     static var models: [any PersistentModel.Type] {
-        [Dog.self, Adopter.self, Match.self]
+        [] // Empty - we're using Supabase for all data storage
     }
 }
 

@@ -6,11 +6,9 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-final class Match: Codable {
-    @Attribute(.unique) var id: String
+final class Match: Codable, Equatable {
+    var id: String
     var dogID: String
     var adopterID: String
     var shelterID: String
@@ -62,14 +60,14 @@ final class Match: Codable {
 }
 
 enum MatchStatus: String, Codable {
-    case matched = "Matched"
-    case chatting = "Chatting"
-    case meetingScheduled = "Meeting Scheduled"
-    case adopted = "Adopted"
-    case cancelled = "Cancelled"
+    case matched = "matched"
+    case chatting = "chatting"
+    case meetingScheduled = "meetingScheduled"
+    case adopted = "adopted"
+    case cancelled = "cancelled"
 }
 
-struct Message: Codable, Sendable {
+struct Message: Codable, Sendable, Equatable {
     var id: String
     var senderID: String
     var content: String
@@ -83,5 +81,12 @@ struct Message: Codable, Sendable {
         self.senderID = senderID
         self.content = content
         self.timestamp = timestamp
+    }
+}
+
+// MARK: - Equatable
+extension Match {
+    static func == (lhs: Match, rhs: Match) -> Bool {
+        lhs.id == rhs.id
     }
 }

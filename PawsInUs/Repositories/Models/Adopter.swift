@@ -6,11 +6,9 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-final class Adopter: Codable {
-    @Attribute(.unique) var id: String
+final class Adopter: Codable, Equatable {
+    var id: String
     var name: String
     var email: String
     var location: String
@@ -103,5 +101,12 @@ struct AdopterPreferences: Codable, Sendable {
         self.hasKids = hasKids
         self.hasOtherPets = hasOtherPets
         self.maxDistance = maxDistance
+    }
+}
+
+// MARK: - Equatable
+extension Adopter {
+    static func == (lhs: Adopter, rhs: Adopter) -> Bool {
+        lhs.id == rhs.id
     }
 }

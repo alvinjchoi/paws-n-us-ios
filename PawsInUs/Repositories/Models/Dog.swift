@@ -6,11 +6,9 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-final class Dog: Codable {
-    @Attribute(.unique) var id: String
+final class Dog: Codable, Equatable {
+    var id: String
     var name: String
     var breed: String
     var age: Int
@@ -149,5 +147,12 @@ enum EnergyLevel: String, Codable, CaseIterable {
         case .high: return "High"
         case .veryHigh: return "Very High"
         }
+    }
+}
+
+// MARK: - Equatable
+extension Dog {
+    static func == (lhs: Dog, rhs: Dog) -> Bool {
+        lhs.id == rhs.id
     }
 }
