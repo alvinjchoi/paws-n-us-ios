@@ -54,36 +54,28 @@ struct SwipeView: View {
     
     private var headerView: some View {
         HStack(alignment: .center) {
-            // Logo section - positioned more to the left
-            if Bundle.main.path(forResource: "pawsinus-logo", ofType: "svg") != nil {
-                SVGLogoView()
-                    .frame(width: 160, height: 48)
-                    .clipped()
-                    .offset(x: -20)
-            } else {
-                // Fallback to pawprint + text
-                HStack(spacing: 8) {
-                    Image(systemName: "pawprint.fill")
-                        .font(.title)
-                        .foregroundColor(.orange)
-                    
-                    Text("Paws-N-Us")
-                        .font(.title)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                }
+            // Logo section - using text for proper dark mode support
+            HStack(spacing: 8) {
+                Image(systemName: "pawprint.fill")
+                    .font(.system(size: 28))
+                    .foregroundColor(.orange)
+                
+                Text("Paws-N-Us")
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
             }
             
             Spacer()
             
-            // Right side buttons
+            // Right side buttons - commented out
+            /*
             HStack(spacing: 16) {
                 Button(action: {
                     diContainer.appState[\.routing.selectedTab] = .profile
                 }) {
                     Image(systemName: "person.circle")
                         .font(.title2)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.primary)
                 }
                 
                 Button(action: {
@@ -91,16 +83,15 @@ struct SwipeView: View {
                 }) {
                     Image(systemName: "heart.circle")
                         .font(.title2)
-                        .foregroundColor(.gray)
+                        .foregroundColor(.primary)
                 }
             }
+            */
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
         .background(Color(.systemBackground))
-        .onAppear {
-            let logoPath = Bundle.main.path(forResource: "pawsinus-logo", ofType: "svg")
-        }
+        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 2)
     }
     
     @ViewBuilder
@@ -420,12 +411,15 @@ struct DogCardView: View {
                             
                             Spacer(minLength: 8)
                             
+                            // Info button - commented out since center tap opens details
+                            /*
                             Button(action: onInfoTap) {
                                 Image(systemName: "info.circle")
                                     .font(.system(size: 26))
                                     .foregroundColor(.white)
                             }
                             .layoutPriority(2)
+                            */
                         }
                         
                         Text(dog.bio)
@@ -514,9 +508,9 @@ struct DogCardView: View {
                         )
                 }
                 
-                // Bottom area - leave empty for info button
+                // Bottom area - reduced since no info button
                 Spacer()
-                    .frame(height: 160) // Space for info area
+                    .frame(height: 120) // Space for text area
             }
             .allowsHitTesting(true) // Ensure tap gestures work
         )
