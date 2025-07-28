@@ -214,15 +214,14 @@ struct HeroArticleView: View {
                 // Large featured image
                 Group {
                     if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
-                        // Test with hardcoded working URL first
-                        let testUrl = URL(string: "https://images.unsplash.com/photo-1646906975349-eebfad38ee3b?q=80&w=1579&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")!
-                        
-                        AsyncImage(url: testUrl) { phase in
+                        AsyncImage(url: url) { phase in
                             switch phase {
                             case .success(let image):
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .clipped()
                             case .failure(let error):
                                 Rectangle()
                                     .fill(Color.red.opacity(0.2))
@@ -260,9 +259,7 @@ struct HeroArticleView: View {
                             }
                         }
                         .onAppear {
-                            print("📸 Testing hardcoded image URL for article '\(article.title)'")
-                            print("📸 Original URL: \(imageUrl)")
-                            print("📸 Test URL: \(testUrl)")
+                            print("📸 Loading image for article '\(article.title)': \(imageUrl)")
                         }
                     } else {
                         Rectangle()
@@ -283,6 +280,7 @@ struct HeroArticleView: View {
                     }
                 }
                 .aspectRatio(1.0, contentMode: .fit)
+                .clipped()
                 .overlay(
                     VStack {
                         Spacer()
@@ -335,6 +333,8 @@ struct SecondaryFeaturedCard: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 80)
+                            .clipped()
                     } placeholder: {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
@@ -358,9 +358,7 @@ struct SecondaryFeaturedCard: View {
                         )
                 }
             }
-            .frame(width: 100, height: 80)
             .cornerRadius(12)
-            .clipped()
             
             // Article content
             VStack(alignment: .leading, spacing: 8) {
