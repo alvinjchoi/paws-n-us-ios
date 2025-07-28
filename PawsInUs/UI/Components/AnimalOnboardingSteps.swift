@@ -249,6 +249,10 @@ struct PhotosStepViewLegacy: View {
 struct CharacteristicsStepView: View {
     @ObservedObject var viewModel: AnimalOnboardingViewModel
     
+    private let exampleText = """
+    처음엔 다소 소심한 성격으로 사람을 피하려는 경향이 있었지만, 목욕도 시켜주고 아이와 함께 놀아주다 보니 점차 경계를 허물고 사람에 대한 신뢰를 쌓아가고 있습니다. 이제는 자신감 있게 장난감을 가지고 놀며, 사람을 좋아하는 순하고 사랑스러운 아이로 변했어요. 건강한 에너지와 호기심 가득한 눈빛을 가진 이 귀염둥이는 잘 먹고 잘 뛰어놀며 하루하루 밝게 자라고 있습니다.
+    """
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 32) {
             Text("🐾 성격과 특징")
@@ -258,11 +262,38 @@ struct CharacteristicsStepView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("소개글 *")
                         .font(.system(size: 16, weight: .medium))
-                    TextEditor(text: $viewModel.animalData.bio)
-                        .frame(minHeight: 100)
-                        .padding(8)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
+                    
+                    ZStack(alignment: .topLeading) {
+                        if viewModel.animalData.bio.isEmpty {
+                            Text(exampleText)
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray)
+                                .padding(.top, 10)
+                                .padding(.horizontal, 12)
+                                .allowsHitTesting(false)
+                        }
+                        
+                        TextEditor(text: $viewModel.animalData.bio)
+                            .font(.system(size: 14))
+                            .frame(minHeight: 150)
+                            .padding(8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .opacity(viewModel.animalData.bio.isEmpty ? 0.25 : 1)
+                    }
+                }
+                
+                if viewModel.animalData.bio.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("예시 내용입니다", systemImage: "lightbulb")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.blue)
+                        
+                        Text("아이의 성격 변화, 특별한 습관, 좋아하는 것들을 자세히 적어주세요.")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 4)
                 }
             }
             
