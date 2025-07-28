@@ -25,7 +25,8 @@ struct LikesView: View {
                 
                 if isAuthenticated {
                     ScrollView {
-                        switch likedDogs {
+                        VStack(spacing: 0) {
+                            switch likedDogs {
                         case .notRequested:
                             VStack {
                                 ProgressView()
@@ -44,7 +45,7 @@ struct LikesView: View {
                             }
                             .frame(maxWidth: .infinity, minHeight: 400)
                         case .loaded(let dogs):
-                            VStack {
+                            Group {
                                 if dogs.isEmpty {
                                     emptyLikesView
                                 } else {
@@ -52,7 +53,6 @@ struct LikesView: View {
                                         .frame(maxWidth: .infinity)
                                 }
                             }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .onAppear {
                                 isCurrentlyLoading = false
                                 // Preload all images for better performance
@@ -70,7 +70,9 @@ struct LikesView: View {
                             .onAppear {
                                 isCurrentlyLoading = false
                             }
+                            }
                         }
+                        .padding(.top, -30) // Negative padding to reduce top space
                     }
                     .refreshable {
                         loadLikedDogs()
@@ -80,7 +82,7 @@ struct LikesView: View {
                 }
             }
             .navigationTitle("Likes")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if isAuthenticated && likedDogs == .notRequested {
                     loadLikedDogs()
@@ -136,7 +138,7 @@ struct LikesView: View {
             }
         }
         .padding(.horizontal, 14) // Reduced to account for card's internal padding
-        .padding(.top, 8)
+        .padding(.top, 0) // Removed top padding to reduce gap
         .padding(.bottom, 100) // Extra bottom padding for tab bar and safe area
     }
     
