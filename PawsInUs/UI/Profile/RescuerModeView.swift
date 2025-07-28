@@ -1041,7 +1041,10 @@ struct ListingsView: View {
     
     private func dogsList(_ dogs: [Dog]) -> some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVGrid(columns: [
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8)
+            ], spacing: 16) {
                 ForEach(dogs) { dog in
                     RescuerDogCard(dog: dog) {
                         selectedDog = dog
@@ -1227,35 +1230,28 @@ struct RescuerDogCard: View {
             .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(PlainButtonStyle())
-        .overlay(
-            // Photo navigation tap areas
-            HStack(spacing: 0) {
-                // Left side - previous photo
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if currentImageIndex > 0 {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                currentImageIndex -= 1
-                            }
+        .simultaneousGesture(
+            // Photo navigation tap areas - only for multiple photos
+            dog.imageURLs.count > 1 ? 
+            DragGesture(minimumDistance: 0)
+                .onEnded { value in
+                    let tapLocation = value.location
+                    let cardWidth = 180.0 // Approximate card width for 2-column grid
+                    
+                    // Left third of card - previous photo
+                    if tapLocation.x < cardWidth / 3 && currentImageIndex > 0 {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            currentImageIndex -= 1
                         }
                     }
-                
-                // Right side - next photo  
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if currentImageIndex < dog.imageURLs.count - 1 {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                currentImageIndex += 1
-                            }
+                    // Right third of card - next photo
+                    else if tapLocation.x > (cardWidth * 2 / 3) && currentImageIndex < dog.imageURLs.count - 1 {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            currentImageIndex += 1
                         }
                     }
-            }
+                    // Middle third - let main button handle (do nothing here)
+                } : nil
         )
     }
 }
@@ -1706,42 +1702,96 @@ struct MenuView: View {
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 0) {
-                // Earnings section
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text("수익")
-                            .font(.headline)
-                        Text("2025년 1월")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("₩0")
-                            .font(.system(size: 36, weight: .bold))
-                            .padding(.top, 10)
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .leading) {
-                        Text("인사이트")
-                            .font(.headline)
-                        Text("아직 리뷰가 없습니다")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        HStack {
-                            ForEach(0..<5) { _ in
-                                Image(systemName: "star")
-                                    .foregroundColor(.gray.opacity(0.3))
-                            }
+                // Rescuer Stats section - Horizontally scrollable
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        // Current Animals KPI
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("현재 보호 중")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("유기동물 수")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text("3마리")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.blue)
+                                .padding(.top, 6)
                         }
-                        .padding(.top, 10)
+                        .frame(width: 120, height: 80)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                        
+                        // Applications KPI
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("입양 신청")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("이번 달")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text("7건")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.green)
+                                .padding(.top, 6)
+                        }
+                        .frame(width: 120, height: 80)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                        
+                        // Successful Adoptions KPI
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("성공 입양")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("전체")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text("12마리")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.orange)
+                                .padding(.top, 6)
+                        }
+                        .frame(width: 120, height: 80)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                        
+                        // Playtime KPI
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("놀이 시간")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("예정")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text("5회")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.purple)
+                                .padding(.top, 6)
+                        }
+                        .frame(width: 120, height: 80)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                     }
+                    .padding(.horizontal, 16)
                 }
-                .padding()
-                .background(Color(.systemBackground))
-                .cornerRadius(12)
-                .padding()
+                .padding(.vertical, 20)
                 
                 // Menu Items
                 VStack(spacing: 0) {
