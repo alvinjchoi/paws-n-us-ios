@@ -499,7 +499,7 @@ struct ProfileView: View {
                     }) {
                         Text("회원가입")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.black)
+                            .foregroundColor(.primary)
                             .underline()
                     }
                 }
@@ -536,12 +536,12 @@ struct MenuButton: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.system(size: 22))
-                    .foregroundColor(.black)
+                    .foregroundColor(.primary)
                     .frame(width: 28)
                 
                 Text(title)
                     .font(.system(size: 16))
-                    .foregroundColor(.black)
+                    .foregroundColor(.primary)
                 
                 Spacer()
                 

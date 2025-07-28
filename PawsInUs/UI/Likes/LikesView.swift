@@ -72,7 +72,8 @@ struct LikesView: View {
                             }
                             }
                         }
-                        .padding(.top, -30) // Negative padding to reduce top space
+                        .offset(y: -30) // Shift content up
+                        .padding(.top, -80) // Even more negative padding to reduce top space
                     }
                     .refreshable {
                         loadLikedDogs()
@@ -305,12 +306,14 @@ struct LikedDogCard: View {
 struct DogDetailView: View {
     let dog: Dog
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.injected) private var diContainer
     @State private var showingPlaydateScheduler = false
     @State private var showingAdoptionApplication = false
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
                 // Image carousel
                 TabView {
                     ForEach(dog.imageURLs, id: \.self) { imageURL in
@@ -404,51 +407,66 @@ struct DogDetailView: View {
                     .font(.body)
                     .foregroundColor(.secondary)
                     
-                    // Action buttons
-                    HStack(spacing: 12) {
-                        // Playdate button (70%)
-                        Button(action: {
-                            showingPlaydateScheduler = true
-                        }) {
-                            HStack {
-                                Image(systemName: "calendar")
-                                Text("Schedule Playdate")
-                            }
-                            .font(.system(size: 16, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(25)
-                        }
-                        .frame(maxWidth: .infinity)
-                        
-                        // Adoption button (30%)
-                        Button(action: {
-                            showingAdoptionApplication = true
-                        }) {
-                            Text("Adopt")
-                                .font(.system(size: 16, weight: .semibold))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.orange)
-                                .foregroundColor(.white)
-                                .cornerRadius(25)
-                        }
-                        .frame(width: 100)
-                    }
-                    .padding(.top)
+                    // Add bottom padding to account for floating buttons
+                    Spacer()
+                        .frame(height: 100)
                 }
                 .padding()
             }
         }
+            
+            // Fixed action buttons at bottom
+            VStack {
+                HStack(spacing: 12) {
+                    // Playdate button (70%)
+                    Button(action: {
+                        showingPlaydateScheduler = true
+                    }) {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text("Schedule Playdate")
+                        }
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(25)
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // Adoption button (30%)
+                    Button(action: {
+                        showingAdoptionApplication = true
+                    }) {
+                        Text("Adopt")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.orange)
+                            .foregroundColor(.white)
+                            .cornerRadius(25)
+                    }
+                    .frame(width: 100)
+                }
+                .padding(.horizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 32)
+                .background(
+                    Color(.systemBackground)
+                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: -5)
+                )
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .ignoresSafeArea(edges: .top)
-        .sheet(isPresented: $showingPlaydateScheduler) {
+        .fullScreenCover(isPresented: $showingPlaydateScheduler) {
             PlaydateSchedulingView(dog: dog)
+                .environment(\.injected, diContainer)
         }
-        .sheet(isPresented: $showingAdoptionApplication) {
+        .fullScreenCover(isPresented: $showingAdoptionApplication) {
             AdoptionApplicationView(dog: dog)
+                .environment(\.injected, diContainer)
         }
     }
 }
