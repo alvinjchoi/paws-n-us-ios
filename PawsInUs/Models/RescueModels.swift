@@ -337,11 +337,11 @@ enum MedicalStatus: String, Codable, CaseIterable {
 }
 
 // MARK: - Visit Model
-struct Visit: Codable, Identifiable {
-    let id: String
-    let rescuerId: String
+struct Visit: Codable, Identifiable, Equatable {
+    let id: UUID
+    let rescuerId: UUID
     let adopterId: String
-    let animalId: String
+    let animalId: UUID
     let visitType: VisitType
     let scheduledDate: Date
     let durationMinutes: Int
@@ -385,7 +385,7 @@ enum VisitType: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .meetGreet: return "만남"
+        case .meetGreet: return "놀이 시간"
         case .adoptionInterview: return "입양 상담"
         case .homeVisit: return "가정 방문"
         case .followUp: return "후속 방문"
@@ -410,6 +410,31 @@ enum VisitStatus: String, Codable, CaseIterable {
         case .cancelled: return "취소됨"
         case .noShow: return "미참석"
         }
+    }
+}
+
+// MARK: - Visit Creation Request
+struct CreateVisitRequest: Codable {
+    let rescuerId: UUID
+    let adopterId: String
+    let animalId: UUID
+    let visitType: VisitType
+    let scheduledDate: Date
+    let durationMinutes: Int
+    let location: String?
+    let adopterNotes: String?
+    let requirements: [String]
+    
+    enum CodingKeys: String, CodingKey {
+        case rescuerId = "rescuer_id"
+        case adopterId = "adopter_id"
+        case animalId = "animal_id"
+        case visitType = "visit_type"
+        case scheduledDate = "scheduled_date"
+        case durationMinutes = "duration_minutes"
+        case location
+        case adopterNotes = "adopter_notes"
+        case requirements
     }
 }
 

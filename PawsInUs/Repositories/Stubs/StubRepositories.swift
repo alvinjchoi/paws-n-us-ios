@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import Combine
 
 #if DEBUG
 
@@ -122,20 +123,62 @@ struct StubMessagesRepository: MessagesRepository {
 }
 
 struct StubVisitsRepository: VisitsRepository {
-    func createVisit(_ visit: VisitDTO) async throws {
-        // Stub implementation
+    func createVisit(_ request: CreateVisitRequest) async throws -> Visit {
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+        
+        return Visit(
+            id: UUID(),
+            rescuerId: request.rescuerId,
+            adopterId: request.adopterId,
+            animalId: request.animalId,
+            visitType: request.visitType,
+            scheduledDate: request.scheduledDate,
+            durationMinutes: request.durationMinutes,
+            location: request.location,
+            status: .scheduled,
+            rescuerNotes: nil,
+            adopterNotes: request.adopterNotes,
+            outcome: nil,
+            requirements: request.requirements,
+            preparationNotes: nil,
+            followUpRequired: false,
+            followUpDate: nil,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
     }
     
-    func getVisits(for rescuerID: String) async throws -> [VisitDTO] {
+    func getVisitsForRescuer(_ rescuerId: UUID) async throws -> [Visit] {
+        try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
         return []
     }
     
-    func getVisitsByDate(rescuerID: String, date: Date) async throws -> [VisitDTO] {
+    func getVisitsForAdopter(_ adopterId: String) async throws -> [Visit] {
+        try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
         return []
     }
     
-    func updateVisitStatus(visitID: String, status: String) async throws {
-        // Stub implementation
+    func getVisitsForAnimal(_ animalId: UUID) async throws -> [Visit] {
+        try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+        return []
+    }
+    
+    func updateVisitStatus(_ visitId: UUID, status: VisitStatus) async throws -> Visit {
+        throw NSError(domain: "StubRepository", code: -1, userInfo: [NSLocalizedDescriptionKey: "Stub implementation"])
+    }
+    
+    func cancelVisit(_ visitId: UUID, reason: String?) async throws -> Visit {
+        throw NSError(domain: "StubRepository", code: -1, userInfo: [NSLocalizedDescriptionKey: "Stub implementation"])
+    }
+    
+    func getVisitsByDate(_ rescuerId: UUID, date: Date) async throws -> [Visit] {
+        try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+        return []
+    }
+    
+    func getVisits(_ rescuerId: UUID) async throws -> [Visit] {
+        try await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+        return []
     }
 }
 

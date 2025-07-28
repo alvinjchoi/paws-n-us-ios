@@ -510,13 +510,68 @@ struct ArticleDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // Header image
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .aspectRatio(16/9, contentMode: .fit)
-                    .overlay(
-                        Text("Article Image")
-                            .foregroundColor(.white)
-                    )
+                Group {
+                    if let imageUrl = article.imageUrl, 
+                       let url = URL(string: imageUrl),
+                       !imageUrl.contains("example.com") {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(maxWidth: .infinity)
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .clipped()
+                            case .failure(_):
+                                Rectangle()
+                                    .fill(Color.red.opacity(0.2))
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .overlay(
+                                        VStack(spacing: 8) {
+                                            Image(systemName: "exclamationmark.triangle")
+                                                .font(.title)
+                                                .foregroundColor(.red)
+                                            Text("이미지 로드 실패")
+                                                .font(.caption)
+                                                .foregroundColor(.red)
+                                        }
+                                    )
+                            case .empty:
+                                Rectangle()
+                                    .fill(Color.blue.opacity(0.3))
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .overlay(
+                                        VStack {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            Text("이미지 로딩 중...")
+                                                .foregroundColor(.white)
+                                                .font(.caption)
+                                        }
+                                    )
+                            @unknown default:
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .aspectRatio(16/9, contentMode: .fit)
+                            }
+                        }
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .aspectRatio(16/9, contentMode: .fit)
+                            .overlay(
+                                VStack(spacing: 8) {
+                                    Image(systemName: "photo")
+                                        .font(.largeTitle)
+                                        .foregroundColor(.gray)
+                                    Text("이미지 없음")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            )
+                    }
+                }
                 
                 VStack(alignment: .leading, spacing: 16) {
                     // Category and location

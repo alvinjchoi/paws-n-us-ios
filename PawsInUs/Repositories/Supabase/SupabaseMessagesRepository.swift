@@ -130,12 +130,6 @@ protocol MessagesRepository: Sendable {
     func markMessageAsRead(_ messageID: String) async throws
 }
 
-protocol VisitsRepository: Sendable {
-    func createVisit(_ visit: VisitDTO) async throws
-    func getVisits(for rescuerID: String) async throws -> [VisitDTO]
-    func getVisitsByDate(rescuerID: String, date: Date) async throws -> [VisitDTO]
-    func updateVisitStatus(visitID: String, status: String) async throws
-}
 
 struct SupabaseMessagesRepository: MessagesRepository, @unchecked Sendable {
     let client: SupabaseClient
@@ -175,54 +169,6 @@ struct SupabaseMessagesRepository: MessagesRepository, @unchecked Sendable {
     }
 }
 
-struct SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
-    let client: SupabaseClient
-    
-    func createVisit(_ visit: VisitDTO) async throws {
-        try await client.from("visits")
-            .insert(visit)
-            .execute()
-    }
-    
-    func getVisits(for rescuerID: String) async throws -> [VisitDTO] {
-        let visits: [VisitDTO] = try await client.from("visits")
-            .select()
-            .eq("rescuer_id", value: rescuerID)
-            .order("scheduled_date", ascending: true)
-            .execute()
-            .value
-        
-        return visits
-    }
-    
-    func getVisitsByDate(rescuerID: String, date: Date) async throws -> [VisitDTO] {
-        let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
-        
-        let dateFormatter = ISO8601DateFormatter()
-        let startDateString = dateFormatter.string(from: startOfDay)
-        let endDateString = dateFormatter.string(from: endOfDay)
-        
-        let visits: [VisitDTO] = try await client.from("visits")
-            .select()
-            .eq("rescuer_id", value: rescuerID)
-            .gte("scheduled_date", value: startDateString)
-            .lt("scheduled_date", value: endDateString)
-            .order("scheduled_date", ascending: true)
-            .execute()
-            .value
-        
-        return visits
-    }
-    
-    func updateVisitStatus(visitID: String, status: String) async throws {
-        try await client.from("visits")
-            .update(["status": status])
-            .eq("id", value: visitID)
-            .execute()
-    }
-}
 
 // Repository to get rescuer by user ID
 protocol RescuerRepository: Sendable {

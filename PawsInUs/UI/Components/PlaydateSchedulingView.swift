@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct PlaydateSchedulingView: View {
     let dog: Dog
@@ -16,6 +17,7 @@ struct PlaydateSchedulingView: View {
     @State private var selectedTimeSlot: String?
     @State private var showingConfirmation = false
     @State private var isSubmitting = false
+    @State private var cancellables = Set<AnyCancellable>()
     
     private let guestOptions = [1, 2, 3, 4, 5, 6]
     private let timeSlots = [
@@ -192,93 +194,71 @@ struct PlaydateSchedulingView: View {
     private func submitPlaydateRequest() async {
         isSubmitting = true
         
-        do {
-            // Get current user ID
-            guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
-                print("No user ID found")
+        // Get current user ID
+        guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
+            print("❌ No user ID found")
+            isSubmitting = false
+            return
+        }
+        
+        // Get the rescuer ID for this dog from the shelter_id
+        guard let rescuerID = UUID(uuidString: dog.shelterID) else {
+            print("❌ Invalid rescuer ID from shelter")
+            isSubmitting = false
+            return
+        }
+        
+        // Convert dog ID to UUID
+        guard let animalId = UUID(uuidString: dog.id) else {
+            print("❌ Invalid animal ID")
+            isSubmitting = false
+            return
+        }
+        
+        // Create scheduled date with time
+        let calendar = Calendar.current
+        var dateComponents = calendar.dateComponents([.year, .month, .day], from: selectedDate)
+        
+        // Parse time slot
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "h:mm a"
+        timeFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        if let timeSlot = selectedTimeSlot,
+           let time = timeFormatter.date(from: timeSlot) {
+            let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
+            dateComponents.hour = timeComponents.hour
+            dateComponents.minute = timeComponents.minute
+        }
+        
+        let scheduledDate = calendar.date(from: dateComponents) ?? selectedDate
+        
+        // Create visit request
+        let visitRequest = CreateVisitRequest(
+            rescuerId: rescuerID,
+            adopterId: userID,
+            animalId: animalId,
+            visitType: .meetGreet,
+            scheduledDate: scheduledDate,
+            durationMinutes: 60,
+            location: dog.location,
+            adopterNotes: "놀이 시간 신청 - 인원: \(selectedGuests)명",
+            requirements: []
+        )
+        
+        // Submit visit request
+        Task { @MainActor in
+            do {
+                let visit = try await diContainer.repositories.visitsRepository.createVisit(visitRequest)
+                
                 isSubmitting = false
-                return
+                print("✅ Visit created successfully: \(visit.id)")
+                showingConfirmation = true
+            } catch {
+                isSubmitting = false
+                print("❌ Failed to create visit: \(error)")
+                // Could show error alert here
             }
-            
-            // Get the rescuer ID for this dog (we'll need to fetch this from the dogs table)
-            let dogsRepo = diContainer.repositories.dogsRepository
-            let dog = try await dogsRepo.getDog(by: dog.id)
-            
-            // For now, we'll use the shelter_id as the recipient_id
-            // In a real app, you'd need to fetch the rescuer associated with this dog
-            let recipientID = dog.shelterID
-            
-            // Create scheduled date with time
-            let calendar = Calendar.current
-            var dateComponents = calendar.dateComponents([.year, .month, .day], from: selectedDate)
-            
-            // Parse time slot
-            let timeFormatter = DateFormatter()
-            timeFormatter.dateFormat = "h:mm a"
-            timeFormatter.locale = Locale(identifier: "en_US_POSIX")
-            
-            if let timeSlot = selectedTimeSlot,
-               let time = timeFormatter.date(from: timeSlot) {
-                let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
-                dateComponents.hour = timeComponents.hour
-                dateComponents.minute = timeComponents.minute
-            }
-            
-            let scheduledDate = calendar.date(from: dateComponents) ?? selectedDate
-            let dateFormatter = ISO8601DateFormatter()
-            
-            // Create message
-            let messageRepo = diContainer.repositories.messagesRepository
-            let message = MessageDBDTO(
-                id: UUID().uuidString,
-                senderID: userID,
-                recipientID: recipientID,
-                animalID: dog.id,
-                visitID: nil,
-                subject: "놀이 시간 신청 - \(dog.name)",
-                content: "안녕하세요! \(dog.name)와의 놀이 시간을 신청합니다.\n\n날짜: \(DateFormatter.localizedString(from: selectedDate, dateStyle: .long, timeStyle: .none))\n시간: \(selectedTimeSlot ?? "")\n인원: \(selectedGuests)명",
-                messageType: "visit_request",
-                isRead: false,
-                readAt: nil,
-                priority: "normal",
-                attachmentURLs: [],
-                createdAt: dateFormatter.string(from: Date()),
-                updatedAt: dateFormatter.string(from: Date())
-            )
-            
-            try await messageRepo.createMessage(message)
-            
-            // Create visit
-            let visitsRepo = diContainer.repositories.visitsRepository
-            let visit = VisitDTO(
-                id: UUID().uuidString,
-                rescuerID: recipientID, // Using shelter ID as rescuer ID for now
-                adopterID: userID,
-                animalID: dog.id,
-                visitType: "meet_greet",
-                scheduledDate: dateFormatter.string(from: scheduledDate),
-                durationMinutes: 60,
-                location: dog.location,
-                status: "scheduled",
-                rescuerNotes: nil,
-                adopterNotes: "인원: \(selectedGuests)명",
-                outcome: nil,
-                requirements: [],
-                preparationNotes: nil,
-                followUpRequired: false,
-                followUpDate: nil,
-                createdAt: dateFormatter.string(from: Date()),
-                updatedAt: dateFormatter.string(from: Date())
-            )
-            
-            try await visitsRepo.createVisit(visit)
-            
-            isSubmitting = false
-            showingConfirmation = true
-            
-        } catch {
-            print("Error submitting playdate request: \(error)")
-            isSubmitting = false
         }
     }
 }

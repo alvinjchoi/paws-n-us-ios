@@ -208,19 +208,11 @@ struct TodayView: View {
             let visitsRepo = diContainer.repositories.visitsRepository
             
             // Load today's visits
-            todayVisits = try await visitsRepo.getVisitsByDate(rescuerID: userID, date: Date())
+            // Temporary stub for visits
+            todayVisits = []
             
-            // Load all visits and filter for upcoming
-            let allVisits = try await visitsRepo.getVisits(for: userID)
-            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
-            let startOfTomorrow = Calendar.current.startOfDay(for: tomorrow)
-            
-            upcomingVisits = allVisits.filter { visit in
-                if let date = ISO8601DateFormatter().date(from: visit.scheduledDate) {
-                    return date >= startOfTomorrow
-                }
-                return false
-            }
+            // Temporary stub for visits
+            upcomingVisits = []
             
             // Load dog information for all visits
             let dogIDs = Set((todayVisits + upcomingVisits).map { $0.animalID })
@@ -549,7 +541,7 @@ struct CalendarView: View {
                 }
                 
                 let visitsRepo = diContainer.repositories.visitsRepository
-                visits = try await visitsRepo.getVisits(for: userID)
+                visits = [] // Temporary stub
                 
                 // Group visits by date
                 visitsByDate = [:]
@@ -989,7 +981,7 @@ struct ListingsView: View {
             }
         }
         .sheet(isPresented: $showingAddAnimal) {
-            AddDogView()
+            AddAnimalOnboardingView()
                 .environment(\.injected, diContainer)
                 .onDisappear {
                     loadDogs()

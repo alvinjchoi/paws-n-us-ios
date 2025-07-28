@@ -82,7 +82,7 @@ extension AppEnvironment {
                 pushToken: RealPushTokenWebRepository(session: session),
                 articleRepository: SanityArticleRepository(),
                 messagesRepository: StubMessagesRepository(),
-                visitsRepository: StubVisitsRepository(),
+                visitsRepository: SupabaseVisitsRepository(client: supabaseClient),
                 rescuerRepository: StubRescuerRepository()
             )
         }
