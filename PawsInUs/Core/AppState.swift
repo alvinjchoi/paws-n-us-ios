@@ -24,8 +24,8 @@ extension AppState {
     }
     
     enum Tab: Equatable {
+        case magazine
         case discover
-        case likes
         case profile
     }
 }

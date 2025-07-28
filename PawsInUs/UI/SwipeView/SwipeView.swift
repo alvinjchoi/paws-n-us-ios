@@ -17,10 +17,10 @@ struct SwipeView: View {
     @State private var dragOffset = CGSize.zero
     @State private var showAction = false
     @State private var swipeAction: SwipeAction = .none
-    @State private var shouldLoad = false
     @State private var checkTimer: Timer?
     @State private var selectedDog: Dog?
     @State private var currentImageIndices: [String: Int] = [:] // Track image index for each dog
+    @State private var showingAuth = false
     
     private let swipeThreshold: CGFloat = 100
     private let rotationMultiplier: Double = 0.03
@@ -30,26 +30,17 @@ struct SwipeView: View {
             Color(.systemGray6)
                 .ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                // Custom header
-                headerView
-                
-                // Main content
-                content
-                    .padding(.top, 20)
-            }
+            // Main content with more space
+            content
         }
         .onAppear {
-            shouldLoad = true
-        }
-        .onChange(of: shouldLoad) { oldValue, newValue in
-            if newValue {
-                loadDogs()
-                shouldLoad = false
-            }
+            loadDogs()
         }
         .sheet(item: $selectedDog) { dog in
             DogDetailsView(dog: dog)
+        }
+        .sheet(isPresented: $showingAuth) {
+            AuthView()
         }
     }
     
@@ -70,14 +61,6 @@ struct SwipeView: View {
                     diContainer.appState[\.routing.selectedTab] = .profile
                 }) {
                     Image(systemName: "person.circle")
-                        .font(.title2)
-                        .foregroundColor(.primary)
-                }
-                
-                Button(action: {
-                    diContainer.appState[\.routing.selectedTab] = .likes
-                }) {
-                    Image(systemName: "heart.circle")
                         .font(.title2)
                         .foregroundColor(.primary)
                 }
@@ -217,8 +200,8 @@ struct SwipeView: View {
             } else if swipeAction == .pass {
                 VStack {
                     HStack {
-                        Text("NOPE")
-                            .font(.system(size: 44, weight: .bold))
+                        Text("LATER, FRIEND 🥹")
+                            .font(.system(size: 32, weight: .bold))
                             .foregroundColor(.red)
                             .padding()
                             .overlay(
@@ -248,9 +231,8 @@ struct SwipeView: View {
                             .frame(width: 65, height: 65)
                             .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 2)
                         
-                        Image(systemName: "xmark")
-                            .font(.system(size: 30, weight: .bold))
-                            .foregroundColor(.red)
+                        Text("🥹")
+                            .font(.system(size: 32))
                     }
                 }
                 
@@ -262,9 +244,23 @@ struct SwipeView: View {
                             .frame(width: 65, height: 65)
                             .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 2)
                         
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 30))
-                            .foregroundColor(.green)
+                        if !diContainer.appState[\.userData.isAuthenticated] {
+                            // Show lock icon when not authenticated
+                            ZStack {
+                                Image(systemName: "heart.fill")
+                                    .font(.system(size: 30))
+                                    .foregroundColor(.gray.opacity(0.3))
+                                
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.gray)
+                                    .offset(x: 8, y: 8)
+                            }
+                        } else {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 30))
+                                .foregroundColor(.green)
+                        }
                     }
                 }
             }
@@ -279,7 +275,10 @@ struct SwipeView: View {
                 
                 if abs(value.translation.width) > swipeThreshold {
                     swipeAction = value.translation.width > 0 ? .like : .pass
-                    showAction = true
+                    // Only show action overlay if authenticated or if it's a pass action
+                    if diContainer.appState[\.userData.isAuthenticated] || swipeAction == .pass {
+                        showAction = true
+                    }
                 } else {
                     showAction = false
                 }
@@ -302,6 +301,19 @@ struct SwipeView: View {
               currentIndex < dogs.count else { return }
         
         let dog = dogs[currentIndex]
+        
+        // Check authentication for likes
+        if action == .like && !diContainer.appState[\.userData.isAuthenticated] {
+            // Reset the card position
+            withAnimation(.spring()) {
+                dragOffset = .zero
+                showAction = false
+                swipeAction = .none
+            }
+            // Show auth sheet
+            showingAuth = true
+            return
+        }
         
         // Update state immediately, not after animation
         if action == .like {

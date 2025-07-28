@@ -68,9 +68,9 @@ struct RealDeepLinksHandler: DeepLinksHandler {
                 // TODO: Implement navigation to specific dog
             }
         case .showMatch:
-            // Navigate to likes tab
+            // Navigate to profile tab (likes are now in profile)
             container.appState.bulkUpdate {
-                $0.routing.selectedTab = .likes
+                $0.routing.selectedTab = .profile
                 // TODO: Implement navigation to specific liked dog
             }
         case .showProfile:
