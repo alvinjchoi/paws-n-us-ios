@@ -10,10 +10,12 @@ import SwiftUI
 struct PlaydateSchedulingView: View {
     let dog: Dog
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.injected) private var diContainer
     @State private var selectedGuests = 1
     @State private var selectedDate = Date()
     @State private var selectedTimeSlot: String?
     @State private var showingConfirmation = false
+    @State private var isSubmitting = false
     
     private let guestOptions = [1, 2, 3, 4, 5, 6]
     private let timeSlots = [
@@ -138,18 +140,29 @@ struct PlaydateSchedulingView: View {
                 VStack {
                     Button(action: {
                         if selectedTimeSlot != nil {
-                            showingConfirmation = true
+                            Task {
+                                await submitPlaydateRequest()
+                            }
                         }
                     }) {
-                        Text("놀이 시간 신청")
-                            .font(.system(size: 18, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(selectedTimeSlot != nil ? Color.blue : Color.gray)
-                            .foregroundColor(.white)
-                            .cornerRadius(28)
+                        if isSubmitting {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(Color.gray)
+                                .cornerRadius(28)
+                        } else {
+                            Text("놀이 시간 신청")
+                                .font(.system(size: 18, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(selectedTimeSlot != nil ? Color.blue : Color.gray)
+                                .foregroundColor(.white)
+                                .cornerRadius(28)
+                        }
                     }
-                    .disabled(selectedTimeSlot == nil)
+                    .disabled(selectedTimeSlot == nil || isSubmitting)
                     .padding(.horizontal)
                     .padding(.vertical, 16)
                 }
@@ -173,6 +186,99 @@ struct PlaydateSchedulingView: View {
             }
         } message: {
             Text("\(dog.shelterName)에 놀이 시간 신청이 전송되었습니다. 곧 확인 연락을 드릴 예정입니다!")
+        }
+    }
+    
+    private func submitPlaydateRequest() async {
+        isSubmitting = true
+        
+        do {
+            // Get current user ID
+            guard let userID = diContainer.appState[\.userData.currentUserID] else {
+                print("No user ID found")
+                isSubmitting = false
+                return
+            }
+            
+            // Get the rescuer ID for this dog (we'll need to fetch this from the dogs table)
+            let dogsRepo = diContainer.repositories.dogsRepository
+            let dog = try await dogsRepo.getDog(by: dog.id)
+            
+            // For now, we'll use the shelter_id as the recipient_id
+            // In a real app, you'd need to fetch the rescuer associated with this dog
+            let recipientID = dog.shelterID
+            
+            // Create scheduled date with time
+            let calendar = Calendar.current
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: selectedDate)
+            
+            // Parse time slot
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateFormat = "h:mm a"
+            timeFormatter.locale = Locale(identifier: "en_US_POSIX")
+            
+            if let timeSlot = selectedTimeSlot,
+               let time = timeFormatter.date(from: timeSlot) {
+                let timeComponents = calendar.dateComponents([.hour, .minute], from: time)
+                dateComponents.hour = timeComponents.hour
+                dateComponents.minute = timeComponents.minute
+            }
+            
+            let scheduledDate = calendar.date(from: dateComponents) ?? selectedDate
+            let dateFormatter = ISO8601DateFormatter()
+            
+            // Create message
+            let messageRepo = diContainer.repositories.messagesRepository
+            let message = MessageDBDTO(
+                id: UUID().uuidString,
+                senderID: userID,
+                recipientID: recipientID,
+                animalID: dog.id,
+                visitID: nil,
+                subject: "놀이 시간 신청 - \(dog.name)",
+                content: "안녕하세요! \(dog.name)와의 놀이 시간을 신청합니다.\n\n날짜: \(DateFormatter.localizedString(from: selectedDate, dateStyle: .long, timeStyle: .none))\n시간: \(selectedTimeSlot ?? "")\n인원: \(selectedGuests)명",
+                messageType: "visit_request",
+                isRead: false,
+                readAt: nil,
+                priority: "normal",
+                attachmentURLs: [],
+                createdAt: dateFormatter.string(from: Date()),
+                updatedAt: dateFormatter.string(from: Date())
+            )
+            
+            try await messageRepo.createMessage(message)
+            
+            // Create visit
+            let visitsRepo = diContainer.repositories.visitsRepository
+            let visit = VisitDTO(
+                id: UUID().uuidString,
+                rescuerID: recipientID, // Using shelter ID as rescuer ID for now
+                adopterID: userID,
+                animalID: dog.id,
+                visitType: "meet_greet",
+                scheduledDate: dateFormatter.string(from: scheduledDate),
+                durationMinutes: 60,
+                location: dog.location,
+                status: "scheduled",
+                rescuerNotes: nil,
+                adopterNotes: "인원: \(selectedGuests)명",
+                outcome: nil,
+                requirements: [],
+                preparationNotes: nil,
+                followUpRequired: false,
+                followUpDate: nil,
+                createdAt: dateFormatter.string(from: Date()),
+                updatedAt: dateFormatter.string(from: Date())
+            )
+            
+            try await visitsRepo.createVisit(visit)
+            
+            isSubmitting = false
+            showingConfirmation = true
+            
+        } catch {
+            print("Error submitting playdate request: \(error)")
+            isSubmitting = false
         }
     }
 }

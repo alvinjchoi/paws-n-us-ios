@@ -17,6 +17,10 @@ struct DIContainer {
     let appState: Store<AppState>
     let interactors: Interactors
     let supabaseClient: SupabaseClient
+    
+    var repositories: Repositories {
+        interactors.repositories
+    }
 
     init(appState: Store<AppState> = .init(AppState()), 
          interactors: Interactors,
@@ -44,6 +48,9 @@ extension DIContainer {
         let images: ImagesWebRepository
         let pushToken: PushTokenWebRepository
         let articleRepository: ArticleRepository
+        let messagesRepository: MessagesRepository
+        let visitsRepository: VisitsRepository
+        let rescuerRepository: RescuerRepository
     }
     struct Interactors {
         let appState: Store<AppState>
@@ -66,7 +73,10 @@ extension DIContainer {
                       storageRepository: StubStorageRepository(),
                       images: StubImagesRepository(),
                       pushToken: StubPushTokenRepository(),
-                      articleRepository: SanityArticleRepository()
+                      articleRepository: SanityArticleRepository(),
+                      messagesRepository: StubMessagesRepository(),
+                      visitsRepository: StubVisitsRepository(),
+                      rescuerRepository: StubRescuerRepository()
                   ))
             #else
             fatalError("Stub interactors should only be used in DEBUG mode")

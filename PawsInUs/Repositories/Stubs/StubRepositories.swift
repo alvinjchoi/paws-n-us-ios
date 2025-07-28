@@ -103,6 +103,44 @@ struct StubStorageRepository: StorageRepository {
     }
 }
 
+struct StubMessagesRepository: MessagesRepository {
+    func createMessage(_ message: MessageDBDTO) async throws {
+        // Stub implementation
+    }
+    
+    func getMessages(for recipientID: String) async throws -> [MessageDBDTO] {
+        return []
+    }
+    
+    func markMessageAsRead(_ messageID: String) async throws {
+        // Stub implementation
+    }
+}
+
+struct StubVisitsRepository: VisitsRepository {
+    func createVisit(_ visit: VisitDTO) async throws {
+        // Stub implementation
+    }
+    
+    func getVisits(for rescuerID: String) async throws -> [VisitDTO] {
+        return []
+    }
+    
+    func getVisitsByDate(rescuerID: String, date: Date) async throws -> [VisitDTO] {
+        return []
+    }
+    
+    func updateVisitStatus(visitID: String, status: String) async throws {
+        // Stub implementation
+    }
+}
+
+struct StubRescuerRepository: RescuerRepository {
+    func getRescuerByUserID(_ userID: String) async throws -> RescuerDTO? {
+        return nil
+    }
+}
+
 enum RepositoryError: Error {
     case notFound
 }

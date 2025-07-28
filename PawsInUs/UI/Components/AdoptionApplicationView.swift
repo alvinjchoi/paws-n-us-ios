@@ -10,6 +10,7 @@ import SwiftUI
 struct AdoptionApplicationView: View {
     let dog: Dog
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.injected) private var diContainer
     @State private var fullName = ""
     @State private var email = ""
     @State private var phone = ""
@@ -20,6 +21,7 @@ struct AdoptionApplicationView: View {
     @State private var experience = ""
     @State private var whyAdopt = ""
     @State private var showingConfirmation = false
+    @State private var isSubmitting = false
     
     var isFormValid: Bool {
         !fullName.isEmpty && !email.isEmpty && !phone.isEmpty && !address.isEmpty && !whyAdopt.isEmpty
@@ -115,18 +117,29 @@ struct AdoptionApplicationView: View {
                     // Submit button
                     Button(action: {
                         if isFormValid {
-                            showingConfirmation = true
+                            Task {
+                                await submitAdoptionApplication()
+                            }
                         }
                     }) {
-                        Text("신청서 제출")
-                            .font(.system(size: 18, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(isFormValid ? Color.orange : Color.gray)
-                            .foregroundColor(.white)
-                            .cornerRadius(28)
+                        if isSubmitting {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(Color.gray)
+                                .cornerRadius(28)
+                        } else {
+                            Text("신청서 제출")
+                                .font(.system(size: 18, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(isFormValid ? Color.orange : Color.gray)
+                                .foregroundColor(.white)
+                                .cornerRadius(28)
+                        }
                     }
-                    .disabled(!isFormValid)
+                    .disabled(!isFormValid || isSubmitting)
                     .padding(.horizontal)
                     .padding(.bottom, 32)
                 }
@@ -149,6 +162,78 @@ struct AdoptionApplicationView: View {
             }
         } message: {
             Text("\(dog.name) 입양 신청서가 \(dog.shelterName)에 전송되었습니다. 2-3일 내에 검토 후 연락드리겠습니다.")
+        }
+    }
+    
+    private func submitAdoptionApplication() async {
+        isSubmitting = true
+        
+        do {
+            // Get current user ID
+            guard let userID = diContainer.appState[\.userData.currentUserID] else {
+                print("No user ID found")
+                isSubmitting = false
+                return
+            }
+            
+            // Get the rescuer ID for this dog
+            let dogsRepo = diContainer.repositories.dogsRepository
+            let dog = try await dogsRepo.getDog(by: dog.id)
+            
+            // For now, we'll use the shelter_id as the recipient_id
+            let recipientID = dog.shelterID
+            
+            let dateFormatter = ISO8601DateFormatter()
+            
+            // Create adoption application message
+            let messageRepo = diContainer.repositories.messagesRepository
+            
+            let applicationContent = """
+            입양 신청서 - \(dog.name)
+            
+            신청자 정보:
+            이름: \(fullName)
+            이메일: \(email)
+            전화번호: \(phone)
+            주소: \(address)
+            
+            주거 환경:
+            마당 여부: \(hasYard ? "있음" : "없음")
+            다른 반려동물: \(hasOtherPets ? "있음" : "없음")
+            \(hasOtherPets ? "다른 반려동물 설명: \(otherPetsDescription)" : "")
+            
+            경험 및 동기:
+            반려동물 경험: \(experience.isEmpty ? "없음" : experience)
+            
+            입양 동기:
+            \(whyAdopt)
+            """
+            
+            let message = MessageDBDTO(
+                id: UUID().uuidString,
+                senderID: userID,
+                recipientID: recipientID,
+                animalID: dog.id,
+                visitID: nil,
+                subject: "입양 신청 - \(dog.name)",
+                content: applicationContent,
+                messageType: "adoption_inquiry",
+                isRead: false,
+                readAt: nil,
+                priority: "high",
+                attachmentURLs: [],
+                createdAt: dateFormatter.string(from: Date()),
+                updatedAt: dateFormatter.string(from: Date())
+            )
+            
+            try await messageRepo.createMessage(message)
+            
+            isSubmitting = false
+            showingConfirmation = true
+            
+        } catch {
+            print("Error submitting adoption application: \(error)")
+            isSubmitting = false
         }
     }
 }
