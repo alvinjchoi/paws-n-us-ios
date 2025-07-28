@@ -193,6 +193,7 @@ struct RealRescueInteractor: RescueInteractor {
             let medical_status: String
             let medical_notes: String?
             let is_spayed_neutered: Bool
+            let weight: Double?
             let rescuer_notes: String?
             let is_featured: Bool
             let vaccinations: [String: String]?
@@ -225,6 +226,7 @@ struct RealRescueInteractor: RescueInteractor {
             medical_status: animal.medicalStatus.rawValue,
             medical_notes: animal.medicalNotes,
             is_spayed_neutered: animal.isSpayedNeutered,
+            weight: animal.weight,
             rescuer_notes: animal.rescuerNotes,
             is_featured: animal.isFeatured,
             vaccinations: animal.vaccinations,
@@ -271,6 +273,7 @@ struct RealRescueInteractor: RescueInteractor {
             let medical_status: String
             let medical_notes: String?
             let is_spayed_neutered: Bool
+            let weight: Double?
             let rescuer_notes: String?
             let is_featured: Bool
             let vaccinations: [String: String]?
@@ -301,6 +304,7 @@ struct RealRescueInteractor: RescueInteractor {
             medical_status: animal.medicalStatus.rawValue,
             medical_notes: animal.medicalNotes,
             is_spayed_neutered: animal.isSpayedNeutered,
+            weight: animal.weight,
             rescuer_notes: animal.rescuerNotes,
             is_featured: animal.isFeatured,
             vaccinations: animal.vaccinations,
@@ -620,6 +624,7 @@ struct CreateRescueAnimal {
     let medicalStatus: MedicalStatus
     let medicalNotes: String?
     let isSpayedNeutered: Bool
+    let weight: Double?
     let rescuerNotes: String?
     let isFeatured: Bool
     let vaccinations: [String: String]?

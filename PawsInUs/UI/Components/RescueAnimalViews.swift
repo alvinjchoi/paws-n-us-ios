@@ -172,6 +172,7 @@ struct AddRescueAnimalView: View {
     @State private var medicalStatus: MedicalStatus = .healthy
     @State private var medicalNotes = ""
     @State private var isSpayedNeutered = false
+    @State private var weight: Double = 0.0
     @State private var rescuerNotes = ""
     @State private var isFeatured = false
     
@@ -260,7 +261,7 @@ struct AddRescueAnimalView: View {
                     }
                 }
                 
-                Section("의료 정보") {
+                Section("건강정보") {
                     HStack {
                         Text("건강 상태")
                         Picker("건강 상태", selection: $medicalStatus) {
@@ -271,13 +272,21 @@ struct AddRescueAnimalView: View {
                         .pickerStyle(MenuPickerStyle())
                     }
                     
-                    VStack(alignment: .leading) {
-                        Text("의료 기록")
-                        TextEditor(text: $medicalNotes)
-                            .frame(minHeight: 60)
+                    HStack {
+                        Text("몸무게")
+                        TextField("0.0", value: $weight, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                        Text("kg")
                     }
                     
                     Toggle("중성화 수술 완료", isOn: $isSpayedNeutered)
+                    
+                    VStack(alignment: .leading) {
+                        Text("기타 건강 정보")
+                        TextEditor(text: $medicalNotes)
+                            .frame(minHeight: 60)
+                    }
                 }
                 
                 Section("기타") {
@@ -370,6 +379,7 @@ struct AddRescueAnimalView: View {
                     medicalStatus: medicalStatus,
                     medicalNotes: medicalNotes.isEmpty ? nil : medicalNotes,
                     isSpayedNeutered: isSpayedNeutered,
+                    weight: weight > 0 ? weight : nil,
                     rescuerNotes: rescuerNotes.isEmpty ? nil : rescuerNotes,
                     isFeatured: isFeatured,
                     vaccinations: nil,
@@ -488,17 +498,71 @@ struct RescueAnimalDetailView: View {
                         
                         Divider()
                         
-                        // Medical info
-                        if let medicalNotes = animal.medicalNotes, !medicalNotes.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("의료 기록")
-                                    .font(.headline)
-                                Text(medicalNotes)
-                                    .font(.body)
-                            }
+                        // Health info (건강정보)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("건강정보")
+                                .font(.headline)
                             
-                            Divider()
+                            // Health info card
+                            VStack(alignment: .leading, spacing: 8) {
+                                // Vaccination status
+                                HStack(spacing: 4) {
+                                    Text("*")
+                                        .foregroundColor(.red)
+                                    Text("종합 백신 / 코로나 백신 접종")
+                                    if let vaccinations = animal.vaccinations?["종합백신"], vaccinations == "completed" {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .foregroundColor(.green)
+                                            .font(.system(size: 14))
+                                    }
+                                }
+                                .font(.system(size: 14))
+                                
+                                // Giardia test
+                                HStack(spacing: 4) {
+                                    Text("*")
+                                        .foregroundColor(.red)
+                                    Text("지알디아 음성")
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                        .font(.system(size: 14))
+                                }
+                                .font(.system(size: 14))
+                                
+                                // Weight
+                                if let weight = animal.weight, weight > 0 {
+                                    HStack(spacing: 4) {
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                        Text("몸무게 \(String(format: "%.1f", weight))kg(25년 7월 기준)")
+                                    }
+                                    .font(.system(size: 14))
+                                }
+                                
+                                // Admission date
+                                HStack(spacing: 4) {
+                                    Text("*")
+                                        .foregroundColor(.red)
+                                    Text("입소일 : 25년 7월 3일 기준(3개월령)")
+                                }
+                                .font(.system(size: 14))
+                                
+                                // Additional medical notes
+                                if let medicalNotes = animal.medicalNotes, !medicalNotes.isEmpty {
+                                    HStack(alignment: .top, spacing: 4) {
+                                        Text("*")
+                                            .foregroundColor(.red)
+                                        Text(medicalNotes)
+                                    }
+                                    .font(.system(size: 14))
+                                }
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
                         }
+                        
+                        Divider()
                         
                         // Internal notes for rescuer
                         if let rescuerNotes = animal.rescuerNotes, !rescuerNotes.isEmpty {
@@ -647,6 +711,7 @@ struct EditRescueAnimalView: View {
     @State private var medicalStatus: MedicalStatus
     @State private var medicalNotes: String
     @State private var isSpayedNeutered: Bool
+    @State private var weight: Double
     @State private var rescuerNotes: String
     @State private var isFeatured: Bool
     @State private var available: Bool
@@ -673,6 +738,7 @@ struct EditRescueAnimalView: View {
         _medicalStatus = State(initialValue: animal.medicalStatus)
         _medicalNotes = State(initialValue: animal.medicalNotes ?? "")
         _isSpayedNeutered = State(initialValue: animal.isSpayedNeutered)
+        _weight = State(initialValue: animal.weight ?? 0.0)
         _rescuerNotes = State(initialValue: animal.rescuerNotes ?? "")
         _isFeatured = State(initialValue: animal.isFeatured)
         _available = State(initialValue: animal.available)
@@ -760,7 +826,7 @@ struct EditRescueAnimalView: View {
                     }
                 }
                 
-                Section("의료 정보") {
+                Section("건강정보") {
                     HStack {
                         Text("건강 상태")
                         Picker("건강 상태", selection: $medicalStatus) {
@@ -771,13 +837,21 @@ struct EditRescueAnimalView: View {
                         .pickerStyle(MenuPickerStyle())
                     }
                     
-                    VStack(alignment: .leading) {
-                        Text("의료 기록")
-                        TextEditor(text: $medicalNotes)
-                            .frame(minHeight: 60)
+                    HStack {
+                        Text("몸무게")
+                        TextField("0.0", value: $weight, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                        Text("kg")
                     }
                     
                     Toggle("중성화 수술 완료", isOn: $isSpayedNeutered)
+                    
+                    VStack(alignment: .leading) {
+                        Text("기타 건강 정보")
+                        TextEditor(text: $medicalNotes)
+                            .frame(minHeight: 60)
+                    }
                 }
                 
                 Section("기타") {
@@ -874,6 +948,7 @@ struct EditRescueAnimalView: View {
                     medicalNotes: medicalNotes.isEmpty ? nil : medicalNotes,
                     isSpayedNeutered: isSpayedNeutered,
                     vaccinations: animal.vaccinations ?? [:],
+                    weight: weight > 0 ? weight : nil,
                     fosterFamilyId: animal.fosterFamilyId,
                     documentUrls: animal.documentUrls,
                     rescuerNotes: rescuerNotes.isEmpty ? nil : rescuerNotes,

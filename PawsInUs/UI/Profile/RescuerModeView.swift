@@ -945,9 +945,22 @@ struct ListingsView: View {
                         .padding()
                     }
                 } else if dogs.isEmpty {
-                    emptyStateView
+                    VStack {
+                        // API Integration Status
+                        APIIntegrationStatus()
+                            .padding()
+                        
+                        emptyStateView
+                    }
                 } else {
-                    dogsList(dogs)
+                    VStack {
+                        // API Integration Status
+                        APIIntegrationStatus()
+                            .padding(.horizontal)
+                            .padding(.top)
+                        
+                        dogsList(dogs)
+                    }
                 }
             }
             .navigationTitle("보호 동물")

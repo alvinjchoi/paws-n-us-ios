@@ -134,6 +134,7 @@ struct RescueAnimal: Codable, Identifiable {
     let medicalNotes: String?
     let isSpayedNeutered: Bool
     let vaccinations: [String: String]?
+    let weight: Double?
     let fosterFamilyId: String?
     let documentUrls: [String]
     let rescuerNotes: String?
@@ -163,6 +164,7 @@ struct RescueAnimal: Codable, Identifiable {
         case medicalNotes = "medical_notes"
         case isSpayedNeutered = "is_spayed_neutered"
         case vaccinations
+        case weight
         case fosterFamilyId = "foster_family_id"
         case documentUrls = "document_urls"
         case rescuerNotes = "rescuer_notes"
@@ -210,6 +212,7 @@ struct RescueAnimal: Codable, Identifiable {
         medicalNotes = try container.decodeIfPresent(String.self, forKey: .medicalNotes)
         isSpayedNeutered = try container.decode(Bool.self, forKey: .isSpayedNeutered)
         vaccinations = try container.decodeIfPresent([String: String].self, forKey: .vaccinations)
+        weight = try container.decodeIfPresent(Double.self, forKey: .weight)
         fosterFamilyId = try container.decodeIfPresent(String.self, forKey: .fosterFamilyId)
         documentUrls = try container.decodeIfPresent([String].self, forKey: .documentUrls) ?? []
         rescuerNotes = try container.decodeIfPresent(String.self, forKey: .rescuerNotes)
@@ -264,6 +267,7 @@ struct RescueAnimal: Codable, Identifiable {
         medicalNotes: String?,
         isSpayedNeutered: Bool,
         vaccinations: [String: String]?,
+        weight: Double?,
         fosterFamilyId: String?,
         documentUrls: [String],
         rescuerNotes: String?,
@@ -299,6 +303,7 @@ struct RescueAnimal: Codable, Identifiable {
         self.medicalNotes = medicalNotes
         self.isSpayedNeutered = isSpayedNeutered
         self.vaccinations = vaccinations
+        self.weight = weight
         self.fosterFamilyId = fosterFamilyId
         self.documentUrls = documentUrls
         self.rescuerNotes = rescuerNotes

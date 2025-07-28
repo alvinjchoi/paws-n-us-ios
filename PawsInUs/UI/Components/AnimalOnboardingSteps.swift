@@ -311,10 +311,11 @@ struct MedicalStepView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 32) {
-            Text("🏥 의료 정보")
+            Text("🏥 건강정보")
                 .font(.system(size: 28, weight: .bold))
             
             VStack(alignment: .leading, spacing: 24) {
+                // 건강 상태
                 VStack(alignment: .leading, spacing: 8) {
                     Text("현재 건강 상태 *")
                         .font(.system(size: 16, weight: .medium))
@@ -325,6 +326,64 @@ struct MedicalStepView: View {
                         Text("회복 중").tag("recovering")
                     }
                     .pickerStyle(SegmentedPickerStyle())
+                }
+                
+                // 백신 접종
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("백신 접종")
+                        .font(.system(size: 16, weight: .medium))
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            viewModel.animalData.vaccinations = viewModel.animalData.vaccinations == "completed" ? "" : "completed"
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: viewModel.animalData.vaccinations == "completed" ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(viewModel.animalData.vaccinations == "completed" ? .green : .gray)
+                                Text("종합 백신")
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                        
+                        Button(action: {
+                            viewModel.animalData.isSpayedNeutered = !(viewModel.animalData.isSpayedNeutered ?? false)
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: (viewModel.animalData.isSpayedNeutered ?? false) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor((viewModel.animalData.isSpayedNeutered ?? false) ? .green : .gray)
+                                Text("중성화")
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // 체중
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("몸무게")
+                        .font(.system(size: 16, weight: .medium))
+                    HStack {
+                        TextField("0.0", value: $viewModel.animalData.weight, format: .number)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .keyboardType(.decimalPad)
+                            .frame(width: 100)
+                        Text("kg")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // 추가 의료 정보
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("기타 건강 정보")
+                        .font(.system(size: 16, weight: .medium))
+                    TextEditor(text: $viewModel.animalData.medicalNotes)
+                        .frame(minHeight: 80)
+                        .padding(8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                    Text("예: 지알디아 음성, 피부병 치료 완료, 알레르기 없음 등")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
                 }
             }
             

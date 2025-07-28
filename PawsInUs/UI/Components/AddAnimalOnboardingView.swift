@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import Supabase
 
 // MARK: - Main Onboarding Flow
 struct AddAnimalOnboardingView: View {
@@ -130,8 +131,18 @@ struct AddAnimalOnboardingView: View {
             
             Button(viewModel.isLastStep ? "Publish" : "Next") {
                 if viewModel.isLastStep {
-                    viewModel.publishAnimal()
-                    dismiss()
+                    Task {
+                        do {
+                            let animalId = try await viewModel.publishAnimal()
+                            await MainActor.run {
+                                print("✅ Successfully published animal with ID: \(animalId)")
+                                dismiss()
+                            }
+                        } catch {
+                            print("❌ Failed to publish animal: \(error)")
+                            // TODO: Show error alert to user
+                        }
+                    }
                 } else {
                     viewModel.goToNextStep()
                 }
@@ -166,7 +177,7 @@ enum OnboardingStep: Int, CaseIterable {
         case .basicInfo: return "Basic Information"
         case .photos: return "Photos"
         case .characteristics: return "Characteristics"
-        case .medical: return "Medical Info"
+        case .medical: return "Health Info"
         case .location: return "Location"
         case .review: return "Review"
         }
@@ -174,6 +185,7 @@ enum OnboardingStep: Int, CaseIterable {
 }
 
 // MARK: - View Model
+@MainActor
 class AnimalOnboardingViewModel: ObservableObject {
     @Published var currentStep: OnboardingStep = .welcome
     @Published var animalData = AnimalDraftData()
@@ -229,9 +241,56 @@ class AnimalOnboardingViewModel: ObservableObject {
         print("Saving draft: \(animalData)")
     }
     
-    func publishAnimal() {
-        // Publish animal to database
-        print("Publishing animal: \(animalData)")
+    func publishAnimal() async throws -> String {
+        // Convert age to total months
+        let ageInMonths = animalData.ageYears * 12 + animalData.ageMonths
+        
+        // Map help types to API format
+        let helpTypes = animalData.helpTypes.map { type in
+            switch type {
+            case "transport": return "Transport"
+            case "temporary_care": return "Temporary Care"
+            case "grooming": return "Grooming"
+            default: return type
+            }
+        }
+        
+        // Get current user's auth token if available
+        let authToken = try? await SupabaseConfig.client.auth.session.accessToken
+        
+        // Call the local API
+        let response = try await LocalAPIClient.shared.createAnimal(
+            name: animalData.name,
+            species: animalData.species,
+            breed: animalData.breed.isEmpty ? nil : animalData.breed,
+            age: ageInMonths,
+            gender: animalData.gender.isEmpty ? "unknown" : animalData.gender,
+            size: animalData.size.isEmpty ? "medium" : animalData.size,
+            bio: animalData.bio,
+            traits: animalData.traits,
+            energyLevel: "medium", // Default for now
+            goodWithKids: false, // Default for now
+            goodWithPets: false, // Default for now
+            houseTrained: false, // Default for now
+            location: animalData.location,
+            specialNeeds: nil,
+            isSpayedNeutered: animalData.isSpayedNeutered ?? false,
+            medicalStatus: animalData.medicalStatus.isEmpty ? "healthy" : animalData.medicalStatus,
+            medicalNotes: animalData.medicalNotes.isEmpty ? nil : animalData.medicalNotes,
+            vaccinations: animalData.vaccinations.isEmpty ? nil : animalData.vaccinations,
+            weight: animalData.weight > 0 ? animalData.weight : nil,
+            adoptionFee: nil,
+            rescueDate: Date(),
+            rescueLocation: animalData.location,
+            rescueStory: animalData.rescueStory.isEmpty ? nil : animalData.rescueStory,
+            images: animalData.photos,
+            helpNeeded: helpTypes,
+            rescuerId: nil,
+            authToken: authToken
+        )
+        
+        print("✅ Animal published successfully: \(response.animal.name) with ID: \(response.animal.id)")
+        return response.animal.id
     }
 }
 
@@ -253,6 +312,9 @@ struct AnimalDraftData {
     var traits: [String] = []
     var medicalStatus: String = ""
     var vaccinations: String = ""
+    var isSpayedNeutered: Bool? = false
+    var weight: Double = 0.0
+    var medicalNotes: String = ""
     var location: String = ""
     var rescueStory: String = ""
     var helpTypes: [String] = []
