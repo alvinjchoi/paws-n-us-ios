@@ -148,9 +148,13 @@ struct SwipeView: View {
                 // Render cards in reverse order so the current card is on top
                 ForEach(Array(dogs.enumerated().reversed()), id: \.element.id) { index, dog in
                     if index >= currentIndex && index < currentIndex + 3 {
-                        DogCardView(dog: dog, onInfoTap: {
-                            selectedDog = dog
-                        })
+                        DogCardView(
+                            dog: dog, 
+                            onInfoTap: {
+                                selectedDog = dog
+                            },
+                            isActive: index == currentIndex
+                        )
                             .frame(width: geometry.size.width - 40, height: geometry.size.height - 80)
                             .aspectRatio(3/4, contentMode: .fit)
                             .offset(y: CGFloat(index - currentIndex) * 10 - 25)
@@ -324,6 +328,7 @@ enum SwipeAction {
 struct DogCardView: View {
     let dog: Dog
     let onInfoTap: () -> Void
+    let isActive: Bool
     @State private var currentImageIndex = 0
     
     var body: some View {
@@ -439,76 +444,81 @@ struct DogCardView: View {
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
         .overlay(
-            // Tap areas for navigation - positioned to avoid info button
-            VStack {
-                // Upper portion for photo navigation
-                HStack(spacing: 0) {
-                    // Left edge - previous photo
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(width: 80)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if currentImageIndex > 0 {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    currentImageIndex -= 1
-                                }
-                            }
-                        }
-                        .overlay(
-                            Group {
-                                if dog.imageURLs.count > 1 && currentImageIndex > 0 {
-                                    HStack {
-                                        Image(systemName: "chevron.left")
-                                            .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.white.opacity(0.7))
-                                            .padding(.leading, 8)
-                                        Spacer()
+            // Only show tap areas on active card
+            Group {
+                if isActive {
+                    // Tap areas for navigation - positioned to avoid info button
+                    VStack {
+                        // Upper portion for photo navigation
+                        HStack(spacing: 0) {
+                            // Left edge - previous photo
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 80)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if currentImageIndex > 0 {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            currentImageIndex -= 1
+                                        }
                                     }
                                 }
-                            }
-                        )
-                    
-                    // Center area - show details
-                    Rectangle()
-                        .fill(Color.clear)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            onInfoTap()
-                        }
-                    
-                    // Right edge - next photo
-                    Rectangle()
-                        .fill(Color.clear)
-                        .frame(width: 80)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if currentImageIndex < dog.imageURLs.count - 1 {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    currentImageIndex += 1
+                                .overlay(
+                                    Group {
+                                        if dog.imageURLs.count > 1 && currentImageIndex > 0 {
+                                            HStack {
+                                                Image(systemName: "chevron.left")
+                                                    .font(.system(size: 20, weight: .medium))
+                                                    .foregroundColor(.white.opacity(0.7))
+                                                    .padding(.leading, 8)
+                                                Spacer()
+                                            }
+                                        }
+                                    }
+                                )
+                            
+                            // Center area - show details
+                            Rectangle()
+                                .fill(Color.clear)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    onInfoTap()
                                 }
-                            }
-                        }
-                        .overlay(
-                            Group {
-                                if dog.imageURLs.count > 1 && currentImageIndex < dog.imageURLs.count - 1 {
-                                    HStack {
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.white.opacity(0.7))
-                                            .padding(.trailing, 8)
+                            
+                            // Right edge - next photo
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 80)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if currentImageIndex < dog.imageURLs.count - 1 {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            currentImageIndex += 1
+                                        }
                                     }
                                 }
-                            }
-                        )
+                                .overlay(
+                                    Group {
+                                        if dog.imageURLs.count > 1 && currentImageIndex < dog.imageURLs.count - 1 {
+                                            HStack {
+                                                Spacer()
+                                                Image(systemName: "chevron.right")
+                                                    .font(.system(size: 20, weight: .medium))
+                                                    .foregroundColor(.white.opacity(0.7))
+                                                    .padding(.trailing, 8)
+                                            }
+                                        }
+                                    }
+                                )
+                        }
+                        
+                        // Bottom area - reduced since no info button
+                        Spacer()
+                            .frame(height: 120) // Space for text area
+                    }
+                    .allowsHitTesting(true) // Ensure tap gestures work
                 }
-                
-                // Bottom area - reduced since no info button
-                Spacer()
-                    .frame(height: 120) // Space for text area
             }
-            .allowsHitTesting(true) // Ensure tap gestures work
         )
     }
 }
