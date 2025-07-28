@@ -13,16 +13,19 @@ struct DogDetailsView: View {
     let dog: Dog
     @State private var currentImageIndex = 0
     @State private var isLiked = false
+    @State private var showingPlaydateScheduler = false
+    @State private var showingAdoptionApplication = false
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Image carousel
-                    imageCarousel
-                    
-                    // Dog info
-                    VStack(alignment: .leading, spacing: 20) {
+        NavigationView {
+            ZStack(alignment: .bottom) {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Image carousel
+                        imageCarousel
+                        
+                        // Dog info
+                        VStack(alignment: .leading, spacing: 20) {
                         // Name and basic info
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
@@ -117,21 +120,52 @@ struct DogDetailsView: View {
                         }
                         .padding(.horizontal)
                         
-                        // Contact button
-                        Button(action: contactShelter) {
-                            Text("보호소 연락하기")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(Color.orange)
-                                .cornerRadius(28)
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 20)
-                        .padding(.bottom, 40)
+                        // Add bottom padding to make room for floating buttons
+                        Color.clear
+                            .frame(height: 100)
                     }
                 }
+                }
+                
+                // Fixed bottom buttons
+                VStack {
+                    HStack(spacing: 12) {
+                        // Playdate button (70%)
+                        Button(action: {
+                            showingPlaydateScheduler = true
+                        }) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                Text("놀이 시간 예약")
+                            }
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(25)
+                        }
+                        .frame(maxWidth: .infinity)
+                        
+                        // Adoption button (30%)
+                        Button(action: {
+                            showingAdoptionApplication = true
+                        }) {
+                            Text("입양")
+                                .font(.system(size: 16, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.orange)
+                                .foregroundColor(.white)
+                                .cornerRadius(25)
+                        }
+                        .frame(width: 100)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 16)
+                }
+                .background(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: -5)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -151,9 +185,16 @@ struct DogDetailsView: View {
                     }
                 }
             }
+            .navigationBarHidden(false)
         }
         .onAppear {
             checkIfLiked()
+        }
+        .sheet(isPresented: $showingPlaydateScheduler) {
+            PlaydateSchedulingView(dog: dog)
+        }
+        .sheet(isPresented: $showingAdoptionApplication) {
+            AdoptionApplicationView(dog: dog)
         }
     }
     
@@ -197,10 +238,6 @@ struct DogDetailsView: View {
         isLiked.toggle()
     }
     
-    private func contactShelter() {
-        // TODO: Implement contact functionality
-        print("Contact shelter for dog: \(dog.name)")
-    }
     
     private func shareDog() {
         // TODO: Implement share functionality
@@ -213,7 +250,6 @@ struct DogDetailsView: View {
         .inject(DIContainer(
             appState: AppState(),
             interactors: .stub,
-            modelContainer: .stub,
             supabaseClient: SupabaseConfig.client
         ))
 }
