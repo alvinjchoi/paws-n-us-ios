@@ -163,24 +163,175 @@ struct CalendarView: View {
 
 // MARK: - Listings View
 struct ListingsView: View {
+    @Environment(\.injected) private var diContainer
+    @State private var rescueAnimals: Loadable<[RescueAnimal]> = .notRequested
+    @State private var currentRescuer: Rescuer?
+    @State private var showingAddAnimal = false
+    @State private var showingAnimalDetail: RescueAnimal?
+    
     var body: some View {
         NavigationView {
             VStack {
-                Text("보호 중인 동물 목록")
-                    .font(.title)
-                    .padding()
-                
-                Button(action: {}) {
-                    Label("새 동물 등록", systemImage: "plus.circle.fill")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.orange)
+                switch rescueAnimals {
+                case .notRequested, .isLoading:
+                    VStack {
+                        ProgressView()
+                        Text("동물 목록을 불러오는 중...")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
+                case .loaded(let animals):
+                    if animals.isEmpty {
+                        emptyStateView
+                    } else {
+                        animalsList(animals)
+                    }
+                    
+                case .failed(let error):
+                    VStack {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 50))
+                            .foregroundColor(.red)
+                        Text("동물 목록을 불러올 수 없습니다")
+                            .font(.headline)
+                        Text(error.localizedDescription)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Button("다시 시도") {
+                            loadRescueAnimals()
+                        }
+                        .padding()
+                    }
                 }
-                .padding()
-                
-                Spacer()
             }
             .navigationTitle("보호 동물")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showingAddAnimal = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                    .disabled(currentRescuer == nil)
+                }
+            }
+        }
+        .task {
+            await loadCurrentRescuer()
+            loadRescueAnimals()
+        }
+        .sheet(isPresented: $showingAddAnimal) {
+            AddRescueAnimalView()
+                .onDisappear {
+                    loadRescueAnimals()
+                }
+        }
+        .sheet(item: $showingAnimalDetail) { animal in
+            RescueAnimalDetailView(animal: animal)
+                .onDisappear {
+                    loadRescueAnimals()
+                }
+        }
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 30) {
+            Spacer()
+            
+            Image(systemName: "pawprint.2")
+                .font(.system(size: 80))
+                .foregroundColor(.gray.opacity(0.5))
+            
+            VStack(spacing: 12) {
+                Text("아직 보호 중인 동물이 없습니다")
+                    .font(.title2)
+                    .fontWeight(.medium)
+                
+                Text("첫 번째 보호 동물을 등록해보세요")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+            
+            Button(action: {
+                showingAddAnimal = true
+            }) {
+                Label("새 동물 등록", systemImage: "plus.circle.fill")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.orange)
+                    .cornerRadius(25)
+            }
+            .disabled(currentRescuer == nil)
+            
+            Spacer()
+        }
+        .padding()
+    }
+    
+    private func animalsList(_ animals: [RescueAnimal]) -> some View {
+        ScrollView {
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 16) {
+                ForEach(animals) { animal in
+                    RescueAnimalCard(animal: animal) {
+                        showingAnimalDetail = animal
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 100)
+        }
+    }
+    
+    private func loadRescueAnimals() {
+        guard let rescuer = currentRescuer else { return }
+        
+        rescueAnimals = .isLoading(last: nil, cancelBag: CancelBag())
+        
+        Task {
+            do {
+                let animals = try await diContainer.interactors.rescueInteractor.getRescueAnimals(for: rescuer.id)
+                await MainActor.run {
+                    rescueAnimals = .loaded(animals)
+                }
+            } catch {
+                await MainActor.run {
+                    rescueAnimals = .failed(error)
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func loadCurrentRescuer() async {
+        do {
+            currentRescuer = try await diContainer.interactors.rescueInteractor.getCurrentRescuer()
+            
+            // If no rescuer profile exists, create a basic one
+            if currentRescuer == nil {
+                let basicProfile = CreateRescuerProfile(
+                    organizationName: nil,
+                    registrationNumber: nil,
+                    specialties: [],
+                    capacity: 5,
+                    location: nil,
+                    contactPhone: nil,
+                    contactEmail: nil,
+                    bio: nil,
+                    websiteUrl: nil
+                )
+                
+                currentRescuer = try await diContainer.interactors.rescueInteractor.createRescuerProfile(basicProfile)
+            }
+        } catch {
+            print("Failed to load or create rescuer profile: \(error)")
         }
     }
 }
