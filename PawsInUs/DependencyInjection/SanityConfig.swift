@@ -117,21 +117,7 @@ final class SanityClient: @unchecked Sendable {
     }
     
     func fetchArticlesWithCompletion(completion: @escaping @Sendable (Result<[Article], Error>) -> Void) {
-        let query = """
-        *[_type == "article" && published == true] | order(publishedDate desc) {
-          _id,
-          title,
-          subtitle,
-          category,
-          "imageUrl": coalesce(imageURL, featuredImage.asset->url),
-          author,
-          publishedDate,
-          readTime,
-          location,
-          featured,
-          "slug": slug.current
-        }
-        """
+        let query = "*[_type == \"article\" && published == true] | order(publishedDate desc) { _id, title, subtitle, category, \"imageUrl\": coalesce(imageURL, featuredImage.asset->url), author, publishedDate, readTime, location, featured, \"slug\": slug.current }"
         
         executeQuery(query: query, responseType: [Article].self, completion: completion)
     }
@@ -145,21 +131,7 @@ final class SanityClient: @unchecked Sendable {
     }
     
     func fetchFeaturedArticlesWithCompletion(completion: @escaping @Sendable (Result<[Article], Error>) -> Void) {
-        let query = """
-        *[_type == "article" && published == true && featured == true] | order(publishedDate desc) {
-          _id,
-          title,
-          subtitle,
-          category,
-          "imageUrl": coalesce(imageURL, featuredImage.asset->url),
-          author,
-          publishedDate,
-          readTime,
-          location,
-          featured,
-          "slug": slug.current
-        }
-        """
+        let query = "*[_type == \"article\" && published == true && featured == true] | order(publishedDate desc) { _id, title, subtitle, category, \"imageUrl\": coalesce(imageURL, featuredImage.asset->url), author, publishedDate, readTime, location, featured, \"slug\": slug.current }"
         
         executeQuery(query: query, responseType: [Article].self, completion: completion)
     }
@@ -173,21 +145,7 @@ final class SanityClient: @unchecked Sendable {
     }
     
     func fetchArticlesWithCompletion(by category: String, completion: @escaping @Sendable (Result<[Article], Error>) -> Void) {
-        let query = """
-        *[_type == "article" && published == true && category == "\(category)"] | order(publishedDate desc) {
-          _id,
-          title,
-          subtitle,
-          category,
-          "imageUrl": coalesce(imageURL, featuredImage.asset->url),
-          author,
-          publishedDate,
-          readTime,
-          location,
-          featured,
-          "slug": slug.current
-        }
-        """
+        let query = "*[_type == \"article\" && published == true && category == \"\(category)\"] | order(publishedDate desc) { _id, title, subtitle, category, \"imageUrl\": coalesce(imageURL, featuredImage.asset->url), author, publishedDate, readTime, location, featured, \"slug\": slug.current }"
         
         executeQuery(query: query, responseType: [Article].self, completion: completion)
     }
@@ -201,21 +159,7 @@ final class SanityClient: @unchecked Sendable {
     }
     
     func fetchArticleWithCompletion(by id: String, completion: @escaping @Sendable (Result<Article?, Error>) -> Void) {
-        let query = """
-        *[_type == "article" && _id == "\(id)"][0] {
-          _id,
-          title,
-          subtitle,
-          category,
-          "imageUrl": coalesce(imageURL, featuredImage.asset->url),
-          content,
-          author,
-          publishedDate,
-          readTime,
-          location,
-          "slug": slug.current
-        }
-        """
+        let query = "*[_type == \"article\" && _id == \"\(id)\"][0] { _id, title, subtitle, category, \"imageUrl\": coalesce(imageURL, featuredImage.asset->url), content, author, publishedDate, readTime, location, \"slug\": slug.current }"
         
         executeQuery(query: query, responseType: Article?.self, completion: completion)
     }
