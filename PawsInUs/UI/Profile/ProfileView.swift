@@ -239,14 +239,6 @@ struct ProfileView: View {
                         .cornerRadius(25)
                 }
                 .padding(.horizontal, 40)
-                
-                Button(action: {
-                    // Continue as guest - do nothing
-                }) {
-                    Text("계속 둘러보기")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.orange)
-                }
             }
             
             Spacer()

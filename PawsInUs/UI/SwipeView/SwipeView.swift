@@ -103,7 +103,7 @@ struct SwipeView: View {
             case .isLoading:
                 ProgressView()
             case .loaded(let dogsArray):
-                if dogsArray.isEmpty {
+                if dogsArray.isEmpty || currentIndex >= dogsArray.count {
                     emptyView
                 } else {
                     swipeStack(dogs: dogsArray)
@@ -123,13 +123,24 @@ struct SwipeView: View {
                     Image(systemName: "pawprint.fill")
                         .font(.system(size: 60))
                         .foregroundColor(.gray)
-                    Text("No more dogs to show")
+                    Text("더 이상 표시할 강아지가 없습니다")
                         .font(.title2)
                         .foregroundColor(.secondary)
-                    Text("Check back later for more furry friends!")
+                    Text("나중에 다시 확인해주세요!")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+                    
+                    Button(action: loadDogs) {
+                        Label("새로고침", systemImage: "arrow.clockwise")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Color.orange)
+                            .cornerRadius(25)
+                    }
+                    .padding(.top, 10)
                 }
                 .padding()
                 
@@ -319,6 +330,8 @@ struct SwipeView: View {
     }
     
     private func loadDogs() {
+        // Reset index when loading new dogs
+        currentIndex = 0
         diContainer.interactors.dogsInteractor.loadDogs(dogs: $dogs)
     }
     
