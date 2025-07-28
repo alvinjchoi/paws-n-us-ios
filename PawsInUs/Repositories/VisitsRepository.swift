@@ -36,7 +36,7 @@ final class SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
             .execute()
             .value
         
-        print("✅ Visit created successfully: \(visit.id)")
+        // Visit created successfully
         return visit
     }
     
@@ -49,7 +49,7 @@ final class SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
             .execute()
             .value
         
-        print("✅ Fetched \(visits.count) visits for rescuer: \(rescuerId)")
+        // Fetched visits for rescuer
         return visits
     }
     
@@ -62,7 +62,7 @@ final class SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
             .execute()
             .value
         
-        print("✅ Fetched \(visits.count) visits for adopter: \(adopterId)")
+        // Fetched visits for adopter
         return visits
     }
     
@@ -75,7 +75,7 @@ final class SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
             .execute()
             .value
         
-        print("✅ Fetched \(visits.count) visits for animal: \(animalId)")
+        // Fetched visits for animal
         return visits
     }
     
@@ -89,7 +89,7 @@ final class SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
             .execute()
             .value
         
-        print("✅ Visit status updated: \(visitId) -> \(status.rawValue)")
+        // Visit status updated
         return visit
     }
     
@@ -113,7 +113,7 @@ final class SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
             .execute()
             .value
         
-        print("✅ Visit cancelled: \(visitId)")
+        // Visit cancelled
         return visit
     }
     
@@ -132,7 +132,7 @@ final class SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
             .execute()
             .value
         
-        print("✅ Fetched \(visits.count) visits for rescuer \(rescuerId) on \(date)")
+        // Fetched visits by date
         return visits
     }
     

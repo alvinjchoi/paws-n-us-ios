@@ -119,17 +119,21 @@ struct LocalAPIClient {
         
         request.httpBody = try JSONEncoder().encode(requestBody)
         
+        
         let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw LocalAPIError.serverError("Invalid response")
         }
         
+        
         if httpResponse.statusCode == 401 {
             throw LocalAPIError.unauthorized
         }
         
         if httpResponse.statusCode != 201 {
+            if let responseString = String(data: data, encoding: .utf8) {
+            }
             if let errorData = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                 throw LocalAPIError.serverError(errorData.error)
             }

@@ -24,11 +24,9 @@ final class SanityArticleRepository: ArticleRepository, ObservableObject {
         SanityClient.shared.fetchArticlesWithCompletion { result in
             switch result {
             case .success(let articles):
-                print("📰 SanityArticleRepository: Successfully fetched \(articles.count) articles from Sanity")
                 subject.send(articles)
                 subject.send(completion: .finished)
             case .failure(let error):
-                print("📰 SanityArticleRepository: Error fetching articles: \(error)")
                 subject.send(completion: .failure(error))
             }
         }
@@ -42,11 +40,9 @@ final class SanityArticleRepository: ArticleRepository, ObservableObject {
         SanityClient.shared.fetchFeaturedArticlesWithCompletion { result in
             switch result {
             case .success(let articles):
-                print("📰 SanityArticleRepository: Successfully fetched \(articles.count) featured articles from Sanity")
                 subject.send(articles)
                 subject.send(completion: .finished)
             case .failure(let error):
-                print("📰 SanityArticleRepository: Error fetching featured articles: \(error)")
                 subject.send(completion: .failure(error))
             }
         }
@@ -60,11 +56,9 @@ final class SanityArticleRepository: ArticleRepository, ObservableObject {
         SanityClient.shared.fetchArticlesWithCompletion(by: category.rawValue) { result in
             switch result {
             case .success(let articles):
-                print("📰 SanityArticleRepository: Successfully fetched \(articles.count) articles for category \(category.rawValue)")
                 subject.send(articles)
                 subject.send(completion: .finished)
             case .failure(let error):
-                print("📰 SanityArticleRepository: Error fetching articles for category \(category.rawValue): \(error)")
                 subject.send(completion: .failure(error))
             }
         }
@@ -78,11 +72,9 @@ final class SanityArticleRepository: ArticleRepository, ObservableObject {
         SanityClient.shared.fetchArticleWithCompletion(by: id) { result in
             switch result {
             case .success(let article):
-                print("📰 SanityArticleRepository: Successfully fetched article with id \(id)")
                 subject.send(article)
                 subject.send(completion: .finished)
             case .failure(let error):
-                print("📰 SanityArticleRepository: Error fetching article with id \(id): \(error)")
                 subject.send(completion: .failure(error))
             }
         }
