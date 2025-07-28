@@ -340,6 +340,7 @@ struct DogCardView: View {
                     // Background image with fixed aspect ratio
                     Group {
                         if !dog.imageURLs.isEmpty, let url = URL(string: dog.imageURLs[currentImageIndex]) {
+                            let _ = print("Loading image at index \(currentImageIndex): \(url.absoluteString)")
                             CachedAsyncImage(url: url) { image in
                                 image
                                     .resizable()
@@ -352,6 +353,8 @@ struct DogCardView: View {
                                             .progressViewStyle(CircularProgressViewStyle())
                                     )
                             }
+                            .id("\(dog.id)-\(currentImageIndex)") // Force view update when index changes
+                            .transition(.opacity)
                         } else {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.3))
@@ -458,6 +461,7 @@ struct DogCardView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     if currentImageIndex > 0 {
+                                        print("Left tap: changing from index \(currentImageIndex) to \(currentImageIndex - 1)")
                                         withAnimation(.easeInOut(duration: 0.3)) {
                                             currentImageIndex -= 1
                                         }
@@ -492,6 +496,8 @@ struct DogCardView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     if currentImageIndex < dog.imageURLs.count - 1 {
+                                        print("Right tap: changing from index \(currentImageIndex) to \(currentImageIndex + 1)")
+                                        print("Total images: \(dog.imageURLs.count)")
                                         withAnimation(.easeInOut(duration: 0.3)) {
                                             currentImageIndex += 1
                                         }
