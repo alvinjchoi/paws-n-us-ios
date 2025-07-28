@@ -43,6 +43,7 @@ extension DIContainer {
         let storageRepository: StorageRepository
         let images: ImagesWebRepository
         let pushToken: PushTokenWebRepository
+        let articleRepository: ArticleRepository
     }
     struct Interactors {
         let appState: Store<AppState>
@@ -64,7 +65,8 @@ extension DIContainer {
                       authRepository: StubAuthRepository(),
                       storageRepository: StubStorageRepository(),
                       images: StubImagesRepository(),
-                      pushToken: StubPushTokenRepository()
+                      pushToken: StubPushTokenRepository(),
+                      articleRepository: SanityArticleRepository()
                   ))
             #else
             fatalError("Stub interactors should only be used in DEBUG mode")

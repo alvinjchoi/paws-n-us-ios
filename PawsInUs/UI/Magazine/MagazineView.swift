@@ -6,21 +6,25 @@
 //
 
 import SwiftUI
+import Combine
 
 struct MagazineView: View {
     @Environment(\.injected) private var diContainer
-    @State private var articles = Article.sampleArticles
+    @State private var articles: [Article] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String?
+    @State private var cancellables = Set<AnyCancellable>()
     
     var featuredArticles: [Article] {
-        articles.filter { $0.category == .featured }
+        articles.filter { $0.featured }
     }
     
     var guideArticles: [Article] {
-        articles.filter { $0.category == .guides }
+        articles.filter { $0.categoryEnum == .guides }
     }
     
     var placeArticles: [Article] {
-        articles.filter { $0.category == .places }
+        articles.filter { $0.categoryEnum == .places }
     }
     
     var body: some View {
@@ -33,7 +37,26 @@ struct MagazineView: View {
                 headerView
                 
                 NavigationView {
-                    ScrollView {
+                    Group {
+                        if isLoading {
+                            ProgressView("Loading articles...")
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else if let errorMessage = errorMessage {
+                            VStack(spacing: 16) {
+                                Image(systemName: "exclamationmark.triangle")
+                                    .font(.largeTitle)
+                                    .foregroundColor(.orange)
+                                Text(errorMessage)
+                                    .multilineTextAlignment(.center)
+                                Button("다시 시도") {
+                                    loadArticles()
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            ScrollView {
                         VStack(spacing: 0) {
                     // Hero Featured Article
                     if let heroArticle = featuredArticles.first {
@@ -122,10 +145,17 @@ struct MagazineView: View {
                     }
                     .padding(.bottom, 100)
                 }
+                        }
+                    }
             }
             .navigationBarHidden(true)
             .background(Color(.systemGray6))
         }
+            }
+        }
+        .onAppear {
+            if articles.isEmpty {
+                loadArticles()
             }
         }
     }
@@ -144,6 +174,28 @@ struct MagazineView: View {
         .padding(.vertical, 12)
         .background(Color(.systemBackground))
         .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 2)
+    }
+    
+    private func loadArticles() {
+        isLoading = true
+        errorMessage = nil
+        
+        diContainer.interactors.repositories.articleRepository.getAllArticles()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    isLoading = false
+                    if case .failure(let error) = completion {
+                        errorMessage = "Failed to load articles: \(error.localizedDescription)"
+                        // Fallback to sample data
+                        articles = Article.sampleArticles
+                    }
+                },
+                receiveValue: { fetchedArticles in
+                    articles = fetchedArticles.isEmpty ? Article.sampleArticles : fetchedArticles
+                }
+            )
+            .store(in: &cancellables)
     }
 }
 
@@ -332,7 +384,7 @@ struct ArticleDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // Category and location
                     HStack {
-                        Text(article.category.displayName)
+                        Text(article.categoryEnum.displayName)
                             .font(.caption)
                             .foregroundColor(.orange)
                             .textCase(.uppercase)
@@ -371,7 +423,7 @@ struct ArticleDetailView: View {
                         
                         Spacer()
                         
-                        Text(article.publishedDate.formatted(date: .abbreviated, time: .omitted))
+                        Text(article.parsedDate.formatted(date: .abbreviated, time: .omitted))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -379,9 +431,17 @@ struct ArticleDetailView: View {
                     Divider()
                     
                     // Content
-                    Text(article.content)
-                        .font(.body)
-                        .lineSpacing(8)
+                    if let contentBlocks = article.content {
+                        VStack(alignment: .leading, spacing: 16) {
+                            ForEach(contentBlocks.indices, id: \.self) { index in
+                                PortableTextView(block: contentBlocks[index])
+                            }
+                        }
+                    } else {
+                        Text("No content available")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 50)
