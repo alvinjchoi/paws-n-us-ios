@@ -56,23 +56,33 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         
         isLoading = true
         
+        // Set a timeout to prevent infinite loading
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+            if self.isLoading && self.image == nil {
+                self.isLoading = false
+                self.loadFailed = true
+            }
+        }
         
         var request = URLRequest(url: url)
         request.cachePolicy = .returnCacheDataElseLoad
-        request.timeoutInterval = 30
+        request.timeoutInterval = 10
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
+                print("CachedAsyncImage: Error loading \(url): \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     self.isLoading = false
                     // Retry if we haven't exceeded max retries
                     if self.retryCount < self.maxRetries {
                         self.retryCount += 1
+                        print("CachedAsyncImage: Retrying \(url) (attempt \(self.retryCount + 1))")
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.loadImage()
                         }
                     } else {
                         // Mark as failed after max retries
+                        print("CachedAsyncImage: Failed after \(self.maxRetries) retries for \(url)")
                         self.loadFailed = true
                     }
                 }
@@ -82,6 +92,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             guard let data = data, let downloadedImage = UIImage(data: data) else {
                 DispatchQueue.main.async {
                     self.isLoading = false
+                    self.loadFailed = true
                 }
                 return
             }
