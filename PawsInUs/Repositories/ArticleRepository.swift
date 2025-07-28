@@ -22,24 +22,28 @@ final class SanityArticleRepository: ArticleRepository, ObservableObject {
         // For now, return sample data to avoid concurrency issues
         Just(Article.sampleArticles)
             .setFailureType(to: Error.self)
+            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
     
     func getFeaturedArticles() -> AnyPublisher<[Article], Error> {
         Just(Article.sampleArticles.filter { $0.featured })
             .setFailureType(to: Error.self)
+            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
     
     func getArticles(by category: ArticleCategory) -> AnyPublisher<[Article], Error> {
         Just(Article.sampleArticles.filter { $0.categoryEnum == category })
             .setFailureType(to: Error.self)
+            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
     
     func getArticle(by id: String) -> AnyPublisher<Article?, Error> {
         Just(Article.sampleArticles.first { $0.id == id })
             .setFailureType(to: Error.self)
+            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
 }
