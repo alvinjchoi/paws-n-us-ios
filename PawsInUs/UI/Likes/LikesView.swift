@@ -71,6 +71,7 @@ struct LikesView: View {
                             }
                         }
                     }
+                    .padding(.bottom, 20) // Add extra bottom padding for tab bar
                 } else {
                     notAuthenticatedView
                 }
@@ -143,7 +144,8 @@ struct LikesView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.top, 8)
+        .padding(.bottom, 20) // Extra bottom padding for last card
     }
     
     private func loadLikedDogs() {
@@ -298,6 +300,7 @@ struct LikedDogCard: View {
             .padding(.vertical, 12)
             .background(Color(.systemBackground))
         }
+        .frame(minHeight: 240) // Ensure minimum height for cards
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.1), radius: 6, x: 0, y: 3)
