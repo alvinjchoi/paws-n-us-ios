@@ -39,7 +39,7 @@ struct DebugImageView: View {
                 .padding(.horizontal, 4)
         }
         .onAppear {
-            print("Debug: Loading image \(index) from URL: \(url)")
+            // Debug: Loading image
         }
     }
 }

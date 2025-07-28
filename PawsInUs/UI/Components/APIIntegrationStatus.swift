@@ -73,7 +73,7 @@ struct APIIntegrationStatus: View {
             } catch {
                 await MainActor.run {
                     isBackendRunning = false
-                    print("Backend check failed: \(error)")
+                    // Backend check failed
                 }
             }
             

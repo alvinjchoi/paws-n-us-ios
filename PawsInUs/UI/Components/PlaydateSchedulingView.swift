@@ -196,21 +196,21 @@ struct PlaydateSchedulingView: View {
         
         // Get current user ID
         guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
-            print("❌ No user ID found")
+            // No user ID found
             isSubmitting = false
             return
         }
         
         // Get the rescuer ID for this dog from the shelter_id
         guard let rescuerID = UUID(uuidString: dog.shelterID) else {
-            print("❌ Invalid rescuer ID from shelter")
+            // Invalid rescuer ID from shelter
             isSubmitting = false
             return
         }
         
         // Convert dog ID to UUID
         guard let animalId = UUID(uuidString: dog.id) else {
-            print("❌ Invalid animal ID")
+            // Invalid animal ID
             isSubmitting = false
             return
         }
@@ -252,11 +252,11 @@ struct PlaydateSchedulingView: View {
                 let visit = try await diContainer.repositories.visitsRepository.createVisit(visitRequest)
                 
                 isSubmitting = false
-                print("✅ Visit created successfully: \(visit.id)")
+                // Visit created successfully
                 showingConfirmation = true
             } catch {
                 isSubmitting = false
-                print("❌ Failed to create visit: \(error)")
+                // Failed to create visit
                 // Could show error alert here
             }
         }

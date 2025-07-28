@@ -70,19 +70,19 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("CachedAsyncImage: Error loading \(url): \(error.localizedDescription)")
+                // CachedAsyncImage: Error loading
                 DispatchQueue.main.async {
                     self.isLoading = false
                     // Retry if we haven't exceeded max retries
                     if self.retryCount < self.maxRetries {
                         self.retryCount += 1
-                        print("CachedAsyncImage: Retrying \(url) (attempt \(self.retryCount + 1))")
+                        // CachedAsyncImage: Retrying
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.loadImage()
                         }
                     } else {
                         // Mark as failed after max retries
-                        print("CachedAsyncImage: Failed after \(self.maxRetries) retries for \(url)")
+                        // CachedAsyncImage: Failed after max retries
                         self.loadFailed = true
                     }
                 }
