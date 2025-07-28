@@ -13,6 +13,8 @@ protocol AuthInteractor: Sendable {
     func signUp(email: String, password: String, name: String) async throws
     func signIn(email: String, password: String) async throws
     func signInWithOTP(email: String) async throws
+    func signInWithPhoneOTP(phone: String) async throws
+    func verifyPhoneOTP(phone: String, token: String) async throws
     func signOut() async throws
     func getCurrentUser() async throws -> User?
     func signInWithApple() async throws
@@ -83,6 +85,24 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
         )
     }
     
+    func signInWithPhoneOTP(phone: String) async throws {
+        try await supabaseClient.auth.signInWithOTP(phone: phone)
+    }
+    
+    func verifyPhoneOTP(phone: String, token: String) async throws {
+        let session = try await supabaseClient.auth.verifyOTP(
+            phone: phone,
+            token: token,
+            type: .sms
+        )
+        
+        // Update app state after successful verification
+        await MainActor.run { [appState] in
+            appState[\.userData.currentAdopterID] = session.user.id.uuidString
+            appState[\.userData.isAuthenticated] = true
+        }
+    }
+    
     
     func signOut() async throws {
         try await supabaseClient.auth.signOut()
@@ -97,7 +117,14 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
     }
     
     func getCurrentUser() async throws -> User? {
-        return supabaseClient.auth.currentSession?.user
+        let session = supabaseClient.auth.currentSession
+        print("AuthInteractor: Current session exists: \(session != nil)")
+        if let user = session?.user {
+            print("AuthInteractor: Returning user: \(user.id)")
+        } else {
+            print("AuthInteractor: No user in session")
+        }
+        return session?.user
     }
     
     func signInWithApple() async throws {

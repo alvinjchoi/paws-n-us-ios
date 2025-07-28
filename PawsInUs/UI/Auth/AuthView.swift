@@ -7,14 +7,16 @@
 
 import SwiftUI
 import Supabase
+import Combine
 
 struct AuthView: View {
     @Environment(\.injected) private var diContainer
     @Environment(\.dismiss) private var dismiss
     @State private var showEmailSignIn = false
+    @State private var showPhoneSignIn = false
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack {
                 // Close button
                 HStack {
@@ -106,7 +108,7 @@ struct AuthView: View {
                     
                     // Phone login
                     Button(action: {
-                        // Handle phone login
+                        showPhoneSignIn = true
                     }) {
                         HStack {
                             Image(systemName: "phone.fill")
@@ -167,6 +169,17 @@ struct AuthView: View {
             .sheet(isPresented: $showEmailSignIn) {
                 EmailSignInView()
             }
+            .sheet(isPresented: $showPhoneSignIn) {
+                PhoneSignInView()
+            }
+            .onReceive(diContainer.appState.updates(for: \.userData.isAuthenticated).removeDuplicates()) { isAuthenticated in
+                if isAuthenticated {
+                    // User is now authenticated, dismiss the auth view
+                    dismiss()
+                    // Also switch to profile tab
+                    diContainer.appState[\.routing.selectedTab] = .profile
+                }
+            }
         }
     }
 }
@@ -181,7 +194,7 @@ struct EmailSignInView: View {
     @State private var emailSent = false
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             VStack(spacing: 20) {
                 TextField("이메일 주소", text: $email)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -282,12 +295,246 @@ struct EmailSignInView: View {
     
 }
 
+struct PhoneSignInView: View {
+    @Environment(\.injected) private var diContainer
+    @Environment(\.dismiss) private var dismiss
+    @State private var phoneNumber = ""
+    @State private var verificationCode = ""
+    @State private var isLoading = false
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    @State private var codeSent = false
+    @State private var selectedCountryCode = "+82" // Korea default
+    @State private var resendTimer = 60
+    @State private var canResend = false
+    
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                if !codeSent {
+                    // Phone number input
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("휴대폰 번호")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        HStack {
+                            // Country code picker
+                            Menu {
+                                Button("+82 🇰🇷") { selectedCountryCode = "+82" }
+                                Button("+1 🇺🇸") { selectedCountryCode = "+1" }
+                                Button("+81 🇯🇵") { selectedCountryCode = "+81" }
+                                Button("+86 🇨🇳") { selectedCountryCode = "+86" }
+                            } label: {
+                                HStack {
+                                    Text(selectedCountryCode)
+                                        .font(.system(size: 16))
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 12))
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                            }
+                            
+                            TextField("01012345678", text: $phoneNumber)
+                                .keyboardType(.phonePad)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                        }
+                        .padding(.horizontal)
+                        
+                        Text("- 없이 숫자만 입력해주세요")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                    }
+                    .padding(.top, 40)
+                    
+                    Button(action: sendVerificationCode) {
+                        if isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("인증번호 받기")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.orange)
+                    .foregroundColor(.white)
+                    .cornerRadius(25)
+                    .disabled(isLoading || phoneNumber.isEmpty)
+                    .padding(.horizontal)
+                } else {
+                    // Verification code input
+                    VStack(spacing: 20) {
+                        Image(systemName: "message.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.orange)
+                        
+                        Text("인증번호가 전송되었습니다")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("\(selectedCountryCode) \(phoneNumber)로 전송된\n6자리 인증번호를 입력해주세요")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        
+                        TextField("000000", text: $verificationCode)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .multilineTextAlignment(.center)
+                            .font(.system(size: 24, weight: .semibold))
+                            .padding(.horizontal, 40)
+                        
+                        Button(action: verifyCode) {
+                            if isLoading {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Text("확인")
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(25)
+                        .disabled(isLoading || verificationCode.count != 6)
+                        .padding(.horizontal)
+                        
+                        if canResend {
+                            Button(action: resendCode) {
+                                Text("인증번호 다시 받기")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.orange)
+                            }
+                        } else {
+                            Text("\(resendTimer)초 후 다시 시도")
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Button(action: { 
+                            codeSent = false
+                            verificationCode = ""
+                            resendTimer = 60
+                            canResend = false
+                        }) {
+                            Text("번호 변경")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding()
+                }
+                
+                Spacer()
+            }
+            .navigationTitle("휴대폰으로 로그인")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("취소") {
+                        dismiss()
+                    }
+                }
+            }
+            .alert("알림", isPresented: $showAlert) {
+                Button("확인", role: .cancel) { }
+            } message: {
+                Text(alertMessage)
+            }
+            .onReceive(timer) { _ in
+                if codeSent && resendTimer > 0 {
+                    resendTimer -= 1
+                    if resendTimer == 0 {
+                        canResend = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private func sendVerificationCode() {
+        guard !phoneNumber.isEmpty else { return }
+        
+        // Format phone number
+        let fullPhoneNumber = "\(selectedCountryCode)\(phoneNumber)"
+        
+        isLoading = true
+        
+        Task {
+            do {
+                try await diContainer.supabaseClient.auth.signInWithOTP(
+                    phone: fullPhoneNumber
+                )
+                
+                await MainActor.run {
+                    isLoading = false
+                    codeSent = true
+                    resendTimer = 60
+                    canResend = false
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    alertMessage = "인증번호 전송에 실패했습니다: \(error.localizedDescription)"
+                    showAlert = true
+                }
+            }
+        }
+    }
+    
+    private func verifyCode() {
+        guard verificationCode.count == 6 else { return }
+        
+        let fullPhoneNumber = "\(selectedCountryCode)\(phoneNumber)"
+        
+        isLoading = true
+        
+        Task {
+            do {
+                try await diContainer.supabaseClient.auth.verifyOTP(
+                    phone: fullPhoneNumber,
+                    token: verificationCode,
+                    type: .sms
+                )
+                
+                await MainActor.run {
+                    isLoading = false
+                    // Authentication successful
+                    // The parent AuthView will handle dismissing when it detects auth state change
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    alertMessage = "인증에 실패했습니다. 인증번호를 다시 확인해주세요."
+                    showAlert = true
+                }
+            }
+        }
+    }
+    
+    private func resendCode() {
+        guard canResend else { return }
+        
+        canResend = false
+        resendTimer = 60
+        sendVerificationCode()
+    }
+}
+
 #Preview {
     AuthView()
         .inject(DIContainer(
             appState: AppState(),
             interactors: .stub,
-            modelContainer: .stub,
             supabaseClient: SupabaseConfig.client
         ))
 }
