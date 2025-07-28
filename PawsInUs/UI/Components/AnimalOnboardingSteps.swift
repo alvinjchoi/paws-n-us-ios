@@ -74,6 +74,28 @@ struct BasicInfoStepView: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
                 }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("성별")
+                        .font(.system(size: 16, weight: .medium))
+                    Picker("성별", selection: $viewModel.animalData.gender) {
+                        Text("선택").tag("")
+                        Text("수컷").tag("male")
+                        Text("암컷").tag("female")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("크기")
+                        .font(.system(size: 16, weight: .medium))
+                    Picker("크기", selection: $viewModel.animalData.size) {
+                        Text("소형").tag("small")
+                        Text("중형").tag("medium")
+                        Text("대형").tag("large")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                }
             }
             
             Spacer()
@@ -164,13 +186,13 @@ struct PhotosStepViewModern: View {
     }
     
     private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
-        print("Loading \(items.count) selected images")
+        // Loading selected images
         for item in items {
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 await MainActor.run {
                     viewModel.animalData.photos.append(image)
-                    print("Added photo. Total photos: \(viewModel.animalData.photos.count)")
+                    // Added photo
                 }
             }
         }

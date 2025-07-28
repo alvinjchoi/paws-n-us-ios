@@ -13,6 +13,9 @@ import Supabase
 struct AddAnimalOnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = AnimalOnboardingViewModel()
+    @State private var showingError = false
+    @State private var errorMessage = ""
+    @State private var isPublishing = false
     
     var body: some View {
         NavigationView {
@@ -40,6 +43,11 @@ struct AddAnimalOnboardingView: View {
             }
         }
         .navigationBarHidden(true)
+        .alert("Error", isPresented: $showingError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
     }
     
     // MARK: - Header
@@ -129,18 +137,26 @@ struct AddAnimalOnboardingView: View {
             
             Spacer()
             
-            Button(viewModel.isLastStep ? "Publish" : "Next") {
+            Button(viewModel.isLastStep ? (isPublishing ? "Publishing..." : "Publish") : "Next") {
+                // Button tapped
                 if viewModel.isLastStep {
+                    // Starting publish process
+                    isPublishing = true
                     Task {
                         do {
                             let animalId = try await viewModel.publishAnimal()
                             await MainActor.run {
-                                print("✅ Successfully published animal with ID: \(animalId)")
+                                // Successfully published animal
+                                isPublishing = false
                                 dismiss()
                             }
                         } catch {
-                            print("❌ Failed to publish animal: \(error)")
-                            // TODO: Show error alert to user
+                            await MainActor.run {
+                                // Failed to publish animal
+                                errorMessage = error.localizedDescription
+                                showingError = true
+                                isPublishing = false
+                            }
                         }
                     }
                 } else {
@@ -151,9 +167,9 @@ struct AddAnimalOnboardingView: View {
             .foregroundColor(.white)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
-            .background(viewModel.canProceed ? Color.black : Color.gray)
+            .background(viewModel.canProceed && !isPublishing ? Color.black : Color.gray)
             .cornerRadius(8)
-            .disabled(!viewModel.canProceed)
+            .disabled(!viewModel.canProceed || isPublishing)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
@@ -207,7 +223,7 @@ class AnimalOnboardingViewModel: ObservableObject {
             result = !animalData.name.isEmpty && !animalData.species.isEmpty && (animalData.ageYears > 0 || animalData.ageMonths > 0)
         case .photos:
             result = animalData.photos.count >= 1
-            print("Photos step - photo count: \(animalData.photos.count), can proceed: \(result)")
+            // Photos step validation
         case .characteristics:
             result = !animalData.bio.isEmpty
         case .medical:
@@ -238,10 +254,12 @@ class AnimalOnboardingViewModel: ObservableObject {
     
     func saveDraft() {
         // Save draft to local storage or database
-        print("Saving draft: \(animalData)")
+        // Saving draft
     }
     
     func publishAnimal() async throws -> String {
+        // Publishing animal with data
+        
         // Convert age to total months
         let ageInMonths = animalData.ageYears * 12 + animalData.ageMonths
         
@@ -258,13 +276,14 @@ class AnimalOnboardingViewModel: ObservableObject {
         // Get current user's auth token if available
         let authToken = try? await SupabaseConfig.client.auth.session.accessToken
         
-        // Call the local API
-        let response = try await LocalAPIClient.shared.createAnimal(
+        // For now, create directly in Supabase instead of using the local API
+        // which has issues with shelter_id foreign key constraint
+        return try await createAnimalDirectly(
             name: animalData.name,
             species: animalData.species,
             breed: animalData.breed.isEmpty ? nil : animalData.breed,
             age: ageInMonths,
-            gender: animalData.gender.isEmpty ? "unknown" : animalData.gender,
+            gender: animalData.gender.isEmpty ? "male" : animalData.gender,
             size: animalData.size.isEmpty ? "medium" : animalData.size,
             bio: animalData.bio,
             traits: animalData.traits,
@@ -289,7 +308,7 @@ class AnimalOnboardingViewModel: ObservableObject {
             authToken: authToken
         )
         
-        print("✅ Animal published successfully: \(response.animal.name) with ID: \(response.animal.id)")
+        // Animal published successfully
         return response.animal.id
     }
 }

@@ -171,7 +171,7 @@ struct AdoptionApplicationView: View {
         do {
             // Get current user ID
             guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
-                print("No user ID found")
+                // No user ID found
                 isSubmitting = false
                 return
             }
@@ -232,7 +232,7 @@ struct AdoptionApplicationView: View {
             showingConfirmation = true
             
         } catch {
-            print("Error submitting adoption application: \(error)")
+            // Error submitting adoption application
             isSubmitting = false
         }
     }
