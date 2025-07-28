@@ -207,20 +207,42 @@ struct HeroArticleView: View {
         NavigationLink(destination: ArticleDetailView(article: article)) {
             VStack(spacing: 0) {
                 // Large featured image
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .aspectRatio(1.0, contentMode: .fit)
-                    .overlay(
-                        VStack {
-                            Spacer()
-                            LinearGradient(
-                                gradient: Gradient(colors: [.clear, .black.opacity(0.7)]),
-                                startPoint: .center,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 200)
+                Group {
+                    if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
+                        CachedAsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .overlay(
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                )
                         }
-                    )
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                Image(systemName: "photo")
+                                    .font(.largeTitle)
+                                    .foregroundColor(.gray)
+                            )
+                    }
+                }
+                .aspectRatio(1.0, contentMode: .fit)
+                .overlay(
+                    VStack {
+                        Spacer()
+                        LinearGradient(
+                            gradient: Gradient(colors: [.clear, .black.opacity(0.7)]),
+                            startPoint: .center,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 200)
+                    }
+                )
                     .overlay(
                         VStack(alignment: .leading, spacing: 8) {
                             Spacer()
@@ -254,18 +276,53 @@ struct SecondaryFeaturedCard: View {
     let article: Article
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(article.title)
-                .font(.title2)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
-                .lineLimit(3)
+        HStack(spacing: 16) {
+            // Thumbnail image
+            Group {
+                if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
+                    CachedAsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .gray))
+                            )
+                    }
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            Image(systemName: "photo")
+                                .font(.title2)
+                                .foregroundColor(.gray)
+                        )
+                }
+            }
+            .frame(width: 100, height: 80)
+            .cornerRadius(12)
+            .clipped()
             
-            Text(article.subtitle)
-                .font(.body)
-                .foregroundColor(.secondary)
-                .lineLimit(2)
+            // Article content
+            VStack(alignment: .leading, spacing: 8) {
+                Text(article.title)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                
+                Text(article.subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
