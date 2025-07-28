@@ -57,10 +57,11 @@ struct MagazineView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         } else {
                             ScrollView {
-                        VStack(spacing: 0) {
+                                LazyVStack(alignment: .leading, spacing: 0) {
                     // Hero Featured Article
                     if let heroArticle = featuredArticles.first {
                         HeroArticleView(article: heroArticle)
+                            .frame(maxWidth: .infinity)
                     }
                     
                     // Secondary Featured Articles
@@ -75,9 +76,9 @@ struct MagazineView: View {
                             ForEach(featuredArticles.dropFirst().prefix(2)) { article in
                                 NavigationLink(destination: ArticleDetailView(article: article)) {
                                     SecondaryFeaturedCard(article: article)
-                                        .padding(.horizontal)
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .padding(.horizontal)
                             }
                         }
                         .padding(.vertical, 32)
@@ -114,6 +115,7 @@ struct MagazineView: View {
                                 )
                             }
                             .padding(.horizontal)
+                            .padding(.trailing, 20)
                         }
                     }
                     .padding(.bottom, 40)
@@ -144,12 +146,13 @@ struct MagazineView: View {
                         }
                     }
                     .padding(.bottom, 100)
-                }
+                                }
                         }
                     }
             }
             .navigationBarHidden(true)
             .background(Color(.systemGray6))
+            .clipped()
         }
             }
         }
@@ -238,8 +241,6 @@ struct HeroArticleView: View {
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .clipped()
                             case .failure(let error):
                                 Rectangle()
                                     .fill(Color.red.opacity(0.2))
@@ -301,7 +302,7 @@ struct HeroArticleView: View {
                             }
                     }
                 }
-                .aspectRatio(1.0, contentMode: .fit)
+                .frame(height: 300)
                 .clipped()
                 .overlay(
                     VStack {
@@ -323,17 +324,20 @@ struct HeroArticleView: View {
                                 .textCase(.uppercase)
                             
                             Text(article.title)
-                                .font(.largeTitle)
+                                .font(.title2)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.leading)
+                                .lineLimit(3)
                             
                             Text(article.subtitle)
-                                .font(.body)
+                                .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.9))
                                 .lineLimit(2)
                         }
-                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
                         , alignment: .bottomLeading
                     )
             }
@@ -347,8 +351,8 @@ struct SecondaryFeaturedCard: View {
     let article: Article
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Thumbnail image
+        HStack(spacing: 12) {
+            // Thumbnail image - fixed size
             Group {
                 if let imageUrl = article.imageUrl, 
                    let url = URL(string: imageUrl),
@@ -357,8 +361,6 @@ struct SecondaryFeaturedCard: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 100, height: 80)
-                            .clipped()
                     } placeholder: {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
@@ -382,10 +384,12 @@ struct SecondaryFeaturedCard: View {
                         )
                 }
             }
-            .cornerRadius(12)
+            .frame(width: 90, height: 70)
+            .clipped()
+            .cornerRadius(8)
             
             // Article content
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(article.title)
                     .font(.headline)
                     .fontWeight(.semibold)
@@ -399,10 +403,8 @@ struct SecondaryFeaturedCard: View {
                     .lineLimit(2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
     }
 }
 
