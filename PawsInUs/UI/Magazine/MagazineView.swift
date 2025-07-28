@@ -213,7 +213,9 @@ struct HeroArticleView: View {
             VStack(spacing: 0) {
                 // Large featured image
                 Group {
-                    if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
+                    if let imageUrl = article.imageUrl, 
+                       let url = URL(string: imageUrl),
+                       !imageUrl.contains("example.com") {
                         AsyncImage(url: url) { phase in
                             switch phase {
                             case .success(let image):
@@ -259,7 +261,7 @@ struct HeroArticleView: View {
                             }
                         }
                         .onAppear {
-                            print("📸 Loading image for article '\(article.title)': \(imageUrl)")
+                            print("📸 Loading real image for article '\(article.title)': \(imageUrl)")
                         }
                     } else {
                         Rectangle()
@@ -275,7 +277,11 @@ struct HeroArticleView: View {
                                 }
                             )
                             .onAppear {
-                                print("📸 No image URL for article: \(article.title)")
+                                if let imageUrl = article.imageUrl {
+                                    print("📸 Placeholder URL filtered out for article '\(article.title)': \(imageUrl)")
+                                } else {
+                                    print("📸 No image URL for article: \(article.title)")
+                                }
                             }
                     }
                 }
@@ -328,7 +334,9 @@ struct SecondaryFeaturedCard: View {
         HStack(spacing: 16) {
             // Thumbnail image
             Group {
-                if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
+                if let imageUrl = article.imageUrl, 
+                   let url = URL(string: imageUrl),
+                   !imageUrl.contains("example.com") {
                     AsyncImage(url: url) { image in
                         image
                             .resizable()
