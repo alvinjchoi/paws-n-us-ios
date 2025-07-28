@@ -117,17 +117,6 @@ struct LikesView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
-            Button(action: {
-                diContainer.appState[\.routing.selectedTab] = .discover
-            }) {
-                Text("둘러보기 시작")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 150, height: 44)
-                    .background(Color.orange)
-                    .cornerRadius(22)
-            }
-            .padding(.top, 10)
             
             Spacer()
         }
