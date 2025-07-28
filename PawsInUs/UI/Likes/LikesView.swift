@@ -231,7 +231,7 @@ struct LikedDogCard: View {
                                 ProgressView()
                             )
                     }
-                    .frame(height: 140)
+                    .frame(height: 160)
                     .clipped()
                     .onAppear {
                     }
@@ -248,7 +248,7 @@ struct LikedDogCard: View {
                                     .foregroundColor(.gray)
                             }
                         )
-                        .frame(height: 140)
+                        .frame(height: 160)
                 }
                 
                 // Heart button
@@ -266,33 +266,35 @@ struct LikedDogCard: View {
             }
             
             // Dog info section
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(dog.name)
-                            .font(.system(size: 15, weight: .semibold))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .foregroundColor(.primary)
-                        
-                        Text(dog.breed)
-                            .font(.system(size: 12, weight: .medium))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .foregroundColor(.secondary)
-                        
-                        Text(dog.shelterName)
-                            .font(.system(size: 11, weight: .regular))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(dog.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
+                
+                HStack(spacing: 4) {
+                    Text("\(dog.age)세")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                    Text("•")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                    Text(dog.breed)
+                        .font(.system(size: 13))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundColor(.secondary)
                 }
+                
+                Text(dog.shelterName)
+                    .font(.system(size: 12))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .foregroundColor(.gray)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.vertical, 12)
             .background(Color(.systemBackground))
         }
         .background(Color(.systemBackground))

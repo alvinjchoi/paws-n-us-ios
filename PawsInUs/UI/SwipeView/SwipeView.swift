@@ -54,16 +54,11 @@ struct SwipeView: View {
     
     private var headerView: some View {
         HStack(alignment: .center) {
-            // Logo section - using text for proper dark mode support
-            HStack(spacing: 8) {
-                Image(systemName: "pawprint.fill")
-                    .font(.system(size: 28))
-                    .foregroundColor(.orange)
-                
-                Text("Paws-N-Us")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-            }
+            // Logo section - using separate images for light/dark mode
+            Image("logo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(height: 40)
             
             Spacer()
             
