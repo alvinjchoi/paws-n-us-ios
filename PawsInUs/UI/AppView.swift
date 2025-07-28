@@ -35,16 +35,16 @@ struct AppView: View {
         .task {
             // Listen for auth state changes
             for await state in diContainer.supabaseClient.auth.authStateChanges {
-                print("AppView: Auth state event: \(state.event), session exists: \(state.session != nil)")
+                // Auth state event received
                 if [.initialSession, .signedIn, .signedOut].contains(state.event) {
                     // Update app state
                     await MainActor.run {
                         let isAuthenticated = state.session != nil
-                        print("AppView: Setting isAuthenticated to: \(isAuthenticated)")
+                        // Setting isAuthenticated
                         diContainer.appState[\.userData.isAuthenticated] = isAuthenticated
                         if let session = state.session {
                             diContainer.appState[\.userData.currentAdopterID] = session.user.id.uuidString
-                            print("AppView: User ID set to: \(session.user.id.uuidString)")
+                            // User ID set
                         } else {
                             diContainer.appState[\.userData.currentAdopterID] = nil
                             diContainer.appState[\.userData.likedDogIDs] = []

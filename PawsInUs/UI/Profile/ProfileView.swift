@@ -45,7 +45,7 @@ struct ProfileView: View {
     }
     
     var body: some View {
-        let _ = print("ProfileView body rendered - \(debugState)")
+        // ProfileView body rendered
         NavigationView {
             ZStack(alignment: .bottom) {
                 Color(.systemBackground)
@@ -54,7 +54,7 @@ struct ProfileView: View {
                 if diContainer.appState[\.userData.isAuthenticated] {
                     ScrollView {
                         VStack {
-                            let _ = print("ProfileView body: isAuthenticated=true, adopter=\(adopter?.name ?? "nil"), isLoading=\(isLoading)")
+                            // ProfileView body check
                             
                             if isLoading {
                                 VStack {
@@ -63,7 +63,7 @@ struct ProfileView: View {
                                     .padding()
                             }
                         } else if let adopterProfile = adopter {
-                            let _ = print("ProfileView: Showing profile content for \(adopterProfile.name)")
+                            // Showing profile content
                             profileContent(adopterProfile)
                         } else if let error = error {
                             VStack {
@@ -91,7 +91,7 @@ struct ProfileView: View {
                                     .padding()
                             }
                             .onAppear { 
-                                print("ProfileView: No adopter, calling loadProfile")
+                                // No adopter, calling loadProfile
                                 Task {
                                     await loadProfile()
                                 }
@@ -175,21 +175,21 @@ struct ProfileView: View {
         .task {
             // Check current session status
             let currentSession = diContainer.supabaseClient.auth.currentSession
-            print("ProfileView: Current session exists: \(currentSession != nil)")
+            // Current session check
             if let session = currentSession {
-                print("ProfileView: User ID from session: \(session.user.id)")
-                print("ProfileView: User phone: \(session.user.phone ?? "nil")")
+                // User ID from session
+                // User phone from session
             }
             
             if diContainer.appState[\.userData.isAuthenticated] && adopter == nil && !isLoading {
-                print("ProfileView: App state says authenticated, loading profile...")
+                // App state says authenticated, loading profile
                 await loadProfile()
             } else {
-                print("ProfileView: App state says not authenticated or profile already loading")
+                // App state says not authenticated or profile already loading
             }
         }
         .onReceive(diContainer.appState.updates(for: \.userData.isAuthenticated).removeDuplicates()) { isAuthenticated in
-            print("ProfileView: Auth state changed to: \(isAuthenticated)")
+            // Auth state changed
             if isAuthenticated && adopter == nil && !isLoading {
                 Task {
                     // Small delay to ensure auth state is fully propagated
@@ -340,37 +340,37 @@ struct ProfileView: View {
     @MainActor
     private func loadProfile() async {
         guard !isLoadingProfile else {
-            print("ProfileView: Already loading profile, skipping")
+            // Already loading profile, skipping
             return
         }
         
         isLoadingProfile = true
         defer { isLoadingProfile = false }
         
-        print("ProfileView: Starting loadProfile()")
+        // Starting loadProfile()
         isLoading = true
         error = nil
         
         do {
-            print("ProfileView: Getting current user...")
+            // Getting current user
             // Get current user from Supabase
             if let user = try await diContainer.interactors.authInteractor.getCurrentUser() {
-                print("ProfileView: Got user: \(user.id), phone: \(user.phone ?? "nil"), email: \(user.email ?? "nil")")
+                // Got user info
                 // Try to load adopter profile
-                print("ProfileView: Querying profiles table...")
+                // Querying profiles table
                 let response = try await diContainer.supabaseClient.from("profiles")
                     .select()
                     .eq("id", value: user.id.uuidString.lowercased())
                     .execute()
                 
-                print("ProfileView: Got response, data length: \(response.data.count)")
+                // Got response
                 let profileData = response.data
                 let profiles = try JSONDecoder().decode([ProfileRecord].self, from: profileData)
-                print("ProfileView: Decoded \(profiles.count) profiles")
+                // Decoded profiles
                 
                 if let profile = profiles.first {
                     // Profile exists
-                    print("ProfileView: Found profile - name: \(profile.name ?? "nil"), location: \(profile.location ?? "nil")")
+                    // Found profile
                     let adopterProfile = Adopter(
                         id: profile.id,
                         name: profile.name ?? "User",
@@ -380,17 +380,17 @@ struct ProfileView: View {
                         profileImageURL: profile.profile_image_url
                     )
                     
-                    print("ProfileView: Setting adopter to loaded state")
+                    // Setting adopter to loaded state
                     self.adopter = adopterProfile
                     self.isLoading = false
                     self.viewRefreshID = UUID() // Force view refresh
-                    print("ProfileView: State updated - adopter: \(self.adopter?.name ?? "nil"), isLoading: \(self.isLoading)")
+                    // State updated
                 } else {
                     // No profile exists, create one for phone users
                     let phoneNumber = user.phone ?? ""
                     let displayName = phoneNumber.isEmpty ? "User" : "User \(phoneNumber.suffix(4))"
                     
-                    print("ProfileView: No profile found, creating new one...")
+                    // No profile found, creating new one
                     
                     // Try to create a new profile
                     do {
@@ -408,9 +408,9 @@ struct ProfileView: View {
                             .insert(newProfile)
                             .execute()
                         
-                        print("ProfileView: Successfully created new profile")
+                        // Successfully created new profile
                     } catch {
-                        print("ProfileView: Failed to create profile in database: \(error)")
+                        // Failed to create profile in database
                         // Continue anyway - we'll show a basic profile
                     }
                     
@@ -424,7 +424,7 @@ struct ProfileView: View {
                         profileImageURL: nil
                     )
                     
-                    print("ProfileView: Setting adopter to loaded state (new profile)")
+                    // Setting adopter to loaded state (new profile)
                     self.adopter = adopterProfile
                     self.isLoading = false
                     self.viewRefreshID = UUID() // Force view refresh
@@ -437,9 +437,9 @@ struct ProfileView: View {
                 isLoading = false
             }
         } catch {
-            print("ProfileView: Profile loading error: \(error)")
-            print("ProfileView: Error type: \(type(of: error))")
-            print("ProfileView: Error localized: \(error.localizedDescription)")
+            // Profile loading error
+            // Error type
+            // Error localized
             self.error = error
             isLoading = false
         }

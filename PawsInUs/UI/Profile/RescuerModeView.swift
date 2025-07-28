@@ -209,7 +209,7 @@ struct TodayView: View {
             
             // Convert userID to UUID
             guard let rescuerUUID = UUID(uuidString: userID) else {
-                print("Invalid user ID format")
+                // Invalid user ID format
                 isLoading = false
                 return
             }
@@ -231,7 +231,7 @@ struct TodayView: View {
             
             isLoading = false
         } catch {
-            print("Error loading visits: \(error)")
+            // Error loading visits
             isLoading = false
         }
     }
@@ -244,7 +244,7 @@ struct TodayView: View {
                 let dog = try await dogsRepo.getDog(by: dogID)
                 dogs[dogID] = dog
             } catch {
-                print("Error loading dog \(dogID): \(error)")
+                // Error loading dog
             }
         }
     }
@@ -520,7 +520,7 @@ struct CalendarView: View {
                 
                 // Convert userID to UUID
                 guard let rescuerUUID = UUID(uuidString: userID) else {
-                    print("Invalid user ID format")
+                    // Invalid user ID format
                     isLoading = false
                     return
                 }
@@ -544,7 +544,7 @@ struct CalendarView: View {
                 
                 isLoading = false
             } catch {
-                print("Error loading visits: \(error)")
+                // Error loading visits
                 isLoading = false
             }
         }
@@ -558,7 +558,7 @@ struct CalendarView: View {
                 let dog = try await dogsRepo.getDog(by: dogID)
                 dogs[dogID] = dog
             } catch {
-                print("Error loading dog \(dogID): \(error)")
+                // Error loading dog
             }
         }
     }
@@ -1444,7 +1444,7 @@ struct MessagesView: View {
             messages = try await messagesRepo.getMessages(for: userID)
             isLoading = false
         } catch {
-            print("Error loading messages: \(error)")
+            // Error loading messages
             isLoading = false
         }
     }
@@ -1475,7 +1475,7 @@ struct MessagesView: View {
                     )
                 }
             } catch {
-                print("Error marking message as read: \(error)")
+                // Error marking message as read
             }
         }
     }
@@ -1657,7 +1657,7 @@ struct MessageDetailView: View {
                 dog = try await dogsRepo.getDog(by: dogID)
                 isLoadingDog = false
             } catch {
-                print("Error loading dog: \(error)")
+                // Error loading dog
                 isLoadingDog = false
             }
         }
