@@ -83,7 +83,8 @@ extension AppEnvironment {
                 articleRepository: SanityArticleRepository(),
                 messagesRepository: StubMessagesRepository(),
                 visitsRepository: SupabaseVisitsRepository(client: supabaseClient),
-                rescuerRepository: StubRescuerRepository()
+                rescuerRepository: StubRescuerRepository(),
+                animalsRepository: StubAnimalsRepository()
             )
         }
         #endif
@@ -100,7 +101,8 @@ extension AppEnvironment {
             articleRepository: SanityArticleRepository(),
             messagesRepository: SupabaseMessagesRepository(client: supabaseClient),
             visitsRepository: SupabaseVisitsRepository(client: supabaseClient),
-            rescuerRepository: SupabaseRescuerRepository(client: supabaseClient)
+            rescuerRepository: SupabaseRescuerRepository(client: supabaseClient),
+            animalsRepository: APIAnimalsRepository()
         )
     }
 

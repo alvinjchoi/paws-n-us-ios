@@ -244,10 +244,18 @@ class AnimalDraftData: ObservableObject {
     @Published var bio: String = ""
     @Published var traits: [String] = []
     @Published var medicalStatus: String = ""
-    @Published var vaccinations: [String] = []
+    @Published var vaccinations: String = ""
     @Published var location: String = ""
     @Published var rescueStory: String = ""
-}
+    @Published var helpTypes: [String] = []
+
+    func toggleHelpType(_ type: String) {
+        if helpTypes.contains(type) {
+            helpTypes.removeAll { $0 == type }
+        } else {
+            helpTypes.append(type)
+        }
+    }
 
 // MARK: - Welcome Step
 struct WelcomeStepView: View {

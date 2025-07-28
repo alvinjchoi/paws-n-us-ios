@@ -51,6 +51,7 @@ extension DIContainer {
         let messagesRepository: MessagesRepository
         let visitsRepository: VisitsRepository
         let rescuerRepository: RescuerRepository
+        let animalsRepository: AnimalsRepository
     }
     struct Interactors {
         let appState: Store<AppState>
@@ -76,7 +77,8 @@ extension DIContainer {
                       articleRepository: SanityArticleRepository(),
                       messagesRepository: StubMessagesRepository(),
                       visitsRepository: StubVisitsRepository(),
-                      rescuerRepository: StubRescuerRepository()
+                      rescuerRepository: StubRescuerRepository(),
+                      animalsRepository: StubAnimalsRepository()
                   ))
             #else
             fatalError("Stub interactors should only be used in DEBUG mode")
