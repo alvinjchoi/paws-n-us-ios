@@ -41,8 +41,6 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         
         isLoading = true
         
-        // Debug print
-        print("Loading image from URL: \(url)")
         
         var request = URLRequest(url: url)
         request.cachePolicy = .returnCacheDataElseLoad
@@ -50,7 +48,6 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Image load error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     self.isLoading = false
                     // Retry if we haven't exceeded max retries
@@ -65,7 +62,6 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             }
             
             guard let data = data, let downloadedImage = UIImage(data: data) else {
-                print("Failed to create image from data for URL: \(url)")
                 DispatchQueue.main.async {
                     self.isLoading = false
                 }

@@ -20,6 +20,7 @@ struct SwipeView: View {
     @State private var shouldLoad = false
     @State private var checkTimer: Timer?
     @State private var selectedDog: Dog?
+    @State private var currentImageIndices: [String: Int] = [:] // Track image index for each dog
     
     private let swipeThreshold: CGFloat = 100
     private let rotationMultiplier: Double = 0.03
@@ -153,7 +154,8 @@ struct SwipeView: View {
                             onInfoTap: {
                                 selectedDog = dog
                             },
-                            isActive: index == currentIndex
+                            isActive: index == currentIndex,
+                            currentImageIndex: binding(for: dog.id)
                         )
                             .frame(width: geometry.size.width - 40, height: geometry.size.height - 80)
                             .aspectRatio(3/4, contentMode: .fit)
@@ -319,6 +321,13 @@ struct SwipeView: View {
     private func loadDogs() {
         diContainer.interactors.dogsInteractor.loadDogs(dogs: $dogs)
     }
+    
+    private func binding(for dogId: String) -> Binding<Int> {
+        Binding<Int>(
+            get: { currentImageIndices[dogId] ?? 0 },
+            set: { currentImageIndices[dogId] = $0 }
+        )
+    }
 }
 
 enum SwipeAction {
@@ -329,7 +338,7 @@ struct DogCardView: View {
     let dog: Dog
     let onInfoTap: () -> Void
     let isActive: Bool
-    @State private var currentImageIndex = 0
+    @Binding var currentImageIndex: Int
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -340,7 +349,6 @@ struct DogCardView: View {
                     // Background image with fixed aspect ratio
                     Group {
                         if !dog.imageURLs.isEmpty, let url = URL(string: dog.imageURLs[currentImageIndex]) {
-                            let _ = print("Loading image at index \(currentImageIndex): \(url.absoluteString)")
                             CachedAsyncImage(url: url) { image in
                                 image
                                     .resizable()
@@ -461,7 +469,6 @@ struct DogCardView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     if currentImageIndex > 0 {
-                                        print("Left tap: changing from index \(currentImageIndex) to \(currentImageIndex - 1)")
                                         withAnimation(.easeInOut(duration: 0.3)) {
                                             currentImageIndex -= 1
                                         }
@@ -496,8 +503,6 @@ struct DogCardView: View {
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     if currentImageIndex < dog.imageURLs.count - 1 {
-                                        print("Right tap: changing from index \(currentImageIndex) to \(currentImageIndex + 1)")
-                                        print("Total images: \(dog.imageURLs.count)")
                                         withAnimation(.easeInOut(duration: 0.3)) {
                                             currentImageIndex += 1
                                         }
