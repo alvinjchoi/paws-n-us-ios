@@ -187,22 +187,25 @@ class AnimalOnboardingViewModel: ObservableObject {
     }
     
     var canProceed: Bool {
+        let result: Bool
         switch currentStep {
         case .welcome:
-            return true
+            result = true
         case .basicInfo:
-            return !animalData.name.isEmpty && !animalData.species.isEmpty && (animalData.ageYears > 0 || animalData.ageMonths > 0)
+            result = !animalData.name.isEmpty && !animalData.species.isEmpty && (animalData.ageYears > 0 || animalData.ageMonths > 0)
         case .photos:
-            return animalData.photos.count >= 1
+            result = animalData.photos.count >= 1
+            print("Photos step - photo count: \(animalData.photos.count), can proceed: \(result)")
         case .characteristics:
-            return !animalData.bio.isEmpty
+            result = !animalData.bio.isEmpty
         case .medical:
-            return !animalData.medicalStatus.isEmpty
+            result = !animalData.medicalStatus.isEmpty
         case .location:
-            return !animalData.location.isEmpty
+            result = !animalData.location.isEmpty
         case .review:
-            return true
+            result = true
         }
+        return result
     }
     
     func goToNextStep() {
@@ -233,28 +236,28 @@ class AnimalOnboardingViewModel: ObservableObject {
 }
 
 // MARK: - Data Model
-class AnimalDraftData: ObservableObject {
-    @Published var name: String = ""
-    @Published var species: String = ""
-    @Published var breed: String = ""
-    @Published var ageYears: Int = 0
-    @Published var ageMonths: Int = 0
+struct AnimalDraftData {
+    var name: String = ""
+    var species: String = ""
+    var breed: String = ""
+    var ageYears: Int = 0
+    var ageMonths: Int = 0
     
     var age: Int {
         return ageYears * 12 + ageMonths // Total age in months for API compatibility
     }
-    @Published var size: String = ""
-    @Published var gender: String = ""
-    @Published var photos: [UIImage] = []
-    @Published var bio: String = ""
-    @Published var traits: [String] = []
-    @Published var medicalStatus: String = ""
-    @Published var vaccinations: String = ""
-    @Published var location: String = ""
-    @Published var rescueStory: String = ""
-    @Published var helpTypes: [String] = []
+    var size: String = ""
+    var gender: String = ""
+    var photos: [UIImage] = []
+    var bio: String = ""
+    var traits: [String] = []
+    var medicalStatus: String = ""
+    var vaccinations: String = ""
+    var location: String = ""
+    var rescueStory: String = ""
+    var helpTypes: [String] = []
 
-    func toggleHelpType(_ type: String) {
+    mutating func toggleHelpType(_ type: String) {
         if helpTypes.contains(type) {
             helpTypes.removeAll { $0 == type }
         } else {

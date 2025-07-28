@@ -150,9 +150,9 @@ struct PhotosStepViewModern: View {
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
                     }
-                    .onChange(of: selectedImages) { items in
+                    .onChange(of: selectedImages) { newItems in
                         Task {
-                            await loadSelectedImages(items)
+                            await loadSelectedImages(newItems)
                         }
                     }
                 }
@@ -164,11 +164,13 @@ struct PhotosStepViewModern: View {
     }
     
     private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
+        print("Loading \(items.count) selected images")
         for item in items {
             if let data = try? await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
                 await MainActor.run {
                     viewModel.animalData.photos.append(image)
+                    print("Added photo. Total photos: \(viewModel.animalData.photos.count)")
                 }
             }
         }
