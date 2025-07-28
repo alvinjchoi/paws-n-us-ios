@@ -55,6 +55,8 @@ struct LikesView: View {
                             }
                             .onAppear {
                                 isCurrentlyLoading = false
+                                // Preload all images for better performance
+                                ImagePreloader.preloadDogImages(dogs)
                             }
                         case .failed(let error):
                             VStack {

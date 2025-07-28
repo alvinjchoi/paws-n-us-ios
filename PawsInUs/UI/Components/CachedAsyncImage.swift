@@ -15,12 +15,27 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     @State private var image: UIImage?
     @State private var isLoading = false
     @State private var retryCount = 0
+    @State private var loadFailed = false
     private let maxRetries = 3
     
     var body: some View {
         Group {
             if let image = image {
                 content(Image(uiImage: image))
+            } else if loadFailed {
+                // Show error state
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .overlay(
+                        VStack(spacing: 8) {
+                            Image(systemName: "photo")
+                                .font(.title2)
+                                .foregroundColor(.gray)
+                            Text("Failed to load")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    )
             } else {
                 placeholder()
                     .onAppear {
@@ -56,6 +71,9 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.loadImage()
                         }
+                    } else {
+                        // Mark as failed after max retries
+                        self.loadFailed = true
                     }
                 }
                 return
