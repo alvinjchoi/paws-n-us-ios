@@ -219,8 +219,8 @@ struct LikedDogCard: View {
         VStack(spacing: 0) {
             // Dog image with proper corner radius
             ZStack(alignment: .topTrailing) {
-                if let firstImageURL = dog.imageURLs.first {
-                    AsyncImage(url: URL(string: firstImageURL)) { image in
+                if let firstImageURL = dog.imageURLs.first, let url = URL(string: firstImageURL) {
+                    CachedAsyncImage(url: url) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -229,12 +229,11 @@ struct LikedDogCard: View {
                             .fill(Color.gray.opacity(0.3))
                             .overlay(
                                 ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
                             )
                     }
                     .frame(height: 160)
                     .clipped()
-                    .onAppear {
-                    }
                 } else {
                     Rectangle()
                         .fill(Color.gray.opacity(0.3))

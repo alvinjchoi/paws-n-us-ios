@@ -334,8 +334,8 @@ struct DogCardView: View {
                 .overlay(
                     // Background image with fixed aspect ratio
                     Group {
-                        if !dog.imageURLs.isEmpty {
-                            AsyncImage(url: URL(string: dog.imageURLs[currentImageIndex])) { image in
+                        if !dog.imageURLs.isEmpty, let url = URL(string: dog.imageURLs[currentImageIndex]) {
+                            CachedAsyncImage(url: url) { image in
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
@@ -344,6 +344,7 @@ struct DogCardView: View {
                                     .fill(Color.gray.opacity(0.3))
                                     .overlay(
                                         ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle())
                                     )
                             }
                         } else {
