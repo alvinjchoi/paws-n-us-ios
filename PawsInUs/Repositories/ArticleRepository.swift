@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Combine
+@preconcurrency import Combine
 import SwiftUI
 
 protocol ArticleRepository {
@@ -19,31 +19,74 @@ protocol ArticleRepository {
 final class SanityArticleRepository: ArticleRepository, ObservableObject {
     
     func getAllArticles() -> AnyPublisher<[Article], Error> {
-        // For now, return sample data to avoid concurrency issues
-        Just(Article.sampleArticles)
-            .setFailureType(to: Error.self)
-            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .eraseToAnyPublisher()
+        let subject = PassthroughSubject<[Article], Error>()
+        
+        SanityClient.shared.fetchArticlesWithCompletion { result in
+            switch result {
+            case .success(let articles):
+                print("📰 SanityArticleRepository: Successfully fetched \(articles.count) articles from Sanity")
+                subject.send(articles)
+                subject.send(completion: .finished)
+            case .failure(let error):
+                print("📰 SanityArticleRepository: Error fetching articles: \(error)")
+                subject.send(completion: .failure(error))
+            }
+        }
+        
+        return subject.eraseToAnyPublisher()
     }
     
     func getFeaturedArticles() -> AnyPublisher<[Article], Error> {
-        Just(Article.sampleArticles.filter { $0.featured })
-            .setFailureType(to: Error.self)
-            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .eraseToAnyPublisher()
+        let subject = PassthroughSubject<[Article], Error>()
+        
+        SanityClient.shared.fetchFeaturedArticlesWithCompletion { result in
+            switch result {
+            case .success(let articles):
+                print("📰 SanityArticleRepository: Successfully fetched \(articles.count) featured articles from Sanity")
+                subject.send(articles)
+                subject.send(completion: .finished)
+            case .failure(let error):
+                print("📰 SanityArticleRepository: Error fetching featured articles: \(error)")
+                subject.send(completion: .failure(error))
+            }
+        }
+        
+        return subject.eraseToAnyPublisher()
     }
     
     func getArticles(by category: ArticleCategory) -> AnyPublisher<[Article], Error> {
-        Just(Article.sampleArticles.filter { $0.categoryEnum == category })
-            .setFailureType(to: Error.self)
-            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .eraseToAnyPublisher()
+        let subject = PassthroughSubject<[Article], Error>()
+        
+        SanityClient.shared.fetchArticlesWithCompletion(by: category.rawValue) { result in
+            switch result {
+            case .success(let articles):
+                print("📰 SanityArticleRepository: Successfully fetched \(articles.count) articles for category \(category.rawValue)")
+                subject.send(articles)
+                subject.send(completion: .finished)
+            case .failure(let error):
+                print("📰 SanityArticleRepository: Error fetching articles for category \(category.rawValue): \(error)")
+                subject.send(completion: .failure(error))
+            }
+        }
+        
+        return subject.eraseToAnyPublisher()
     }
     
     func getArticle(by id: String) -> AnyPublisher<Article?, Error> {
-        Just(Article.sampleArticles.first { $0.id == id })
-            .setFailureType(to: Error.self)
-            .delay(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .eraseToAnyPublisher()
+        let subject = PassthroughSubject<Article?, Error>()
+        
+        SanityClient.shared.fetchArticleWithCompletion(by: id) { result in
+            switch result {
+            case .success(let article):
+                print("📰 SanityArticleRepository: Successfully fetched article with id \(id)")
+                subject.send(article)
+                subject.send(completion: .finished)
+            case .failure(let error):
+                print("📰 SanityArticleRepository: Error fetching article with id \(id): \(error)")
+                subject.send(completion: .failure(error))
+            }
+        }
+        
+        return subject.eraseToAnyPublisher()
     }
 }

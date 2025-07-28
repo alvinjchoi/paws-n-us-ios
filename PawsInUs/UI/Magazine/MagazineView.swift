@@ -185,19 +185,35 @@ struct MagazineView: View {
         isLoading = true
         errorMessage = nil
         
+        print("📰 Starting to load articles from Sanity...")
+        
         diContainer.interactors.repositories.articleRepository.getAllArticles()
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { completion in
                     isLoading = false
                     if case .failure(let error) = completion {
+                        print("📰 Failed to load articles from Sanity: \(error.localizedDescription)")
                         errorMessage = "Failed to load articles: \(error.localizedDescription)"
                         // Fallback to sample data
+                        print("📰 Falling back to sample data")
                         articles = Article.sampleArticles
+                    } else {
+                        print("📰 Successfully completed article loading")
                     }
                 },
                 receiveValue: { fetchedArticles in
-                    articles = fetchedArticles.isEmpty ? Article.sampleArticles : fetchedArticles
+                    print("📰 Received \(fetchedArticles.count) articles from Sanity")
+                    if fetchedArticles.isEmpty {
+                        print("📰 No articles received, falling back to sample data")
+                        articles = Article.sampleArticles
+                    } else {
+                        print("📰 Using \(fetchedArticles.count) articles from Sanity")
+                        for article in fetchedArticles.prefix(3) {
+                            print("📰   - '\(article.title)': \(article.imageUrl ?? "nil")")
+                        }
+                        articles = fetchedArticles
+                    }
                 }
             )
             .store(in: &cancellables)
