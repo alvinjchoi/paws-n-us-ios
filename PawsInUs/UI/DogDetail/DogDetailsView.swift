@@ -241,7 +241,7 @@ struct DogDetailsView: View {
     
     private func shareDog() {
         // TODO: Implement share functionality
-        print("Share dog: \(dog.name)")
+        // TODO: Implement share functionality
     }
 }
 

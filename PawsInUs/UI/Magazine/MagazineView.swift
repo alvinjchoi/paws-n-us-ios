@@ -161,10 +161,7 @@ struct MagazineView: View {
                 loadArticles()
             }
             // Debug: Print articles and their image URLs
-            print("📰 Magazine loaded \(articles.count) articles:")
-            for article in articles.prefix(3) {
-                print("  - '\(article.title)': imageUrl = \(article.imageUrl ?? "nil")")
-            }
+            // Magazine loaded articles
         }
     }
     
@@ -188,7 +185,7 @@ struct MagazineView: View {
         isLoading = true
         errorMessage = nil
         
-        print("📰 Starting to load articles from Sanity...")
+        // Starting to load articles from Sanity
         
         diContainer.interactors.repositories.articleRepository.getAllArticles()
             .receive(on: DispatchQueue.main)
@@ -196,25 +193,22 @@ struct MagazineView: View {
                 receiveCompletion: { completion in
                     isLoading = false
                     if case .failure(let error) = completion {
-                        print("📰 Failed to load articles from Sanity: \(error.localizedDescription)")
+                        // Failed to load articles from Sanity
                         errorMessage = "Failed to load articles: \(error.localizedDescription)"
                         // Fallback to sample data
-                        print("📰 Falling back to sample data")
+                        // Falling back to sample data
                         articles = Article.sampleArticles
                     } else {
-                        print("📰 Successfully completed article loading")
+                        // Successfully completed article loading
                     }
                 },
                 receiveValue: { fetchedArticles in
-                    print("📰 Received \(fetchedArticles.count) articles from Sanity")
+                    // Received articles from Sanity
                     if fetchedArticles.isEmpty {
-                        print("📰 No articles received, falling back to sample data")
+                        // No articles received, falling back to sample data
                         articles = Article.sampleArticles
                     } else {
-                        print("📰 Using \(fetchedArticles.count) articles from Sanity")
-                        for article in fetchedArticles.prefix(3) {
-                            print("📰   - '\(article.title)': \(article.imageUrl ?? "nil")")
-                        }
+                        // Using articles from Sanity
                         articles = fetchedArticles
                     }
                 }
@@ -278,7 +272,7 @@ struct HeroArticleView: View {
                             }
                         }
                         .onAppear {
-                            print("📸 Loading real image for article '\(article.title)': \(imageUrl)")
+                            // Loading real image for article
                         }
                     } else {
                         Rectangle()
@@ -295,9 +289,9 @@ struct HeroArticleView: View {
                             )
                             .onAppear {
                                 if let imageUrl = article.imageUrl {
-                                    print("📸 Placeholder URL filtered out for article '\(article.title)': \(imageUrl)")
+                                    // Placeholder URL filtered out
                                 } else {
-                                    print("📸 No image URL for article: \(article.title)")
+                                    // No image URL for article
                                 }
                             }
                     }
