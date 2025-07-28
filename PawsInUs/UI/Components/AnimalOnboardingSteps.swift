@@ -211,21 +211,21 @@ struct ReviewStepView: View {
                     title: "🚕 이동 봉사",
                     description: "병원 이동, 입양 만남 등 교통 지원",
                     isSelected: viewModel.animalData.helpTypes.contains("transport"),
-                    onToggle: { viewModel.toggleHelpType("transport") }
+                    onToggle: { viewModel.animalData.toggleHelpType("transport") }
                 )
                 
                 HelpTypeButton(
                     title: "🏡 임시 보호",
                     description: "단기 보호 가정에서 임시 돌봄",
                     isSelected: viewModel.animalData.helpTypes.contains("temporary_care"),
-                    onToggle: { viewModel.toggleHelpType("temporary_care") }
+                    onToggle: { viewModel.animalData.toggleHelpType("temporary_care") }
                 )
                 
                 HelpTypeButton(
                     title: "🧼 미용 지원",
                     description: "목욕, 털 관리 등 미용 서비스",
                     isSelected: viewModel.animalData.helpTypes.contains("grooming"),
-                    onToggle: { viewModel.toggleHelpType("grooming") }
+                    onToggle: { viewModel.animalData.toggleHelpType("grooming") }
                 )
             }
             

@@ -256,6 +256,7 @@ class AnimalDraftData: ObservableObject {
             helpTypes.append(type)
         }
     }
+}
 
 // MARK: - Welcome Step
 struct WelcomeStepView: View {
