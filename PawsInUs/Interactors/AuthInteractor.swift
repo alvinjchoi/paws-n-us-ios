@@ -118,12 +118,6 @@ final class RealAuthInteractor: AuthInteractor, @unchecked Sendable {
     
     func getCurrentUser() async throws -> User? {
         let session = supabaseClient.auth.currentSession
-        print("AuthInteractor: Current session exists: \(session != nil)")
-        if let user = session?.user {
-            print("AuthInteractor: Returning user: \(user.id)")
-        } else {
-            print("AuthInteractor: No user in session")
-        }
         return session?.user
     }
     

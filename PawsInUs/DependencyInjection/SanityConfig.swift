@@ -14,7 +14,6 @@ struct SanityConfig {
         } catch {
             // Fallback for development - remove in production
             #if DEBUG
-            print("Warning: Using hardcoded Sanity project ID. Set SANITY_PROJECT_ID in Info.plist")
             return "p4k25a1o"
             #else
             fatalError("Missing SANITY_PROJECT_ID in Info.plist")
@@ -28,7 +27,6 @@ struct SanityConfig {
         } catch {
             // Fallback for development - remove in production
             #if DEBUG
-            print("Warning: Using hardcoded Sanity dataset. Set SANITY_DATASET in Info.plist")
             return "production"
             #else
             fatalError("Missing SANITY_DATASET in Info.plist")
@@ -67,8 +65,6 @@ final class SanityClient: @unchecked Sendable {
             return
         }
         
-        print("Sanity Query: \(query)")
-        print("Sanity URL: \(url)")
         
         // Configure URLSession to handle external images
         let config = URLSessionConfiguration.default
@@ -79,28 +75,20 @@ final class SanityClient: @unchecked Sendable {
         
         session.dataTask(with: url) { data, response, error in
             if let error = error {
-                print("Sanity network error: \(error)")
                 completion(.failure(error))
                 return
             }
             
             guard let data = data else {
-                print("Sanity: No data received")
                 completion(.failure(SanityError.noData))
                 return
             }
             
-            print("Sanity response data length: \(data.count)")
             
             do {
                 let sanityResponse = try JSONDecoder().decode(SanityResponse<T>.self, from: data)
-                print("Sanity: Successfully decoded response")
                 completion(.success(sanityResponse.result))
             } catch {
-                print("Sanity decode error: \(error)")
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("Raw JSON: \(jsonString)")
-                }
                 completion(.failure(error))
             }
         }.resume()
