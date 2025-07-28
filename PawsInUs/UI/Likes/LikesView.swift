@@ -145,7 +145,7 @@ struct LikesView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)
-        .padding(.bottom, 20) // Extra bottom padding for last card
+        .padding(.bottom, 40) // More bottom padding to prevent cutoff
     }
     
     private func loadLikedDogs() {
