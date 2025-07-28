@@ -90,7 +90,7 @@ extension AppEnvironment {
         #endif
         
         return DIContainer.Repositories(
-            dogsRepository: SupabaseDogsRepository(client: supabaseClient),
+            dogsRepository: LocalDogsRepository(),
             matchesRepository: SupabaseMatchesRepository(client: supabaseClient),
             matchingRepository: SupabaseMatchingRepository(client: supabaseClient),
             adopterRepository: SupabaseAdopterRepository(client: supabaseClient),
