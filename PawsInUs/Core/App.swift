@@ -32,7 +32,6 @@ extension AppEnvironment {
     var rootView: some View {
         RootView()
             .modifier(RootViewAppearance())
-            .modelContainer(modelContainer)
             .inject(diContainer)
     }
 }

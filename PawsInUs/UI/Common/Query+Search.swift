@@ -7,8 +7,12 @@
 //
 
 import SwiftUI
+#if canImport(SwiftData)
 import SwiftData
+#endif
 
+#if canImport(SwiftData)
+@available(iOS 17.0, *)
 extension View {
     /**
      Allows for recreating the @Query each time a searchText changes
@@ -29,6 +33,7 @@ extension View {
 /**
  This view serves as a "shield" over QueryView to avoid dual query
  */
+@available(iOS 17.0, *)
 private struct QueryViewContainer<T: PersistentModel>: View, Equatable {
 
     let searchText: String
@@ -44,6 +49,7 @@ private struct QueryViewContainer<T: PersistentModel>: View, Equatable {
     }
 }
 
+@available(iOS 17.0, *)
 private struct QueryView<T: PersistentModel>: View {
 
     @Query var query: [T]
@@ -57,6 +63,12 @@ private struct QueryView<T: PersistentModel>: View {
     var body: some View {
         Rectangle()
             .hidden()
-            .onChange(of: query, initial: true, results)
+            .onChange(of: query) { newValue in
+                results([], newValue)
+            }
+            .onAppear {
+                results([], query)
+            }
     }
 }
+#endif

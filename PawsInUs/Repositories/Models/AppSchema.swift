@@ -7,10 +7,15 @@
 //
 
 import Foundation
+#if canImport(SwiftData)
 import SwiftData
+#endif
 
+#if canImport(SwiftData)
+@available(iOS 17.0, *)
 typealias DBModel = SchemaV1
 
+@available(iOS 17.0, *)
 enum SchemaV1: VersionedSchema {
     nonisolated(unsafe) static var versionIdentifier = Schema.Version(1, 0, 0)
     
@@ -22,6 +27,7 @@ enum SchemaV1: VersionedSchema {
 }
 
 // Dummy model to satisfy SwiftData requirements
+@available(iOS 17.0, *)
 @Model
 final class DummyModel {
     var id: String = UUID().uuidString
@@ -29,8 +35,10 @@ final class DummyModel {
     init() {}
 }
 
+@available(iOS 17.0, *)
 extension Schema {
     static var appSchema: Schema {
         Schema(versionedSchema: SchemaV1.self)
     }
 }
+#endif

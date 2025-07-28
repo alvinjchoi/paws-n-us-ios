@@ -7,28 +7,29 @@
 //
 
 import SwiftUI
+#if canImport(SwiftData)
 import SwiftData
+#endif
 import Supabase
 
 struct DIContainer {
 
     let appState: Store<AppState>
     let interactors: Interactors
-    let modelContainer: ModelContainer
     let supabaseClient: SupabaseClient
 
     init(appState: Store<AppState> = .init(AppState()), 
          interactors: Interactors,
-         modelContainer: ModelContainer,
          supabaseClient: SupabaseClient) {
         self.appState = appState
         self.interactors = interactors
-        self.modelContainer = modelContainer
         self.supabaseClient = supabaseClient
     }
 
-    init(appState: AppState, interactors: Interactors, modelContainer: ModelContainer, supabaseClient: SupabaseClient) {
-        self.init(appState: Store<AppState>(appState), interactors: interactors, modelContainer: modelContainer, supabaseClient: supabaseClient)
+    init(appState: AppState, interactors: Interactors, 
+         supabaseClient: SupabaseClient) {
+        self.init(appState: Store<AppState>(appState), interactors: interactors, 
+                  supabaseClient: supabaseClient)
     }
 }
 
@@ -78,7 +79,6 @@ extension EnvironmentValues {
         return DIContainer(
             appState: AppState(), 
             interactors: .stub,
-            modelContainer: .stub,
             supabaseClient: SupabaseConfig.client
         )
         #else

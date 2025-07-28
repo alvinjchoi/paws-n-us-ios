@@ -6,8 +6,12 @@
 //  Copyright © 2024 Alexey Naumov. All rights reserved.
 //
 
+#if canImport(SwiftData)
 import SwiftData
+#endif
 
+#if canImport(SwiftData)
+@available(iOS 17.0, *)
 extension ModelContainer {
 
     static func appModelContainer(
@@ -27,5 +31,9 @@ extension ModelContainer {
     }
 }
 
+#if canImport(SwiftData)
+@available(iOS 17.0, *)
 @ModelActor
 final actor MainDBRepository { }
+#endif
+#endif

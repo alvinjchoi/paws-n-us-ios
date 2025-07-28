@@ -7,14 +7,15 @@
 //
 
 import UIKit
+#if canImport(SwiftData)
 import SwiftData
+#endif
 import Supabase
 
 @MainActor
 struct AppEnvironment {
     let isRunningTests: Bool
     let diContainer: DIContainer
-    let modelContainer: ModelContainer
     let systemEventsHandler: SystemEventsHandler
 }
 
@@ -38,11 +39,11 @@ extension AppEnvironment {
             }
         */
         let session = configuredURLSession()
-        let modelContainer = configuredModelContainer()
         let supabaseClient = SupabaseConfig.client
-        let repositories = configuredRepositories(session: session, modelContainer: modelContainer, supabaseClient: supabaseClient)
+        
+        let repositories = configuredRepositories(session: session, modelContainer: nil, supabaseClient: supabaseClient)
         let interactors = DIContainer.Interactors(appState: appState, repositories: repositories)
-        let diContainer = DIContainer(appState: appState, interactors: interactors, modelContainer: modelContainer, supabaseClient: supabaseClient)
+        let diContainer = DIContainer(appState: appState, interactors: interactors, supabaseClient: supabaseClient)
         let deepLinksHandler = RealDeepLinksHandler(container: diContainer)
         let pushNotificationsHandler = RealPushNotificationsHandler(deepLinksHandler: deepLinksHandler)
         let systemEventsHandler = RealSystemEventsHandler(
@@ -53,7 +54,6 @@ extension AppEnvironment {
         return AppEnvironment(
             isRunningTests: ProcessInfo.processInfo.isRunningTests,
             diContainer: diContainer,
-            modelContainer: modelContainer,
             systemEventsHandler: systemEventsHandler)
     }
 
@@ -68,7 +68,7 @@ extension AppEnvironment {
         return URLSession(configuration: configuration)
     }
 
-    private static func configuredRepositories(session: URLSession, modelContainer: ModelContainer, supabaseClient: SupabaseClient) -> DIContainer.Repositories {
+    private static func configuredRepositories(session: URLSession, modelContainer: Any?, supabaseClient: SupabaseClient) -> DIContainer.Repositories {
         #if DEBUG
         if ProcessInfo.processInfo.isRunningTests {
             return DIContainer.Repositories(
@@ -96,6 +96,8 @@ extension AppEnvironment {
         )
     }
 
+    #if canImport(SwiftData)
+    @available(iOS 17.0, *)
     private static func configuredModelContainer() -> ModelContainer {
         do {
             let container = try ModelContainer.appModelContainer()
@@ -104,5 +106,6 @@ extension AppEnvironment {
             return ModelContainer.stub
         }
     }
+    #endif
 
 }

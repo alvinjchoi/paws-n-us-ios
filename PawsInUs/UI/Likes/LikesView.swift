@@ -14,13 +14,11 @@ struct LikesView: View {
     @State private var isCurrentlyLoading = false
     
     var isAuthenticated: Bool {
-        // Temporarily return true to test likes functionality
-        // TODO: Restore proper auth check: diContainer.appState.value.userData.isAuthenticated
-        true
+        diContainer.appState[\.userData.isAuthenticated]
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ZStack {
                 Color(.systemGray6)
                     .ignoresSafeArea()
@@ -35,7 +33,7 @@ struct LikesView: View {
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(maxWidth: .infinity, minHeight: 400)
                             .onAppear { loadLikedDogs() }
                         case .isLoading:
                             VStack {
@@ -44,15 +42,17 @@ struct LikesView: View {
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(maxWidth: .infinity, minHeight: 400)
                         case .loaded(let dogs):
                             VStack {
                                 if dogs.isEmpty {
                                     emptyLikesView
                                 } else {
                                     likedDogsGrid(dogs: dogs)
+                                        .frame(maxWidth: .infinity)
                                 }
                             }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .onAppear {
                                 isCurrentlyLoading = false
                                 // Preload all images for better performance
@@ -66,12 +66,15 @@ struct LikesView: View {
                                     .foregroundColor(.red)
                                     .padding()
                             }
+                            .frame(maxWidth: .infinity, minHeight: 400)
                             .onAppear {
                                 isCurrentlyLoading = false
                             }
                         }
                     }
-                    .padding(.bottom, 20) // Add extra bottom padding for tab bar
+                    .refreshable {
+                        loadLikedDogs()
+                    }
                 } else {
                     notAuthenticatedView
                 }
@@ -104,12 +107,12 @@ struct LikesView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("No likes yet")
+            Text("아직 좋아요가 없습니다")
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
             
-            Text("Start swiping to find dogs you love!")
+            Text("마음에 드는 강아지를 찾아보세요!")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -117,7 +120,7 @@ struct LikesView: View {
             Button(action: {
                 diContainer.appState[\.routing.selectedTab] = .discover
             }) {
-                Text("Start Swiping")
+                Text("둘러보기 시작")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(width: 150, height: 44)
@@ -133,8 +136,8 @@ struct LikesView: View {
     
     private func likedDogsGrid(dogs: [Dog]) -> some View {
         LazyVGrid(columns: [
-            GridItem(.flexible(), spacing: 8),
-            GridItem(.flexible(), spacing: 8)
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12)
         ], spacing: 16) {
             ForEach(dogs, id: \.id) { dog in
                 NavigationLink(destination: DogDetailView(dog: dog)) {
@@ -143,17 +146,15 @@ struct LikesView: View {
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 14) // Reduced to account for card's internal padding
         .padding(.top, 8)
-        .padding(.bottom, 40) // More bottom padding to prevent cutoff
+        .padding(.bottom, 100) // Extra bottom padding for tab bar and safe area
     }
     
     private func loadLikedDogs() {
         guard !isCurrentlyLoading else {
             return
         }
-        
-        let currentLikedIDs = Array(diContainer.appState.value.userData.likedDogIDs)
         
         isCurrentlyLoading = true
         diContainer.interactors.likesInteractor.loadLikedDogs(dogs: $likedDogs)
@@ -176,11 +177,11 @@ struct LikesView: View {
                 .foregroundColor(.orange)
             
             VStack(spacing: 10) {
-                Text("Sign in to Save Your Likes")
+                Text("좋아요를 저장하려면 로그인하세요")
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text("Create an account to save your favorite dogs and connect with shelters")
+                Text("계정을 만들어 좋아하는 강아지를 저장하고\n보호소와 연결하세요")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -191,7 +192,7 @@ struct LikesView: View {
                 Button(action: {
                     showingAuth = true
                 }) {
-                    Text("Sign In / Sign Up")
+                    Text("로그인 / 회원가입")
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -204,7 +205,7 @@ struct LikesView: View {
                 Button(action: {
                     diContainer.appState[\.routing.selectedTab] = .discover
                 }) {
-                    Text("Continue Browsing")
+                    Text("계속 둘러보기")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.orange)
                 }
@@ -223,36 +224,38 @@ struct LikedDogCard: View {
         VStack(spacing: 0) {
             // Dog image with proper corner radius
             ZStack(alignment: .topTrailing) {
-                if let firstImageURL = dog.imageURLs.first, let url = URL(string: firstImageURL) {
-                    CachedAsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
+                GeometryReader { geometry in
+                    if let firstImageURL = dog.imageURLs.first, let url = URL(string: firstImageURL) {
+                        CachedAsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                        } placeholder: {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .overlay(
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                )
+                        }
+                    } else {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
                             .overlay(
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle())
+                                VStack {
+                                    Image(systemName: "photo")
+                                        .font(.title2)
+                                        .foregroundColor(.gray)
+                                    Text("No image")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
                             )
                     }
-                    .frame(height: 160)
-                    .clipped()
-                } else {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            VStack {
-                                Image(systemName: "photo")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
-                                Text("No image")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                        )
-                        .frame(height: 160)
                 }
+                .frame(height: 160)
+                .clipped()
                 
                 // Heart button
                 Button(action: {
@@ -269,7 +272,7 @@ struct LikedDogCard: View {
             }
             
             // Dog info section
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(dog.name)
                     .font(.system(size: 16, weight: .semibold))
                     .lineLimit(1)
@@ -288,6 +291,7 @@ struct LikedDogCard: View {
                         .truncationMode(.tail)
                         .foregroundColor(.secondary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Text(dog.shelterName)
                     .font(.system(size: 12))
@@ -295,21 +299,23 @@ struct LikedDogCard: View {
                     .truncationMode(.tail)
                     .foregroundColor(.gray)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
             .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
             .background(Color(.systemBackground))
         }
-        .frame(minHeight: 240) // Ensure minimum height for cards
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.1), radius: 6, x: 0, y: 3)
+        .padding(.horizontal, 2) // Small padding to prevent shadow clipping
     }
 }
 
 struct DogDetailView: View {
     let dog: Dog
     @Environment(\.dismiss) private var dismiss
+    @State private var showingPlaydateScheduler = false
+    @State private var showingAdoptionApplication = false
     
     var body: some View {
         ScrollView {
@@ -407,17 +413,38 @@ struct DogDetailView: View {
                     .font(.body)
                     .foregroundColor(.secondary)
                     
-                    // Contact button
-                    Button(action: {
-                        // Handle contact shelter
-                    }) {
-                        Text("Contact \(dog.shelterName)")
+                    // Action buttons
+                    HStack(spacing: 12) {
+                        // Playdate button (70%)
+                        Button(action: {
+                            showingPlaydateScheduler = true
+                        }) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                Text("Schedule Playdate")
+                            }
                             .font(.system(size: 16, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(Color.orange)
+                            .background(Color.blue)
                             .foregroundColor(.white)
                             .cornerRadius(25)
+                        }
+                        .frame(maxWidth: .infinity)
+                        
+                        // Adoption button (30%)
+                        Button(action: {
+                            showingAdoptionApplication = true
+                        }) {
+                            Text("Adopt")
+                                .font(.system(size: 16, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.orange)
+                                .foregroundColor(.white)
+                                .cornerRadius(25)
+                        }
+                        .frame(width: 100)
                     }
                     .padding(.top)
                 }
@@ -426,5 +453,11 @@ struct DogDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .ignoresSafeArea(edges: .top)
+        .sheet(isPresented: $showingPlaydateScheduler) {
+            PlaydateSchedulingView(dog: dog)
+        }
+        .sheet(isPresented: $showingAdoptionApplication) {
+            AdoptionApplicationView(dog: dog)
+        }
     }
 }
