@@ -84,10 +84,11 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     }
 }
 
-// Simple in-memory image cache
-class ImageCache {
+// Thread-safe in-memory image cache
+final class ImageCache: @unchecked Sendable {
     static let shared = ImageCache()
     private let cache = NSCache<NSURL, UIImage>()
+    private let lock = NSLock()
     
     private init() {
         // Configure cache limits
@@ -96,19 +97,27 @@ class ImageCache {
     }
     
     func image(for url: URL) -> UIImage? {
+        lock.lock()
+        defer { lock.unlock() }
         return cache.object(forKey: url as NSURL)
     }
     
     func setImage(_ image: UIImage, for url: URL) {
+        lock.lock()
+        defer { lock.unlock() }
         let cost = image.pngData()?.count ?? 0
         cache.setObject(image, forKey: url as NSURL, cost: cost)
     }
     
     func removeImage(for url: URL) {
+        lock.lock()
+        defer { lock.unlock() }
         cache.removeObject(forKey: url as NSURL)
     }
     
     func removeAllImages() {
+        lock.lock()
+        defer { lock.unlock() }
         cache.removeAllObjects()
     }
 }
