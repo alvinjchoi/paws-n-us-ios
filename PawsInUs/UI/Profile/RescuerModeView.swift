@@ -93,8 +93,8 @@ struct RescuerModeView: View {
 struct TodayView: View {
     @Environment(\.injected) private var diContainer
     @State private var selectedSegment = 0
-    @State private var todayVisits: [VisitDTO] = []
-    @State private var upcomingVisits: [VisitDTO] = []
+    @State private var todayVisits: [Visit] = []
+    @State private var upcomingVisits: [Visit] = []
     @State private var isLoading = true
     @State private var dogs: [String: Dog] = [:]
     
@@ -138,7 +138,7 @@ struct TodayView: View {
                             ScrollView {
                                 LazyVStack(spacing: 16) {
                                     ForEach(todayVisits, id: \.id) { visit in
-                                        VisitCard(visit: visit, dog: dogs[visit.animalID])
+                                        VisitCard(visit: visit, dog: dogs[visit.animalId.uuidString])
                                     }
                                 }
                                 .padding()
@@ -168,7 +168,7 @@ struct TodayView: View {
                             ScrollView {
                                 LazyVStack(spacing: 16) {
                                     ForEach(upcomingVisits, id: \.id) { visit in
-                                        VisitCard(visit: visit, dog: dogs[visit.animalID])
+                                        VisitCard(visit: visit, dog: dogs[visit.animalId.uuidString])
                                     }
                                 }
                                 .padding()
@@ -207,15 +207,26 @@ struct TodayView: View {
             
             let visitsRepo = diContainer.repositories.visitsRepository
             
-            // Load today's visits
-            // Temporary stub for visits
-            todayVisits = []
+            // Convert userID to UUID
+            guard let rescuerUUID = UUID(uuidString: userID) else {
+                print("Invalid user ID format")
+                isLoading = false
+                return
+            }
             
-            // Temporary stub for visits
-            upcomingVisits = []
+            // Load today's visits
+            todayVisits = try await visitsRepo.getVisitsByDate(rescuerUUID, date: Date())
+            
+            // Load upcoming visits (next 7 days)
+            let calendar = Calendar.current
+            let nextWeek = calendar.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+            let allVisits = try await visitsRepo.getVisitsForRescuer(rescuerUUID)
+            upcomingVisits = allVisits.filter { visit in
+                visit.scheduledDate > Date() && visit.scheduledDate <= nextWeek
+            }
             
             // Load dog information for all visits
-            let dogIDs = Set((todayVisits + upcomingVisits).map { $0.animalID })
+            let dogIDs = Set((todayVisits + upcomingVisits).map { $0.animalId.uuidString })
             await loadDogs(dogIDs: Array(dogIDs))
             
             isLoading = false
@@ -240,44 +251,35 @@ struct TodayView: View {
 }
 
 struct VisitCard: View {
-    let visit: VisitDTO
+    let visit: Visit
     let dog: Dog?
     
     private var visitTypeText: String {
-        switch visit.visitType {
-        case "meet_greet":
-            return "놀이 시간"
-        case "adoption_interview":
-            return "입양 상담"
-        case "home_visit":
-            return "가정 방문"
-        default:
-            return "방문"
-        }
+        visit.visitType.displayName
     }
     
     private var visitTypeIcon: String {
         switch visit.visitType {
-        case "meet_greet":
+        case .meetGreet:
             return "figure.play"
-        case "adoption_interview":
+        case .adoptionInterview:
             return "heart.fill"
-        case "home_visit":
+        case .homeVisit:
             return "house.fill"
-        default:
+        case .followUp:
             return "calendar"
         }
     }
     
     private var visitTypeColor: Color {
         switch visit.visitType {
-        case "meet_greet":
+        case .meetGreet:
             return .blue
-        case "adoption_interview":
+        case .adoptionInterview:
             return .red
-        case "home_visit":
+        case .homeVisit:
             return .green
-        default:
+        case .followUp:
             return .gray
         }
     }
@@ -341,12 +343,12 @@ struct VisitCard: View {
                 
                 Spacer()
                 
-                Text(statusText(visit.status ?? "scheduled"))
+                Text(visit.status.displayName)
                     .font(.system(size: 12, weight: .medium))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
-                    .background(statusColor(visit.status ?? "scheduled").opacity(0.2))
-                    .foregroundColor(statusColor(visit.status ?? "scheduled"))
+                    .background(statusColor(visit.status).opacity(0.2))
+                    .foregroundColor(statusColor(visit.status))
                     .cornerRadius(12)
             }
             
@@ -364,47 +366,23 @@ struct VisitCard: View {
         .cornerRadius(16)
     }
     
-    private func formatTime(_ dateString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: dateString) else { return "" }
-        
+    private func formatTime(_ date: Date) -> String {
         let timeFormatter = DateFormatter()
         timeFormatter.locale = Locale(identifier: "ko_KR")
         timeFormatter.timeStyle = .short
         return timeFormatter.string(from: date)
     }
     
-    private func statusText(_ status: String) -> String {
+    private func statusColor(_ status: VisitStatus) -> Color {
         switch status {
-        case "scheduled":
-            return "예정됨"
-        case "confirmed":
-            return "확정됨"
-        case "in_progress":
-            return "진행 중"
-        case "completed":
-            return "완료됨"
-        case "cancelled":
-            return "취소됨"
-        case "no_show":
-            return "노쇼"
-        default:
-            return status
-        }
-    }
-    
-    private func statusColor(_ status: String) -> Color {
-        switch status {
-        case "scheduled", "confirmed":
+        case .scheduled, .confirmed:
             return .blue
-        case "in_progress":
+        case .inProgress:
             return .orange
-        case "completed":
+        case .completed:
             return .green
-        case "cancelled", "no_show":
+        case .cancelled, .noShow:
             return .red
-        default:
-            return .gray
         }
     }
 }
@@ -413,11 +391,11 @@ struct VisitCard: View {
 struct CalendarView: View {
     @Environment(\.injected) private var diContainer
     @State private var selectedDate = Date()
-    @State private var visits: [VisitDTO] = []
-    @State private var visitsByDate: [String: [VisitDTO]] = [:]
+    @State private var visits: [Visit] = []
+    @State private var visitsByDate: [String: [Visit]] = [:]
     @State private var dogs: [String: Dog] = [:]
     @State private var isLoading = true
-    @State private var selectedVisit: VisitDTO?
+    @State private var selectedVisit: Visit?
     
     private let calendar = Calendar.current
     
@@ -485,7 +463,7 @@ struct CalendarView: View {
                         ScrollView {
                             LazyVStack(spacing: 16) {
                                 ForEach(visitsForDate, id: \.id) { visit in
-                                    VisitCard(visit: visit, dog: dogs[visit.animalID])
+                                    VisitCard(visit: visit, dog: dogs[visit.animalId.uuidString])
                                         .onTapGesture {
                                             selectedVisit = visit
                                         }
@@ -502,7 +480,7 @@ struct CalendarView: View {
                 loadVisits()
             }
             .sheet(item: $selectedVisit) { visit in
-                VisitDetailSheet(visit: visit, dog: dogs[visit.animalID])
+                VisitDetailSheet(visit: visit, dog: dogs[visit.animalId.uuidString])
             }
         }
     }
@@ -540,23 +518,28 @@ struct CalendarView: View {
                     return
                 }
                 
+                // Convert userID to UUID
+                guard let rescuerUUID = UUID(uuidString: userID) else {
+                    print("Invalid user ID format")
+                    isLoading = false
+                    return
+                }
+                
                 let visitsRepo = diContainer.repositories.visitsRepository
-                visits = [] // Temporary stub
+                visits = try await visitsRepo.getVisitsForRescuer(rescuerUUID)
                 
                 // Group visits by date
                 visitsByDate = [:]
                 for visit in visits {
-                    if let date = ISO8601DateFormatter().date(from: visit.scheduledDate) {
-                        let key = dateKey(for: date)
-                        if visitsByDate[key] == nil {
-                            visitsByDate[key] = []
-                        }
-                        visitsByDate[key]?.append(visit)
+                    let key = dateKey(for: visit.scheduledDate)
+                    if visitsByDate[key] == nil {
+                        visitsByDate[key] = []
                     }
+                    visitsByDate[key]?.append(visit)
                 }
                 
                 // Load dog information
-                let dogIDs = Set(visits.map { $0.animalID })
+                let dogIDs = Set(visits.map { $0.animalId.uuidString })
                 await loadDogs(dogIDs: Array(dogIDs))
                 
                 isLoading = false
@@ -583,7 +566,7 @@ struct CalendarView: View {
 
 struct CalendarGridView: View {
     @Binding var selectedDate: Date
-    let visitsByDate: [String: [VisitDTO]]
+    let visitsByDate: [String: [Visit]]
     let onDateSelected: (Date) -> Void
     
     private let calendar = Calendar.current
@@ -731,7 +714,7 @@ struct CalendarDayView: View {
 }
 
 struct VisitDetailSheet: View {
-    let visit: VisitDTO
+    let visit: Visit
     let dog: Dog?
     @Environment(\.dismiss) private var dismiss
     
@@ -790,10 +773,10 @@ struct VisitDetailSheet: View {
                     
                     // Visit details
                     VStack(alignment: .leading, spacing: 16) {
-                        DetailRow(icon: "calendar", title: "날짜", value: formatDate(visit.scheduledDate))
-                        DetailRow(icon: "clock", title: "시간", value: formatTime(visit.scheduledDate))
+                        DetailRow(icon: "calendar", title: "날짜", value: formatDateFromDate(visit.scheduledDate))
+                        DetailRow(icon: "clock", title: "시간", value: formatTimeFromDate(visit.scheduledDate))
                         DetailRow(icon: "mappin.circle", title: "위치", value: visit.location ?? "위치 미정")
-                        DetailRow(icon: "person.2", title: "상태", value: statusText(visit.status ?? "scheduled"))
+                        DetailRow(icon: "person.2", title: "상태", value: visit.status.displayName)
                         
                         if let notes = visit.adopterNotes, !notes.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
@@ -823,41 +806,32 @@ struct VisitDetailSheet: View {
     }
     
     private var visitTypeText: String {
-        switch visit.visitType {
-        case "meet_greet":
-            return "놀이 시간"
-        case "adoption_interview":
-            return "입양 상담"
-        case "home_visit":
-            return "가정 방문"
-        default:
-            return "방문"
-        }
+        return visit.visitType.displayName
     }
     
     private var visitTypeIcon: String {
         switch visit.visitType {
-        case "meet_greet":
+        case .meetGreet:
             return "figure.play"
-        case "adoption_interview":
+        case .adoptionInterview:
             return "heart.fill"
-        case "home_visit":
+        case .homeVisit:
             return "house.fill"
-        default:
-            return "calendar"
+        case .followUp:
+            return "arrow.clockwise"
         }
     }
     
     private var visitTypeColor: Color {
         switch visit.visitType {
-        case "meet_greet":
+        case .meetGreet:
             return .blue
-        case "adoption_interview":
+        case .adoptionInterview:
             return .red
-        case "home_visit":
+        case .homeVisit:
             return .green
-        default:
-            return .gray
+        case .followUp:
+            return .orange
         }
     }
     
@@ -875,6 +849,20 @@ struct VisitDetailSheet: View {
         let formatter = ISO8601DateFormatter()
         guard let date = formatter.date(from: dateString) else { return "" }
         
+        let timeFormatter = DateFormatter()
+        timeFormatter.locale = Locale(identifier: "ko_KR")
+        timeFormatter.timeStyle = .short
+        return timeFormatter.string(from: date)
+    }
+    
+    private func formatDateFromDate(_ date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "ko_KR")
+        dateFormatter.dateStyle = .long
+        return dateFormatter.string(from: date)
+    }
+    
+    private func formatTimeFromDate(_ date: Date) -> String {
         let timeFormatter = DateFormatter()
         timeFormatter.locale = Locale(identifier: "ko_KR")
         timeFormatter.timeStyle = .short
