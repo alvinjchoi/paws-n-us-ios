@@ -87,6 +87,20 @@ struct PhotosStepView: View {
     @ObservedObject var viewModel: AnimalOnboardingViewModel
     
     var body: some View {
+        if #available(iOS 16.0, *) {
+            PhotosStepViewModern(viewModel: viewModel)
+        } else {
+            PhotosStepViewLegacy(viewModel: viewModel)
+        }
+    }
+}
+
+@available(iOS 16.0, *)
+struct PhotosStepViewModern: View {
+    @ObservedObject var viewModel: AnimalOnboardingViewModel
+    @State private var selectedImages: [PhotosPickerItem] = []
+    
+    var body: some View {
         VStack(alignment: .leading, spacing: 32) {
             Text("📷 사진 업로드")
                 .font(.system(size: 28, weight: .bold))
@@ -118,7 +132,11 @@ struct PhotosStepView: View {
                 }
                 
                 if viewModel.animalData.photos.count < 10 {
-                    Button(action: {}) {
+                    PhotosPicker(
+                        selection: $selectedImages,
+                        maxSelectionCount: 10 - viewModel.animalData.photos.count,
+                        matching: .images
+                    ) {
                         VStack {
                             Image(systemName: "plus")
                                 .font(.system(size: 24))
@@ -131,6 +149,92 @@ struct PhotosStepView: View {
                         .frame(maxWidth: .infinity)
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
+                    }
+                    .onChange(of: selectedImages) { items in
+                        Task {
+                            await loadSelectedImages(items)
+                        }
+                    }
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+    }
+    
+    private func loadSelectedImages(_ items: [PhotosPickerItem]) async {
+        for item in items {
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
+                await MainActor.run {
+                    viewModel.animalData.photos.append(image)
+                }
+            }
+        }
+        // Clear selection after loading
+        await MainActor.run {
+            selectedImages = []
+        }
+    }
+}
+
+struct PhotosStepViewLegacy: View {
+    @ObservedObject var viewModel: AnimalOnboardingViewModel
+    @State private var showingImagePicker = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 32) {
+            Text("📷 사진 업로드")
+                .font(.system(size: 28, weight: .bold))
+            
+            Text("동물의 매력적인 사진들을 추가해주세요. 최소 1장이 필요합니다.")
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+            
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 12) {
+                ForEach(Array(viewModel.animalData.photos.enumerated()), id: \.offset) { index, image in
+                    ZStack(alignment: .topTrailing) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(height: 100)
+                            .clipped()
+                            .cornerRadius(8)
+                        
+                        Button(action: {
+                            viewModel.animalData.photos.remove(at: index)
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.white)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .padding(4)
+                    }
+                }
+                
+                if viewModel.animalData.photos.count < 10 {
+                    Button(action: {
+                        showingImagePicker = true
+                    }) {
+                        VStack {
+                            Image(systemName: "plus")
+                                .font(.system(size: 24))
+                                .foregroundColor(.gray)
+                            Text("사진 추가")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                        .frame(height: 100)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                    }
+                    .sheet(isPresented: $showingImagePicker) {
+                        ImagePickerLegacy { images in
+                            viewModel.animalData.photos.append(contentsOf: images)
+                        }
                     }
                 }
             }
@@ -308,5 +412,43 @@ struct HelpTypeButton: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Legacy Image Picker for iOS 15
+struct ImagePickerLegacy: UIViewControllerRepresentable {
+    let onImagesSelected: ([UIImage]) -> Void
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.delegate = context.coordinator
+        picker.sourceType = .photoLibrary
+        picker.allowsEditing = false
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: ImagePickerLegacy
+        
+        init(_ parent: ImagePickerLegacy) {
+            self.parent = parent
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.onImagesSelected([image])
+            }
+            picker.dismiss(animated: true)
+        }
+        
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true)
+        }
     }
 }
