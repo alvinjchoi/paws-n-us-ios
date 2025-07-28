@@ -32,9 +32,47 @@ struct BasicInfoStepView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("나이 *")
                         .font(.system(size: 16, weight: .medium))
-                    TextField("0", value: $viewModel.animalData.age, format: .number)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .keyboardType(.numberPad)
+                    
+                    HStack(spacing: 16) {
+                        // Years picker
+                        VStack(spacing: 4) {
+                            Text("년")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary)
+                            
+                            Picker("Years", selection: $viewModel.animalData.ageYears) {
+                                ForEach(0...20, id: \.self) { year in
+                                    Text("\(year)")
+                                        .tag(year)
+                                }
+                            }
+                            .pickerStyle(WheelPickerStyle())
+                            .frame(width: 80, height: 120)
+                            .clipped()
+                        }
+                        
+                        // Months picker
+                        VStack(spacing: 4) {
+                            Text("개월")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary)
+                            
+                            Picker("Months", selection: $viewModel.animalData.ageMonths) {
+                                ForEach(0...11, id: \.self) { month in
+                                    Text("\(month)")
+                                        .tag(month)
+                                }
+                            }
+                            .pickerStyle(WheelPickerStyle())
+                            .frame(width: 80, height: 120)
+                            .clipped()
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.vertical, 8)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
                 }
             }
             

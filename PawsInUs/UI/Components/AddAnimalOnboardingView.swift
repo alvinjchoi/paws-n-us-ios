@@ -191,11 +191,11 @@ class AnimalOnboardingViewModel: ObservableObject {
         case .welcome:
             return true
         case .basicInfo:
-            return !animalData.name.isEmpty && !animalData.species.isEmpty
+            return !animalData.name.isEmpty && !animalData.species.isEmpty && (animalData.ageYears > 0 || animalData.ageMonths > 0)
         case .photos:
             return animalData.photos.count >= 1
         case .characteristics:
-            return animalData.age > 0
+            return !animalData.bio.isEmpty
         case .medical:
             return !animalData.medicalStatus.isEmpty
         case .location:
@@ -237,7 +237,12 @@ class AnimalDraftData: ObservableObject {
     @Published var name: String = ""
     @Published var species: String = ""
     @Published var breed: String = ""
-    @Published var age: Int = 0
+    @Published var ageYears: Int = 0
+    @Published var ageMonths: Int = 0
+    
+    var age: Int {
+        return ageYears * 12 + ageMonths // Total age in months for API compatibility
+    }
     @Published var size: String = ""
     @Published var gender: String = ""
     @Published var photos: [UIImage] = []
