@@ -370,74 +370,6 @@ struct DogCardView: View {
                         }
                     }
                     .clipped()
-                    .overlay(
-                        // Tap areas for image navigation
-                        GeometryReader { geometry in
-                            HStack(spacing: 0) {
-                                // Left edge - previous photo
-                                Rectangle()
-                                    .fill(Color.clear)
-                                    .frame(width: 80)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        if currentImageIndex > 0 {
-                                            withAnimation(.easeInOut(duration: 0.3)) {
-                                                currentImageIndex -= 1
-                                            }
-                                        }
-                                    }
-                                    .overlay(
-                                        Group {
-                                            if dog.imageURLs.count > 1 && currentImageIndex > 0 {
-                                                HStack {
-                                                    Image(systemName: "chevron.left")
-                                                        .font(.system(size: 20, weight: .medium))
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                        .padding(.leading, 8)
-                                                    Spacer()
-                                                }
-                                            }
-                                        }
-                                    )
-                                
-                                // Center area - show details
-                                Rectangle()
-                                    .fill(Color.clear)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        onInfoTap()
-                                    }
-                                
-                                // Right edge - next photo
-                                Rectangle()
-                                    .fill(Color.clear)
-                                    .frame(width: 80)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        if currentImageIndex < dog.imageURLs.count - 1 {
-                                            withAnimation(.easeInOut(duration: 0.3)) {
-                                                currentImageIndex += 1
-                                            }
-                                        }
-                                    }
-                                    .overlay(
-                                        Group {
-                                            if dog.imageURLs.count > 1 && currentImageIndex < dog.imageURLs.count - 1 {
-                                                HStack {
-                                                    Spacer()
-                                                    Image(systemName: "chevron.right")
-                                                        .font(.system(size: 20, weight: .medium))
-                                                        .foregroundColor(.white.opacity(0.7))
-                                                        .padding(.trailing, 8)
-                                                }
-                                            }
-                                        }
-                                    )
-                            }
-                            // Only cover the top portion of the image, leave bottom for info button
-                            .frame(height: geometry.size.height - 150)
-                        }
-                    )
                 )
                 
                 // Image indicators at top
@@ -516,6 +448,78 @@ struct DogCardView: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .overlay(
+            // Tap areas for navigation - positioned to avoid info button
+            VStack {
+                // Upper portion for photo navigation
+                HStack(spacing: 0) {
+                    // Left edge - previous photo
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(width: 80)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if currentImageIndex > 0 {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    currentImageIndex -= 1
+                                }
+                            }
+                        }
+                        .overlay(
+                            Group {
+                                if dog.imageURLs.count > 1 && currentImageIndex > 0 {
+                                    HStack {
+                                        Image(systemName: "chevron.left")
+                                            .font(.system(size: 20, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.7))
+                                            .padding(.leading, 8)
+                                        Spacer()
+                                    }
+                                }
+                            }
+                        )
+                    
+                    // Center area - show details
+                    Rectangle()
+                        .fill(Color.clear)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onInfoTap()
+                        }
+                    
+                    // Right edge - next photo
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(width: 80)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if currentImageIndex < dog.imageURLs.count - 1 {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    currentImageIndex += 1
+                                }
+                            }
+                        }
+                        .overlay(
+                            Group {
+                                if dog.imageURLs.count > 1 && currentImageIndex < dog.imageURLs.count - 1 {
+                                    HStack {
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 20, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.7))
+                                            .padding(.trailing, 8)
+                                    }
+                                }
+                            }
+                        )
+                }
+                
+                // Bottom area - leave empty for info button
+                Spacer()
+                    .frame(height: 160) // Space for info area
+            }
+            .allowsHitTesting(true) // Ensure tap gestures work
+        )
     }
 }
 
