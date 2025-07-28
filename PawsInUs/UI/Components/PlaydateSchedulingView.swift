@@ -194,7 +194,7 @@ struct PlaydateSchedulingView: View {
         
         do {
             // Get current user ID
-            guard let userID = diContainer.appState[\.userData.currentUserID] else {
+            guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
                 print("No user ID found")
                 isSubmitting = false
                 return

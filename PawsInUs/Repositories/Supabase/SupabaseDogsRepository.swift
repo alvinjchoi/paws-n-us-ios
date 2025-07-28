@@ -57,4 +57,14 @@ struct SupabaseDogsRepository: DogsRepository, @unchecked Sendable {
         
         return dogDTO.toDog()
     }
+    
+    func getDogsByRescuer(rescuerID: String) async throws -> [Dog] {
+        let dogDTOs: [DogDTO] = try await client.from("dogs")
+            .select()
+            .eq("rescuer_id", value: rescuerID)
+            .execute()
+            .value
+        
+        return dogDTOs.map { $0.toDog() }
+    }
 }

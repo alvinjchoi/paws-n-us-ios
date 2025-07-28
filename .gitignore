@@ -78,3 +78,9 @@ simulator_screenshot_*
 
 ## Test/Debug files
 push_with_deeplink.apns
+
+## Configuration files with sensitive data
+PawsInUs/Resources/Config.plist
+Config.plist
+**/Config.plist
+!**/Config-Example.plist

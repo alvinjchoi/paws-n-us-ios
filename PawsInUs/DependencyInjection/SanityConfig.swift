@@ -8,8 +8,34 @@
 import Foundation
 
 struct SanityConfig {
-    static let projectId = "p4k25a1o"
-    static let dataset = "production"
+    static let projectId: String = {
+        do {
+            return try ConfigurationManager.string(for: ConfigurationKey.sanityProjectID)
+        } catch {
+            // Fallback for development - remove in production
+            #if DEBUG
+            print("Warning: Using hardcoded Sanity project ID. Set SANITY_PROJECT_ID in Info.plist")
+            return "p4k25a1o"
+            #else
+            fatalError("Missing SANITY_PROJECT_ID in Info.plist")
+            #endif
+        }
+    }()
+    
+    static let dataset: String = {
+        do {
+            return try ConfigurationManager.string(for: ConfigurationKey.sanityDataset)
+        } catch {
+            // Fallback for development - remove in production
+            #if DEBUG
+            print("Warning: Using hardcoded Sanity dataset. Set SANITY_DATASET in Info.plist")
+            return "production"
+            #else
+            fatalError("Missing SANITY_DATASET in Info.plist")
+            #endif
+        }
+    }()
+    
     static let apiVersion = "2024-01-01"
     static let baseURL = "https://\(projectId).api.sanity.io/v\(apiVersion)/data/query/\(dataset)"
 }

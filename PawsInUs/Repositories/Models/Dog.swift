@@ -26,6 +26,7 @@ struct Dog: Codable, Equatable, Sendable, Identifiable {
     let dateAdded: Date
     let personality: String?
     let healthStatus: String?
+    let rescuerID: String?
     
     init(id: String = UUID().uuidString,
          name: String,
@@ -44,7 +45,8 @@ struct Dog: Codable, Equatable, Sendable, Identifiable {
          energyLevel: EnergyLevel = .medium,
          dateAdded: Date = Date(),
          personality: String? = nil,
-         healthStatus: String? = nil) {
+         healthStatus: String? = nil,
+         rescuerID: String? = nil) {
         self.id = id
         self.name = name
         self.breed = breed
@@ -63,6 +65,7 @@ struct Dog: Codable, Equatable, Sendable, Identifiable {
         self.dateAdded = dateAdded
         self.personality = personality
         self.healthStatus = healthStatus
+        self.rescuerID = rescuerID
     }
 }
 

@@ -106,6 +106,7 @@ struct RealDogsInteractor: DogsInteractor {
 protocol DogsRepository: Sendable {
     func getDogs() async throws -> [Dog]
     func getDog(by id: String) async throws -> Dog
+    func getDogsByRescuer(rescuerID: String) async throws -> [Dog]
 }
 
 protocol MatchingRepository: Sendable {

@@ -124,13 +124,13 @@ struct RescuerDTO: Codable, Sendable {
     }
 }
 
-protocol MessagesRepository {
+protocol MessagesRepository: Sendable {
     func createMessage(_ message: MessageDBDTO) async throws
     func getMessages(for recipientID: String) async throws -> [MessageDBDTO]
     func markMessageAsRead(_ messageID: String) async throws
 }
 
-protocol VisitsRepository {
+protocol VisitsRepository: Sendable {
     func createVisit(_ visit: VisitDTO) async throws
     func getVisits(for rescuerID: String) async throws -> [VisitDTO]
     func getVisitsByDate(rescuerID: String, date: Date) async throws -> [VisitDTO]
@@ -158,8 +158,18 @@ struct SupabaseMessagesRepository: MessagesRepository, @unchecked Sendable {
     }
     
     func markMessageAsRead(_ messageID: String) async throws {
+        struct MessageUpdate: Codable {
+            let is_read: Bool
+            let read_at: String
+        }
+        
+        let update = MessageUpdate(
+            is_read: true,
+            read_at: ISO8601DateFormatter().string(from: Date())
+        )
+        
         try await client.from("messages")
-            .update(["is_read": true, "read_at": ISO8601DateFormatter().string(from: Date())])
+            .update(update)
             .eq("id", value: messageID)
             .execute()
     }
@@ -215,7 +225,7 @@ struct SupabaseVisitsRepository: VisitsRepository, @unchecked Sendable {
 }
 
 // Repository to get rescuer by user ID
-protocol RescuerRepository {
+protocol RescuerRepository: Sendable {
     func getRescuerByUserID(_ userID: String) async throws -> RescuerDTO?
 }
 

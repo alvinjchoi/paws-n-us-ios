@@ -200,7 +200,7 @@ struct TodayView: View {
         
         do {
             // Get current user ID - in real app, rescuer ID would be used
-            guard let userID = diContainer.appState[\.userData.currentUserID] else {
+            guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
                 isLoading = false
                 return
             }
@@ -543,7 +543,7 @@ struct CalendarView: View {
             isLoading = true
             
             do {
-                guard let userID = diContainer.appState[\.userData.currentUserID] else {
+                guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
                     isLoading = false
                     return
                 }
@@ -1033,7 +1033,6 @@ struct ListingsView: View {
                     .background(Color.orange)
                     .cornerRadius(25)
             }
-            .disabled(currentRescuer == nil)
             
             Spacer()
         }
@@ -1042,17 +1041,15 @@ struct ListingsView: View {
     
     private func dogsList(_ dogs: [Dog]) -> some View {
         ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
+            LazyVStack(spacing: 20) {
                 ForEach(dogs) { dog in
-                    DogManagementCard(dog: dog) {
+                    RescuerDogCard(dog: dog) {
                         selectedDog = dog
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
             .padding(.bottom, 100)
         }
     }
@@ -1068,25 +1065,25 @@ struct ListingsView: View {
         error = nil
         
         do {
-            // Get current user ID - in real app would filter by rescuer
-            guard let userID = diContainer.appState[\.userData.currentUserID] else {
+            // Get current user ID
+            guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
                 dogs = []
                 isLoading = false
                 return
             }
             
-            let dogsRepo = diContainer.repositories.dogsRepository
-            
-            // For now, load all dogs from Supabase
-            // In production, you'd filter by rescuer_id
-            dogs = try await dogsRepo.getDogs()
-            
-            // Filter to show only dogs from sample data that would belong to this rescuer
-            // This is temporary - in production, the database query would handle this
-            dogs = dogs.filter { dog in
-                // Show dogs from specific shelters as example
-                ["서울동물복지지원센터 마포", "서울동물복지지원센터 구로", "서울동물복지지원센터 동대문"].contains(dog.shelterName)
+            // Get rescuer info for current user
+            let rescuerRepo = diContainer.repositories.rescuerRepository
+            guard let rescuer = try await rescuerRepo.getRescuerByUserID(userID) else {
+                // User is not a rescuer
+                dogs = []
+                isLoading = false
+                return
             }
+            
+            // Get dogs assigned to this rescuer
+            let dogsRepo = diContainer.repositories.dogsRepository
+            dogs = try await dogsRepo.getDogsByRescuer(rescuerID: rescuer.id)
             
             isLoading = false
         } catch {
@@ -1096,73 +1093,170 @@ struct ListingsView: View {
     }
 }
 
-struct DogManagementCard: View {
+struct RescuerDogCard: View {
     let dog: Dog
     let onTap: () -> Void
+    @State private var currentImageIndex = 0
     
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 0) {
-                // Image
-                if let imageURL = dog.imageURLs.first, let url = URL(string: imageURL) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .overlay(
-                                ProgressView()
-                            )
+            ZStack(alignment: .bottom) {
+                // Background container with aspect ratio similar to swipe cards
+                Rectangle()
+                    .fill(Color.clear)
+                    .aspectRatio(0.75, contentMode: .fit) // Similar to swipe cards
+                    .overlay(
+                        // Background image
+                        Group {
+                            if !dog.imageURLs.isEmpty, let url = URL(string: dog.imageURLs[currentImageIndex]) {
+                                CachedAsyncImage(url: url) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                } placeholder: {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.3))
+                                        .overlay(
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle())
+                                        )
+                                }
+                            } else {
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .overlay(
+                                        VStack {
+                                            Image(systemName: "photo")
+                                                .font(.title2)
+                                                .foregroundColor(.gray)
+                                            Text("이미지 없음")
+                                                .font(.caption)
+                                                .foregroundColor(.gray)
+                                        }
+                                    )
+                            }
+                        }
+                        .clipped()
+                    )
+                
+                // Image indicators if multiple photos
+                if dog.imageURLs.count > 1 {
+                    VStack {
+                        HStack(spacing: 4) {
+                            ForEach(0..<dog.imageURLs.count, id: \.self) { index in
+                                Rectangle()
+                                    .fill(currentImageIndex == index ? Color.white : Color.white.opacity(0.5))
+                                    .frame(height: 3)
+                                    .cornerRadius(1.5)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.top, 12)
+                        
+                        Spacer()
                     }
-                    .frame(height: 160)
-                    .clipped()
-                } else {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(height: 160)
-                        .overlay(
-                            Image(systemName: "photo")
-                                .font(.title2)
-                                .foregroundColor(.gray)
-                        )
                 }
                 
-                // Info
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(dog.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                // Gradient overlay
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.clear,
+                        Color.clear,
+                        Color.black.opacity(0.7)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                
+                // Dog info section
+                VStack {
+                    Spacer()
                     
-                    Text("\(dog.breed) • \(dog.age)세")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                    
-                    HStack {
-                        Image(systemName: "calendar")
-                            .font(.system(size: 12))
-                        Text(formatDate(dog.dateAdded))
-                            .font(.system(size: 12))
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(alignment: .bottom) {
+                            HStack(alignment: .bottom, spacing: 8) {
+                                Text(dog.name)
+                                    .font(.system(size: 24, weight: .bold))
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .minimumScaleFactor(0.8)
+                                Text("\(dog.age)세")
+                                    .font(.system(size: 18, weight: .medium))
+                            }
+                            .layoutPriority(1)
+                            
+                            Spacer(minLength: 8)
+                            
+                            // Status indicator for rescuer mode
+                            VStack(alignment: .trailing, spacing: 2) {
+                                Image(systemName: "pawprint.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.orange)
+                                Text("보호중")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Text(dog.breed)
+                                .font(.system(size: 14, weight: .medium))
+                            Text("•")
+                                .font(.system(size: 14))
+                            Text(dog.location)
+                                .font(.system(size: 14))
+                                .lineLimit(1)
+                        }
+                        .foregroundColor(.white.opacity(0.9))
+                        
+                        Text(dog.bio)
+                            .font(.system(size: 14))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .truncationMode(.tail)
+                            .foregroundColor(.white.opacity(0.8))
                     }
-                    .foregroundColor(.gray)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(12)
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(PlainButtonStyle())
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "MM/dd"
-        return formatter.string(from: date)
+        .overlay(
+            // Photo navigation tap areas
+            HStack(spacing: 0) {
+                // Left side - previous photo
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if currentImageIndex > 0 {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                currentImageIndex -= 1
+                            }
+                        }
+                    }
+                
+                // Right side - next photo  
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if currentImageIndex < dog.imageURLs.count - 1 {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                currentImageIndex += 1
+                            }
+                        }
+                    }
+            }
+        )
     }
 }
 
@@ -1365,7 +1459,7 @@ struct MessagesView: View {
         
         do {
             // Get current user ID - in real app, rescuer ID would be used
-            guard let userID = diContainer.appState[\.userData.currentUserID] else {
+            guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
                 isLoading = false
                 return
             }

@@ -21,6 +21,10 @@ struct StubDogsRepository: DogsRepository {
         }
         return dog
     }
+    
+    func getDogsByRescuer(rescuerID: String) async throws -> [Dog] {
+        return MockedData.dogs.filter { $0.rescuerID == rescuerID }
+    }
 }
 
 struct StubMatchesRepository: MatchesRepository {
@@ -137,7 +141,29 @@ struct StubVisitsRepository: VisitsRepository {
 
 struct StubRescuerRepository: RescuerRepository {
     func getRescuerByUserID(_ userID: String) async throws -> RescuerDTO? {
-        return nil
+        // Return a test rescuer for development
+        return RescuerDTO(
+            id: "test-rescuer-id",
+            userID: userID,
+            organizationName: "테스트 보호소",
+            registrationNumber: "TEST-001",
+            verificationStatus: "verified",
+            specialties: ["개", "고양이"],
+            capacity: 10,
+            currentCount: 3,
+            location: "서울시 강남구",
+            contactPhone: "02-1234-5678",
+            contactEmail: "test@rescuer.com",
+            bio: "테스트 구조자입니다",
+            websiteURL: nil,
+            socialMedia: [:],
+            earningsTotal: 0.0,
+            rating: 4.5,
+            reviewCount: 10,
+            isActive: true,
+            createdAt: "2025-01-01T00:00:00Z",
+            updatedAt: "2025-01-01T00:00:00Z"
+        )
     }
 }
 
