@@ -406,6 +406,9 @@
     "Likes" : {
 
     },
+    "Load Failed" : {
+
+    },
     "Loading articles..." : {
 
     },
@@ -441,6 +444,9 @@
     "No image" : {
 
     },
+    "No image URL" : {
+
+    },
     "No matches found" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -457,6 +463,9 @@
           }
         }
       }
+    },
+    "No URL" : {
+
     },
     "Not requested yet" : {
 

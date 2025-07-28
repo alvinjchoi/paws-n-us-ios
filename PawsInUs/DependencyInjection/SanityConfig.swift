@@ -70,7 +70,14 @@ final class SanityClient: @unchecked Sendable {
         print("Sanity Query: \(query)")
         print("Sanity URL: \(url)")
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        // Configure URLSession to handle external images
+        let config = URLSessionConfiguration.default
+        config.requestCachePolicy = .returnCacheDataElseLoad
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        let session = URLSession(configuration: config)
+        
+        session.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Sanity network error: \(error)")
                 completion(.failure(error))

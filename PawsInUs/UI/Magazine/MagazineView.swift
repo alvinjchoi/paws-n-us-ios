@@ -157,6 +157,11 @@ struct MagazineView: View {
             if articles.isEmpty {
                 loadArticles()
             }
+            // Debug: Print articles and their image URLs
+            print("📰 Magazine loaded \(articles.count) articles:")
+            for article in articles.prefix(3) {
+                print("  - '\(article.title)': imageUrl = \(article.imageUrl ?? "nil")")
+            }
         }
     }
     
@@ -209,26 +214,72 @@ struct HeroArticleView: View {
                 // Large featured image
                 Group {
                     if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
-                        CachedAsyncImage(url: url) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .overlay(
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                )
+                        // Test with hardcoded working URL first
+                        let testUrl = URL(string: "https://images.unsplash.com/photo-1646906975349-eebfad38ee3b?q=80&w=1579&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")!
+                        
+                        AsyncImage(url: testUrl) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            case .failure(let error):
+                                Rectangle()
+                                    .fill(Color.red.opacity(0.2))
+                                    .overlay(
+                                        VStack(spacing: 4) {
+                                            Image(systemName: "exclamationmark.triangle")
+                                                .font(.title2)
+                                                .foregroundColor(.red)
+                                            Text("Load Failed")
+                                                .font(.caption)
+                                                .foregroundColor(.red)
+                                            Text("\(error.localizedDescription)")
+                                                .font(.caption2)
+                                                .foregroundColor(.red)
+                                                .multilineTextAlignment(.center)
+                                                .lineLimit(2)
+                                        }
+                                        .padding(8)
+                                    )
+                            case .empty:
+                                Rectangle()
+                                    .fill(Color.blue.opacity(0.3))
+                                    .overlay(
+                                        VStack {
+                                            ProgressView()
+                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            Text("Loading...")
+                                                .foregroundColor(.white)
+                                                .font(.caption)
+                                        }
+                                    )
+                            @unknown default:
+                                Rectangle()
+                                    .fill(Color.gray.opacity(0.3))
+                            }
+                        }
+                        .onAppear {
+                            print("📸 Testing hardcoded image URL for article '\(article.title)'")
+                            print("📸 Original URL: \(imageUrl)")
+                            print("📸 Test URL: \(testUrl)")
                         }
                     } else {
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
                             .overlay(
-                                Image(systemName: "photo")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.gray)
+                                VStack(spacing: 4) {
+                                    Image(systemName: "photo")
+                                        .font(.largeTitle)
+                                        .foregroundColor(.gray)
+                                    Text("No image URL")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
                             )
+                            .onAppear {
+                                print("📸 No image URL for article: \(article.title)")
+                            }
                     }
                 }
                 .aspectRatio(1.0, contentMode: .fit)
@@ -280,7 +331,7 @@ struct SecondaryFeaturedCard: View {
             // Thumbnail image
             Group {
                 if let imageUrl = article.imageUrl, let url = URL(string: imageUrl) {
-                    CachedAsyncImage(url: url) { image in
+                    AsyncImage(url: url) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -296,9 +347,14 @@ struct SecondaryFeaturedCard: View {
                     Rectangle()
                         .fill(Color.gray.opacity(0.3))
                         .overlay(
-                            Image(systemName: "photo")
-                                .font(.title2)
-                                .foregroundColor(.gray)
+                            VStack(spacing: 4) {
+                                Image(systemName: "photo")
+                                    .font(.title2)
+                                    .foregroundColor(.gray)
+                                Text("No URL")
+                                    .font(.caption2)
+                                    .foregroundColor(.gray)
+                            }
                         )
                 }
             }
