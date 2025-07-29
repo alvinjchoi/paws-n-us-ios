@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "488734162CDCA2DB00B400A3"
-               BuildableName = "PawsInUs.app"
-               BlueprintName = "PawsInUs"
-               ReferencedContainer = "container:PawsInUs.xcodeproj">
+               BlueprintIdentifier = "EAB5F0CE2E38D9C5004A7583"
+               BuildableName = "Paws-n-Us.app"
+               BlueprintName = "Paws-n-Us"
+               ReferencedContainer = "container:Paws-n-Us.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -29,19 +29,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
-      <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "488734282CDCA2DD00B400A3"
-               BuildableName = "UnitTests.xctest"
-               BlueprintName = "UnitTests"
-               ReferencedContainer = "container:PawsInUs.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -57,10 +44,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "488734162CDCA2DB00B400A3"
-            BuildableName = "PawsInUs.app"
-            BlueprintName = "PawsInUs"
-            ReferencedContainer = "container:PawsInUs.xcodeproj">
+            BlueprintIdentifier = "EAB5F0CE2E38D9C5004A7583"
+            BuildableName = "Paws-n-Us.app"
+            BlueprintName = "Paws-n-Us"
+            ReferencedContainer = "container:Paws-n-Us.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -74,10 +61,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "488734162CDCA2DB00B400A3"
-            BuildableName = "PawsInUs.app"
-            BlueprintName = "PawsInUs"
-            ReferencedContainer = "container:PawsInUs.xcodeproj">
+            BlueprintIdentifier = "EAB5F0CE2E38D9C5004A7583"
+            BuildableName = "Paws-n-Us.app"
+            BlueprintName = "Paws-n-Us"
+            ReferencedContainer = "container:Paws-n-Us.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

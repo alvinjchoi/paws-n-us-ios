@@ -199,30 +199,26 @@ struct TodayView: View {
         isLoading = true
         
         do {
-            // Get current user ID - in real app, rescuer ID would be used
-            guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
-                isLoading = false
-                return
-            }
-            
             let visitsRepo = diContainer.repositories.visitsRepository
             
-            // Convert userID to UUID
-            guard let rescuerUUID = UUID(uuidString: userID) else {
-                // Invalid user ID format
-                isLoading = false
-                return
+            // For now, show all visits since we don't have proper rescuer assignments
+            // In production, you'd filter by the current rescuer's ID
+            let allVisits = try await visitsRepo.getVisitsForAdopter("all") // Temporary hack
+            
+            // Filter today's visits
+            let calendar = Calendar.current
+            let today = Date()
+            let startOfDay = calendar.startOfDay(for: today)
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? today
+            
+            todayVisits = allVisits.filter { visit in
+                visit.scheduledDate >= startOfDay && visit.scheduledDate < endOfDay
             }
             
-            // Load today's visits
-            todayVisits = try await visitsRepo.getVisitsByDate(rescuerUUID, date: Date())
-            
             // Load upcoming visits (next 7 days)
-            let calendar = Calendar.current
-            let nextWeek = calendar.date(byAdding: .day, value: 7, to: Date()) ?? Date()
-            let allVisits = try await visitsRepo.getVisitsForRescuer(rescuerUUID)
+            let nextWeek = calendar.date(byAdding: .day, value: 7, to: today) ?? today
             upcomingVisits = allVisits.filter { visit in
-                visit.scheduledDate > Date() && visit.scheduledDate <= nextWeek
+                visit.scheduledDate > today && visit.scheduledDate <= nextWeek
             }
             
             // Load dog information for all visits
@@ -513,20 +509,11 @@ struct CalendarView: View {
             isLoading = true
             
             do {
-                guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
-                    isLoading = false
-                    return
-                }
-                
-                // Convert userID to UUID
-                guard let rescuerUUID = UUID(uuidString: userID) else {
-                    // Invalid user ID format
-                    isLoading = false
-                    return
-                }
-                
                 let visitsRepo = diContainer.repositories.visitsRepository
-                visits = try await visitsRepo.getVisitsForRescuer(rescuerUUID)
+                
+                // For now, show all visits since we don't have proper rescuer assignments
+                // In production, you'd filter by the current rescuer's ID
+                visits = try await visitsRepo.getVisitsForAdopter("all") // Temporary hack
                 
                 // Group visits by date
                 visitsByDate = [:]
@@ -978,9 +965,6 @@ struct ListingsView: View {
         .sheet(item: $selectedDog) { dog in
             DogManagementDetailView(dog: dog)
                 .environment(\.injected, diContainer)
-                .onDisappear {
-                    loadDogs()
-                }
         }
     }
     
@@ -1021,13 +1005,39 @@ struct ListingsView: View {
     
     private func dogsList(_ dogs: [Dog]) -> some View {
         ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: 8),
-                GridItem(.flexible(), spacing: 8)
-            ], spacing: 16) {
-                ForEach(dogs) { dog in
-                    RescuerDogCard(dog: dog) {
-                        selectedDog = dog
+            LazyVStack(spacing: 16) {
+                ForEach(0..<((dogs.count + 1) / 2), id: \.self) { rowIndex in
+                    HStack(spacing: 8) {
+                        let leftIndex = rowIndex * 2
+                        let rightIndex = leftIndex + 1
+                        
+                        // Left card
+                        if leftIndex < dogs.count {
+                            let leftDog = dogs[leftIndex]
+                            RescuerDogCard(dog: leftDog) {
+                                print("🔵 LEFT card tapped at index \(leftIndex): \(leftDog.name) (ID: \(leftDog.id))")
+                                selectedDog = leftDog
+                                print("🔵 selectedDog set to: \(selectedDog?.name ?? "nil") (ID: \(selectedDog?.id ?? "nil"))")
+                            }
+                            .id(leftDog.id)
+                        } else {
+                            Spacer()
+                                .frame(maxWidth: .infinity)
+                        }
+                        
+                        // Right card
+                        if rightIndex < dogs.count {
+                            let rightDog = dogs[rightIndex]
+                            RescuerDogCard(dog: rightDog) {
+                                print("🔵 RIGHT card tapped at index \(rightIndex): \(rightDog.name) (ID: \(rightDog.id))")
+                                selectedDog = rightDog
+                                print("🔵 selectedDog set to: \(selectedDog?.name ?? "nil") (ID: \(selectedDog?.id ?? "nil"))")
+                            }
+                            .id(rightDog.id)
+                        } else {
+                            Spacer()
+                                .frame(maxWidth: .infinity)
+                        }
                     }
                 }
             }
@@ -1048,28 +1058,14 @@ struct ListingsView: View {
         error = nil
         
         do {
-            // Get current user ID
-            guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
-                dogs = []
-                isLoading = false
-                return
-            }
-            
-            // Get rescuer info for current user
-            let rescuerRepo = diContainer.repositories.rescuerRepository
-            guard let rescuer = try await rescuerRepo.getRescuerByUserID(userID) else {
-                // User is not a rescuer
-                dogs = []
-                isLoading = false
-                return
-            }
-            
-            // Get dogs assigned to this rescuer
+            // Since we're using LocalDogsRepository and not associating animals with specific rescuers,
+            // just get all dogs from the local API
             let dogsRepo = diContainer.repositories.dogsRepository
-            dogs = try await dogsRepo.getDogsByRescuer(rescuerID: rescuer.id)
+            dogs = try await dogsRepo.getDogs()
             
             isLoading = false
         } catch {
+            print("❌ Error loading dogs: \(error)")
             self.error = error
             isLoading = false
         }
@@ -1082,157 +1078,136 @@ struct RescuerDogCard: View {
     @State private var currentImageIndex = 0
     
     var body: some View {
-        Button(action: onTap) {
-            ZStack(alignment: .bottom) {
-                // Background container with aspect ratio similar to swipe cards
-                Rectangle()
-                    .fill(Color.clear)
-                    .aspectRatio(0.75, contentMode: .fit) // Similar to swipe cards
-                    .overlay(
-                        // Background image
-                        Group {
-                            if !dog.imageURLs.isEmpty, let url = URL(string: dog.imageURLs[currentImageIndex]) {
-                                CachedAsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                } placeholder: {
-                                    Rectangle()
-                                        .fill(Color.gray.opacity(0.3))
-                                        .overlay(
-                                            ProgressView()
-                                                .progressViewStyle(CircularProgressViewStyle())
-                                        )
-                                }
-                            } else {
+        ZStack(alignment: .bottom) {
+            // Background container with aspect ratio similar to swipe cards
+            Rectangle()
+                .fill(Color.clear)
+                .aspectRatio(0.75, contentMode: .fit) // Similar to swipe cards
+                .overlay(
+                    // Background image
+                    Group {
+                        if !dog.imageURLs.isEmpty, let url = URL(string: dog.imageURLs[currentImageIndex]) {
+                            CachedAsyncImage(url: url) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
                                 Rectangle()
                                     .fill(Color.gray.opacity(0.3))
                                     .overlay(
-                                        VStack {
-                                            Image(systemName: "photo")
-                                                .font(.title2)
-                                                .foregroundColor(.gray)
-                                            Text("이미지 없음")
-                                                .font(.caption)
-                                                .foregroundColor(.gray)
-                                        }
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle())
                                     )
                             }
+                        } else {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .overlay(
+                                    VStack {
+                                        Image(systemName: "photo")
+                                            .font(.title2)
+                                            .foregroundColor(.gray)
+                                        Text("이미지 없음")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                )
                         }
-                        .clipped()
-                    )
-                
-                // Image indicators if multiple photos
-                if dog.imageURLs.count > 1 {
-                    VStack {
-                        HStack(spacing: 4) {
-                            ForEach(0..<dog.imageURLs.count, id: \.self) { index in
-                                Rectangle()
-                                    .fill(currentImageIndex == index ? Color.white : Color.white.opacity(0.5))
-                                    .frame(height: 3)
-                                    .cornerRadius(1.5)
-                            }
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.top, 12)
-                        
-                        Spacer()
                     }
-                }
-                
-                // Gradient overlay
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.clear,
-                        Color.clear,
-                        Color.black.opacity(0.7)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
+                    .clipped()
                 )
-                
-                // Dog info section
+            
+            // Image indicators if multiple photos
+            if dog.imageURLs.count > 1 {
                 VStack {
-                    Spacer()
-                    
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .bottom) {
-                            HStack(alignment: .bottom, spacing: 8) {
-                                Text(dog.name)
-                                    .font(.system(size: 24, weight: .bold))
-                                    .lineLimit(1)
-                                    .truncationMode(.tail)
-                                    .minimumScaleFactor(0.8)
-                                Text("\(dog.age)세")
-                                    .font(.system(size: 18, weight: .medium))
-                            }
-                            .layoutPriority(1)
-                            
-                            Spacer(minLength: 8)
-                            
-                            // Status indicator for rescuer mode
-                            VStack(alignment: .trailing, spacing: 2) {
-                                Image(systemName: "pawprint.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.orange)
-                                Text("보호중")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(.orange)
-                            }
+                    HStack(spacing: 4) {
+                        ForEach(0..<dog.imageURLs.count, id: \.self) { index in
+                            Rectangle()
+                                .fill(currentImageIndex == index ? Color.white : Color.white.opacity(0.5))
+                                .frame(height: 3)
+                                .cornerRadius(1.5)
                         }
-                        
-                        HStack(spacing: 4) {
-                            Text(dog.breed)
-                                .font(.system(size: 14, weight: .medium))
-                            Text("•")
-                                .font(.system(size: 14))
-                            Text(dog.location)
-                                .font(.system(size: 14))
-                                .lineLimit(1)
-                        }
-                        .foregroundColor(.white.opacity(0.9))
-                        
-                        Text(dog.bio)
-                            .font(.system(size: 14))
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                            .truncationMode(.tail)
-                            .foregroundColor(.white.opacity(0.8))
                     }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+                    
+                    Spacer()
                 }
             }
-            .background(Color.white)
-            .cornerRadius(16)
-            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            // Photo navigation tap areas - only for multiple photos
-            dog.imageURLs.count > 1 ? 
-            DragGesture(minimumDistance: 0)
-                .onEnded { value in
-                    let tapLocation = value.location
-                    let cardWidth = 180.0 // Approximate card width for 2-column grid
+            
+            // Gradient overlay
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.clear,
+                    Color.clear,
+                    Color.black.opacity(0.7)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            
+            // Dog info section
+            VStack {
+                Spacer()
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .bottom) {
+                        HStack(alignment: .bottom, spacing: 8) {
+                            Text(dog.name)
+                                .font(.system(size: 24, weight: .bold))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .minimumScaleFactor(0.8)
+                            Text("\(dog.age)세")
+                                .font(.system(size: 18, weight: .medium))
+                        }
+                        .layoutPriority(1)
+                        
+                        Spacer(minLength: 8)
+                        
+                        // Status indicator for rescuer mode
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Image(systemName: "pawprint.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.orange)
+                            Text("보호중")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.orange)
+                        }
+                    }
                     
-                    // Left third of card - previous photo
-                    if tapLocation.x < cardWidth / 3 && currentImageIndex > 0 {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            currentImageIndex -= 1
-                        }
+                    HStack(spacing: 4) {
+                        Text(dog.breed)
+                            .font(.system(size: 14, weight: .medium))
+                        Text("•")
+                            .font(.system(size: 14))
+                        Text(dog.location)
+                            .font(.system(size: 14))
+                            .lineLimit(1)
                     }
-                    // Right third of card - next photo
-                    else if tapLocation.x > (cardWidth * 2 / 3) && currentImageIndex < dog.imageURLs.count - 1 {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            currentImageIndex += 1
-                        }
-                    }
-                    // Middle third - let main button handle (do nothing here)
-                } : nil
-        )
+                    .foregroundColor(.white.opacity(0.9))
+                    
+                    Text(dog.bio)
+                        .font(.system(size: 14))
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .truncationMode(.tail)
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+        .contentShape(Rectangle()) // Ensure entire bounds are tappable
+        .onTapGesture {
+            print("🟡 RescuerDogCard tapped for: \(dog.name) (ID: \(dog.id))")
+            onTap()
+        }
     }
 }
 

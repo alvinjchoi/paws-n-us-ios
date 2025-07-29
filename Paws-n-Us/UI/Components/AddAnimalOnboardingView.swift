@@ -138,9 +138,9 @@ struct AddAnimalOnboardingView: View {
             Spacer()
             
             Button(viewModel.isLastStep ? (isPublishing ? "Publishing..." : "Publish") : "Next") {
-                // Button tapped
+                print("🔵 Button tapped - isLastStep: \(viewModel.isLastStep), canProceed: \(viewModel.canProceed), isPublishing: \(isPublishing)")
                 if viewModel.isLastStep {
-                    // Starting publish process
+                    print("🔵 Starting publish process...")
                     isPublishing = true
                     Task {
                         do {
@@ -276,9 +276,8 @@ class AnimalOnboardingViewModel: ObservableObject {
         // Get current user's auth token if available
         let authToken = try? await SupabaseConfig.client.auth.session.accessToken
         
-        // For now, create directly in Supabase instead of using the local API
-        // which has issues with shelter_id foreign key constraint
-        return try await createAnimalDirectly(
+        // Call the local API
+        let response = try await LocalAPIClient.shared.createAnimal(
             name: animalData.name,
             species: animalData.species,
             breed: animalData.breed.isEmpty ? nil : animalData.breed,

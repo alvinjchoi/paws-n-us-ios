@@ -17,6 +17,8 @@ struct PlaydateSchedulingView: View {
     @State private var selectedTimeSlot: String?
     @State private var showingConfirmation = false
     @State private var isSubmitting = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
     @State private var cancellables = Set<AnyCancellable>()
     
     private let guestOptions = [1, 2, 3, 4, 5, 6]
@@ -189,29 +191,64 @@ struct PlaydateSchedulingView: View {
         } message: {
             Text("\(dog.shelterName)에 놀이 시간 신청이 전송되었습니다. 곧 확인 연락을 드릴 예정입니다!")
         }
+        .alert("오류", isPresented: $showingError) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
     }
     
     private func submitPlaydateRequest() async {
         isSubmitting = true
         
-        // Get current user ID
-        guard let userID = diContainer.appState[\.userData.currentAdopterID] else {
-            // No user ID found
-            isSubmitting = false
-            return
+        // Debug current auth state
+        let currentUser = diContainer.appState[\.userData.currentAdopterID]
+        let isAuth = diContainer.appState[\.userData.isAuthenticated]
+        print("🔵 PlaydateScheduling - currentAdopterID: \(currentUser ?? "nil")")
+        print("🔵 PlaydateScheduling - isAuthenticated: \(isAuth)")
+        
+        // Get current user ID - for testing, use a temp ID if none exists
+        let userID: String
+        if let currentUserID = diContainer.appState[\.userData.currentAdopterID] {
+            userID = currentUserID
+        } else {
+            // For testing purposes, use a temporary adopter ID
+            // In production, this should require proper authentication
+            userID = "temp-adopter-\(UUID().uuidString)"
+            print("🟡 Using temporary adopter ID: \(userID)")
         }
         
-        // Get the rescuer ID for this dog from the shelter_id
-        guard let rescuerID = UUID(uuidString: dog.shelterID) else {
-            // Invalid rescuer ID from shelter
-            isSubmitting = false
+        // Get the rescuer ID for this dog - handle cases where no rescuer is assigned
+        var rescuerID: UUID?
+        
+        // First try to get rescuer ID from dog.rescuerID if it exists
+        if let dogRescuerID = dog.rescuerID, let rescuerUUID = UUID(uuidString: dogRescuerID) {
+            rescuerID = rescuerUUID
+        } 
+        // Otherwise try to parse shelter ID as UUID
+        else if let shelterUUID = UUID(uuidString: dog.shelterID) {
+            rescuerID = shelterUUID
+        }
+        
+        // If no valid rescuer UUID found, we cannot create a visit
+        guard let validRescuerID = rescuerID else {
+            print("❌ No valid rescuer UUID found for dog \(dog.name)")
+            await MainActor.run {
+                isSubmitting = false
+                errorMessage = "담당자 정보를 찾을 수 없습니다. 다시 시도해주세요."
+                showingError = true
+            }
             return
         }
         
         // Convert dog ID to UUID
         guard let animalId = UUID(uuidString: dog.id) else {
             // Invalid animal ID
-            isSubmitting = false
+            await MainActor.run {
+                isSubmitting = false
+                errorMessage = "동물 정보를 찾을 수 없습니다. 다시 시도해주세요."
+                showingError = true
+            }
             return
         }
         
@@ -235,7 +272,7 @@ struct PlaydateSchedulingView: View {
         
         // Create visit request
         let visitRequest = CreateVisitRequest(
-            rescuerId: rescuerID,
+            rescuerId: validRescuerID,
             adopterId: userID,
             animalId: animalId,
             visitType: .meetGreet,
@@ -247,17 +284,34 @@ struct PlaydateSchedulingView: View {
         )
         
         // Submit visit request
-        Task { @MainActor in
-            do {
-                let visit = try await diContainer.repositories.visitsRepository.createVisit(visitRequest)
-                
+        print("🔵 Creating visit request: \(visitRequest)")
+        do {
+            let visit = try await diContainer.repositories.visitsRepository.createVisit(visitRequest)
+            print("🎉 Visit created successfully: \(visit)")
+            
+            await MainActor.run {
                 isSubmitting = false
                 // Visit created successfully
                 showingConfirmation = true
-            } catch {
+            }
+        } catch {
+            print("❌ Visit creation error: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+            
+            await MainActor.run {
                 isSubmitting = false
-                // Failed to create visit
-                // Could show error alert here
+                // Show specific error message
+                let errorDesc = error.localizedDescription.lowercased()
+                if errorDesc.contains("401") || errorDesc.contains("unauthorized") {
+                    errorMessage = "인증에 실패했습니다. 다시 로그인해주세요."
+                } else if errorDesc.contains("409") || errorDesc.contains("conflict") {
+                    errorMessage = "선택한 시간에 이미 다른 예약이 있습니다. 다른 시간을 선택해주세요."
+                } else if errorDesc.contains("foreign key") || errorDesc.contains("constraint") {
+                    errorMessage = "데이터베이스 제약 조건 오류입니다. 관리자에게 문의해주세요."
+                } else {
+                    errorMessage = "놀이 시간 신청에 실패했습니다: \(error.localizedDescription)"
+                }
+                showingError = true
             }
         }
     }

@@ -4,13 +4,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "PawsInUs",
+    name: "Paws-n-Us",
     platforms: [
         .iOS(.v18),
         .macOS(.v12)
     ],
     products: [
-        .library(name: "PawsInUs", targets: ["PawsInUs"])
+        .library(name: "Paws-n-Us", targets: ["Paws-n-Us"])
     ],
     dependencies: [
         .package(url: "https://github.com/nalexn/ViewInspector", from: "0.10.0"),
