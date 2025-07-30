@@ -27,6 +27,7 @@
 			membershipExceptions = (
 				Info.plist,
 				Resources/Assets.xcassets,
+				"Resources/Preview Assets.xcassets",
 				Resources/TempAssets/Image.imageset/Contents.json,
 				"Resources/TempAssets/pawsinus-logo.imageset/Contents.json",
 			);
@@ -427,7 +428,7 @@
 				ASSETCATALOG_COMPILER_SKIP_APP_STORE_DEPLOYMENT = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Paws-n-Us/Resources\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Paws-n-Us/Resources/Preview Assets.xcassets\"";
 				DEVELOPMENT_TEAM = 9DWYL25EC4;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_SOURCE_FILE_NAMES = Info.plist;
@@ -469,7 +470,7 @@
 				ASSETCATALOG_COMPILER_SKIP_APP_STORE_DEPLOYMENT = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Paws-n-Us/Resources\"";
+				DEVELOPMENT_ASSET_PATHS = "\"Paws-n-Us/Resources/Preview Assets.xcassets\"";
 				DEVELOPMENT_TEAM = 9DWYL25EC4;
 				ENABLE_PREVIEWS = YES;
 				EXCLUDED_SOURCE_FILE_NAMES = Info.plist;
