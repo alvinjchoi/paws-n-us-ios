@@ -26,17 +26,11 @@ struct PortableTextView: View {
     @ViewBuilder
     private var blockView: some View {
         if let children = block.children, !children.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                let spans = children.map { span in
-                    createAttributedText(from: span)
-                }
-                
-                Text(spans.reduce(AttributedString()) { result, span in
-                    result + span
-                })
+            // Use simple Text instead of AttributedString to avoid crashes
+            let plainText = children.map { $0.text }.joined()
+            Text(plainText)
                 .font(fontForStyle(block.style))
                 .lineSpacing(4)
-            }
         } else {
             Text(block.toPlainText())
                 .font(fontForStyle(block.style))

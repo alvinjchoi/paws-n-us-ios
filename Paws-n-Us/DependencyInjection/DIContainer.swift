@@ -81,24 +81,36 @@ extension DIContainer {
                       animalsRepository: StubAnimalsRepository()
                   ))
             #else
-            fatalError("Stub interactors should only be used in DEBUG mode")
+            // In production, return a default configuration
+            let session = URLSession.shared
+            let supabaseClient = SupabaseConfig.client
+            return .init(appState: Store(AppState()),
+                  repositories: Repositories(
+                      dogsRepository: LocalDogsRepository(),
+                      matchesRepository: SupabaseMatchesRepository(client: supabaseClient),
+                      matchingRepository: SupabaseMatchingRepository(client: supabaseClient),
+                      adopterRepository: SupabaseAdopterRepository(client: supabaseClient),
+                      authRepository: SupabaseAuthRepository(client: supabaseClient),
+                      storageRepository: SupabaseStorageRepository(client: supabaseClient),
+                      images: RealImagesWebRepository(session: session),
+                      pushToken: RealPushTokenWebRepository(session: session),
+                      articleRepository: SanityArticleRepository(),
+                      messagesRepository: SupabaseMessagesRepository(client: supabaseClient),
+                      visitsRepository: SupabaseVisitsRepository(client: supabaseClient),
+                      rescuerRepository: SupabaseRescuerRepository(client: supabaseClient),
+                      animalsRepository: APIAnimalsRepository()
+                  ))
             #endif
         }
     }
 }
 
 extension EnvironmentValues {
-    @Entry var injected: DIContainer = {
-        #if DEBUG
-        return DIContainer(
-            appState: AppState(), 
-            interactors: .stub,
-            supabaseClient: SupabaseConfig.client
-        )
-        #else
-        fatalError("DIContainer must be injected via .inject() modifier")
-        #endif
-    }()
+    @Entry var injected: DIContainer = DIContainer(
+        appState: AppState(), 
+        interactors: .stub,
+        supabaseClient: SupabaseConfig.client
+    )
 }
 
 extension View {
