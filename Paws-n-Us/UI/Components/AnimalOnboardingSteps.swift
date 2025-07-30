@@ -172,7 +172,7 @@ struct PhotosStepViewModern: View {
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
                     }
-                    .onChange(of: selectedImages) { newItems in
+                    .onChange(of: selectedImages) { _, newItems in
                         Task {
                             await loadSelectedImages(newItems)
                         }

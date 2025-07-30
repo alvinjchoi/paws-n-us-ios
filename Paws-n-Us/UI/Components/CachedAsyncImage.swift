@@ -69,7 +69,7 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         request.timeoutInterval = 10
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+            if error != nil {
                 // CachedAsyncImage: Error loading
                 DispatchQueue.main.async {
                     self.isLoading = false

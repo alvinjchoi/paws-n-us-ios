@@ -176,7 +176,7 @@ struct ProfileView: View {
             // Check current session status
             let currentSession = diContainer.supabaseClient.auth.currentSession
             // Current session check
-            if let session = currentSession {
+            if currentSession != nil {
                 // User ID from session
                 // User phone from session
             }

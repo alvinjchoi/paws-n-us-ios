@@ -58,7 +58,7 @@ struct AppView: View {
         .onReceive(diContainer.appState.updates(for: \.routing.selectedTab)) { tab in
             selectedTab = tab
         }
-        .onChange(of: selectedTab) { newTab in
+        .onChange(of: selectedTab) { _, newTab in
             diContainer.appState[\.routing.selectedTab] = newTab
         }
         .onAppear {

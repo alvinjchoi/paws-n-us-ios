@@ -144,7 +144,7 @@ struct AddAnimalOnboardingView: View {
                     isPublishing = true
                     Task {
                         do {
-                            let animalId = try await viewModel.publishAnimal()
+                            _ = try await viewModel.publishAnimal()
                             await MainActor.run {
                                 // Successfully published animal
                                 isPublishing = false

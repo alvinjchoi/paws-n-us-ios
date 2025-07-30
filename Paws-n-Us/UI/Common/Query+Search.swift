@@ -63,7 +63,7 @@ private struct QueryView<T: PersistentModel>: View {
     var body: some View {
         Rectangle()
             .hidden()
-            .onChange(of: query) { newValue in
+            .onChange(of: query) { _, newValue in
                 results([], newValue)
             }
             .onAppear {
