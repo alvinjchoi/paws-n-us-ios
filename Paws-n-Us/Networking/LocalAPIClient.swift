@@ -132,8 +132,6 @@ struct LocalAPIClient {
         }
         
         if httpResponse.statusCode != 201 {
-            if let responseString = String(data: data, encoding: .utf8) {
-            }
             if let errorData = try? JSONDecoder().decode(ErrorResponse.self, from: data) {
                 throw LocalAPIError.serverError(errorData.error)
             }
