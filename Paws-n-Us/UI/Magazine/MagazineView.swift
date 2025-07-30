@@ -226,75 +226,13 @@ struct HeroArticleView: View {
             VStack(spacing: 0) {
                 // Large featured image
                 Group {
-                    if let imageUrl = article.imageUrl, 
-                       let url = URL(string: imageUrl),
-                       !imageUrl.contains("example.com") {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                            case .failure(let error):
-                                Rectangle()
-                                    .fill(Color.red.opacity(0.2))
-                                    .overlay(
-                                        VStack(spacing: 4) {
-                                            Image(systemName: "exclamationmark.triangle")
-                                                .font(.title2)
-                                                .foregroundColor(.red)
-                                            Text("Load Failed")
-                                                .font(.caption)
-                                                .foregroundColor(.red)
-                                            Text("\(error.localizedDescription)")
-                                                .font(.caption2)
-                                                .foregroundColor(.red)
-                                                .multilineTextAlignment(.center)
-                                                .lineLimit(2)
-                                        }
-                                        .padding(8)
-                                    )
-                            case .empty:
-                                Rectangle()
-                                    .fill(Color.blue.opacity(0.3))
-                                    .overlay(
-                                        VStack {
-                                            ProgressView()
-                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            Text("Loading...")
-                                                .foregroundColor(.white)
-                                                .font(.caption)
-                                        }
-                                    )
-                            @unknown default:
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                            }
-                        }
-                        .onAppear {
-                            // Loading real image for article
-                        }
-                    } else {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .overlay(
-                                VStack(spacing: 4) {
-                                    Image(systemName: "photo")
-                                        .font(.largeTitle)
-                                        .foregroundColor(.gray)
-                                    Text("No image URL")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            )
-                            .onAppear {
-                                if let imageUrl = article.imageUrl {
-                                    // Placeholder URL filtered out
-                                } else {
-                                    // No image URL for article
-                                }
-                            }
-                    }
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            Image(systemName: "photo")
+                                .font(.largeTitle)
+                                .foregroundColor(.gray)
+                        )
                 }
                 .frame(height: 300)
                 .clipped()
@@ -347,37 +285,13 @@ struct SecondaryFeaturedCard: View {
     var body: some View {
         HStack(spacing: 12) {
             // Thumbnail image - fixed size
-            Group {
-                if let imageUrl = article.imageUrl, 
-                   let url = URL(string: imageUrl),
-                   !imageUrl.contains("example.com") {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .overlay(
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .gray))
-                            )
-                    }
-                } else {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            VStack(spacing: 4) {
-                                Image(systemName: "photo")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
-                                Text("No URL")
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
-                            }
-                        )
-                }
-            }
+            Rectangle()
+                .fill(Color.gray.opacity(0.3))
+                .overlay(
+                    Image(systemName: "photo")
+                        .font(.title2)
+                        .foregroundColor(.gray)
+                )
             .frame(width: 90, height: 70)
             .clipped()
             .cornerRadius(8)
@@ -504,68 +418,14 @@ struct ArticleDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // Header image
-                Group {
-                    if let imageUrl = article.imageUrl, 
-                       let url = URL(string: imageUrl),
-                       !imageUrl.contains("example.com") {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(maxWidth: .infinity)
-                                    .aspectRatio(16/9, contentMode: .fit)
-                                    .clipped()
-                            case .failure(_):
-                                Rectangle()
-                                    .fill(Color.red.opacity(0.2))
-                                    .aspectRatio(16/9, contentMode: .fit)
-                                    .overlay(
-                                        VStack(spacing: 8) {
-                                            Image(systemName: "exclamationmark.triangle")
-                                                .font(.title)
-                                                .foregroundColor(.red)
-                                            Text("이미지 로드 실패")
-                                                .font(.caption)
-                                                .foregroundColor(.red)
-                                        }
-                                    )
-                            case .empty:
-                                Rectangle()
-                                    .fill(Color.blue.opacity(0.3))
-                                    .aspectRatio(16/9, contentMode: .fit)
-                                    .overlay(
-                                        VStack {
-                                            ProgressView()
-                                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            Text("이미지 로딩 중...")
-                                                .foregroundColor(.white)
-                                                .font(.caption)
-                                        }
-                                    )
-                            @unknown default:
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .aspectRatio(16/9, contentMode: .fit)
-                            }
-                        }
-                    } else {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .aspectRatio(16/9, contentMode: .fit)
-                            .overlay(
-                                VStack(spacing: 8) {
-                                    Image(systemName: "photo")
-                                        .font(.largeTitle)
-                                        .foregroundColor(.gray)
-                                    Text("이미지 없음")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            )
-                    }
-                }
+                Rectangle()
+                    .fill(Color.gray.opacity(0.3))
+                    .aspectRatio(16/9, contentMode: .fit)
+                    .overlay(
+                        Image(systemName: "photo")
+                            .font(.largeTitle)
+                            .foregroundColor(.gray)
+                    )
                 
                 VStack(alignment: .leading, spacing: 16) {
                     // Category and location
