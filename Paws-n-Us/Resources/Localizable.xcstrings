@@ -451,9 +451,6 @@
     "Live API (https://pawsnus.com)" : {
 
     },
-    "Load Failed" : {
-
-    },
     "Loading articles..." : {
 
     },
@@ -461,9 +458,6 @@
 
     },
     "Loading profile..." : {
-
-    },
-    "Loading..." : {
 
     },
     "Magazine" : {
@@ -498,9 +492,6 @@
     "No image" : {
 
     },
-    "No image URL" : {
-
-    },
     "No matches found" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -517,9 +508,6 @@
           }
         }
       }
-    },
-    "No URL" : {
-
     },
     "Not requested yet" : {
 
@@ -1026,12 +1014,6 @@
 
     },
     "이메일을 확인해주세요!" : {
-
-    },
-    "이미지 로드 실패" : {
-
-    },
-    "이미지 로딩 중..." : {
 
     },
     "이미지 없음" : {
